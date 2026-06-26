@@ -63,18 +63,41 @@ docker run -p 8000:8000 \
   dossier
 ```
 
+## Authentication
+
+Navigate to `http://localhost:8000/auth/login` — the server redirects to Google's
+consent screen. After you grant access, Google redirects back to `/auth/callback`,
+which returns a JWT:
+
+```json
+{ "access_token": "eyJ...", "token_type": "bearer" }
+```
+
+Pass it as a `Bearer` token on every API request, or paste it into the
+`/docs` **Authorize** button.
+
+Copy `.env.example` to `.env` and fill in your Google credentials before using
+the OAuth flow locally.
+
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./dossier.db` | SQLAlchemy connection URL |
-| `DEV_USER_EMAIL` | `dev@example.com` | Email of the Phase 1 dev user returned by `get_current_user` |
+| `SECRET_KEY` | *(dev default)* | JWT signing key — **change in production** |
+| `GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Registered redirect URI |
+| `DEV_USER_EMAIL` | `dev@example.com` | Email seeded by `seed.py` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` (7 days) | JWT lifetime |
 
 ## Endpoints
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/health` | Health check |
+| `GET` | `/auth/login` | Redirect to Google OAuth |
+| `GET` | `/auth/callback` | Exchange code for JWT |
 | `GET` | `/me` | Current user |
 | `GET` `POST` | `/programs` | List / create programs |
 | `GET` `PATCH` `DELETE` | `/programs/{id}` | Get / update / delete a program |

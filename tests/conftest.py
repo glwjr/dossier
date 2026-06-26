@@ -3,7 +3,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.auth import DEV_USER_EMAIL
+from app.auth import get_current_user
+from app.config import settings
 from app.db import get_db
 from app.main import app
 from app.models.base import Base
@@ -44,15 +45,40 @@ def db_session():
 
 @pytest.fixture()
 def dev_user(db_session: Session) -> User:
-    """Seed the dev user (DEV_USER_EMAIL) into the current test transaction."""
-    user = User(email=DEV_USER_EMAIL, name="Dev User")
+    """Seed the dev user into the current test transaction."""
+    user = User(email=settings.dev_user_email, name="Dev User")
     db_session.add(user)
     db_session.flush()
     return user
 
 
 @pytest.fixture()
-def client(db_session: Session):
+def client(db_session: Session, dev_user: User):
+    """
+    TestClient with get_db and get_current_user both overridden.
+    Business-logic tests use this fixture — no JWT needed.
+    """
+
+    def override_get_db():
+        yield db_session
+
+    def override_get_current_user():
+        return dev_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def raw_client(db_session: Session):
+    """
+    TestClient with only get_db overridden.
+    get_current_user is NOT stubbed — use for auth-specific tests.
+    """
+
     def override_get_db():
         yield db_session
 

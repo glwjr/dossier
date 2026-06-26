@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 
-from app.routers import dashboard, deadlines, me, programs, requirements
+from app.routers import auth, dashboard, deadlines, me, programs, requirements
 
 app = FastAPI(title="Dossier")
 
+app.include_router(auth.router)
 app.include_router(me.router)
 app.include_router(programs.router)
 app.include_router(requirements.router)

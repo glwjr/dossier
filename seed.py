@@ -5,7 +5,7 @@ Run with:  python seed.py
 
 from sqlalchemy import select
 
-from app.auth import DEV_USER_EMAIL
+from app.config import settings
 from app.db import SessionLocal, engine
 from app.models.base import Base
 from app.models.program import Program, ProgramStatus, Tier
@@ -68,14 +68,14 @@ def seed() -> None:
 
     with SessionLocal() as db:
         # Dev user
-        user = db.scalar(select(User).where(User.email == DEV_USER_EMAIL))
+        user = db.scalar(select(User).where(User.email == settings.dev_user_email))
         if user is None:
-            user = User(email=DEV_USER_EMAIL, name="Dev User")
+            user = User(email=settings.dev_user_email, name="Dev User")
             db.add(user)
             db.flush()
-            print(f"Created dev user: {DEV_USER_EMAIL}")
+            print(f"Created dev user: {settings.dev_user_email}")
         else:
-            print(f"Dev user already exists: {DEV_USER_EMAIL}")
+            print(f"Dev user already exists: {settings.dev_user_email}")
 
         # Target programs (idempotent — skip if school+department already seeded)
         existing = {

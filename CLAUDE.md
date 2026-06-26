@@ -60,10 +60,22 @@ theirs.
 
 ---
 
+## Auth (Phase 2)
+
+`get_current_user` in `app/auth.py` now validates a Bearer JWT issued by
+`GET /auth/callback` after the Google OAuth code exchange. The seam is unchanged —
+all routers depend on `get_current_user` exactly as before.
+
+New dependencies: `pydantic-settings`, `python-jose[cryptography]`, `httpx` (moved
+to main deps). Config centralized in `app/config.py` (`Settings`).
+
+Test fixtures: `client` overrides both `get_db` and `get_current_user` (no JWT
+needed for business-logic tests). `raw_client` overrides only `get_db` and is used
+for auth-specific tests.
+
 ## Guardrails
 
 - **No async** — synchronous SQLAlchemy only.
-- **No real OAuth** — stub `get_current_user`; keep the seam clean for Phase 2.
 - **No Phase 2 entities** (Professor, OutreachLog, Recommender, etc.).
 - **No frontend** — API-first; `/docs` is the interim UI.
 - Do not add libraries beyond the stack without flagging at a checkpoint.
@@ -79,6 +91,7 @@ theirs.
 5. ~~**Deadline CRUD**~~ — done.
 6. ~~**Dashboard** aggregation endpoint~~ — done.
 7. ~~**Seed the six programs**, README, final green pass.~~ — done. Phase 1 complete.
+8. ~~**Google OAuth** — `/auth/login` + `/auth/callback`, JWT-based `get_current_user`.~~ — done.
 
 ---
 
