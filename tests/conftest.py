@@ -5,8 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.main import app
+from app.models.base import Base
 
-_TEST_DATABASE_URL = "sqlite://"  # in-memory, discarded after each connection
+# Named shared in-memory SQLite: all connections in this process see the
+# same database, so create_all() in a session fixture is visible to the
+# function-scoped db_session connections.
+_TEST_DATABASE_URL = (
+    "sqlite+pysqlite:///file:testmemdb?mode=memory&cache=shared&uri=true"
+)
 
 _engine = create_engine(
     _TEST_DATABASE_URL,
@@ -14,12 +20,16 @@ _engine = create_engine(
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _create_schema():
+    Base.metadata.create_all(_engine)
+    yield
+    Base.metadata.drop_all(_engine)
+    _engine.dispose()
+
+
 @pytest.fixture()
 def db_session():
-    """Open a connection, begin a transaction, yield a Session, then roll back.
-
-    Each test gets a clean slate without touching the filesystem.
-    """
     with _engine.connect() as conn:
         with conn.begin() as txn:
             session = Session(bind=conn)
@@ -30,8 +40,6 @@ def db_session():
 
 @pytest.fixture()
 def client(db_session: Session):
-    """TestClient with get_db overridden to use the transactional test session."""
-
     def override_get_db():
         yield db_session
 
