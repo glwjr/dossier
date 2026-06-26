@@ -18,7 +18,8 @@ def test_login_redirects_to_google(raw_client, monkeypatch):
     assert "state=" in location
 
 
-def test_login_returns_501_without_credentials(raw_client):
+def test_login_returns_501_without_credentials(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "")
     response = raw_client.get("/auth/login")
     assert response.status_code == 501
 
