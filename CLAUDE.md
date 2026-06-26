@@ -72,17 +72,13 @@ theirs.
 
 ## Build sequence
 
-1. **Skeleton + tooling** — `pyproject.toml`, app structure, `db.py`,
-   `GET /health`, pytest transactional fixture, ruff, Dockerfile, CI workflow.
-2. **User + auth seam** — `User` model, Alembic baseline, `seed.py` (dev user),
-   `get_current_user` stub, `GET /me`. Test that `/me` returns seeded user.
-3. **Program CRUD**, scoped to `current_user`. Isolation test.
-4. **Requirement CRUD**, nested under program, ownership via parent.
-5. **Deadline CRUD**, nested under program, ownership via parent.
-6. **Dashboard** aggregation endpoint (`GET /dashboard`): completion %,
-   next deadline, days remaining, blocking requirements — real query, not a
-   Python loop.
-7. **Seed the six programs**, README, final green pass. → Phase 1 done.
+1. ~~**Skeleton + tooling**~~ — done.
+2. ~~**User + auth seam**~~ — done.
+3. ~~**Program CRUD**~~ — done.
+4. ~~**Requirement CRUD**~~ — done.
+5. ~~**Deadline CRUD**~~ — done.
+6. ~~**Dashboard** aggregation endpoint~~ — done.
+7. ~~**Seed the six programs**, README, final green pass.~~ — done. Phase 1 complete.
 
 ---
 
