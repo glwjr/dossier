@@ -1,0 +1,43 @@
+import enum
+from datetime import datetime
+
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.models.base import Base
+
+
+class Tier(str, enum.Enum):
+    reach = "reach"
+    match = "match"
+    likely = "likely"
+
+
+class ProgramStatus(str, enum.Enum):
+    researching = "researching"
+    drafting = "drafting"
+    submitted = "submitted"
+    interview = "interview"
+    decision = "decision"
+
+
+class Program(Base):
+    __tablename__ = "programs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    school: Mapped[str] = mapped_column(String)
+    department: Mapped[str] = mapped_column(String)
+    degree: Mapped[str] = mapped_column(String)
+    url: Mapped[str | None] = mapped_column(String)
+    tier: Mapped[Tier] = mapped_column(SAEnum(Tier))
+    status: Mapped[ProgramStatus] = mapped_column(
+        SAEnum(ProgramStatus), default=ProgramStatus.researching
+    )
+    app_fee: Mapped[int | None] = mapped_column(Integer)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), onupdate=func.now()
+    )
