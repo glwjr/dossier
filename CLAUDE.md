@@ -1,7 +1,7 @@
 # Dossier — CLAUDE.md
 
-PhD application tracker. Backend SWE portfolio piece. Every architectural
-decision below is **settled** — implement as written, don't re-litigate.
+PhD application tracker. Every architectural decision below is **settled** —
+implement as written, don't re-litigate.
 
 ---
 
@@ -72,7 +72,7 @@ theirs.
 
 ## Build sequence
 
-1. ✅ **Skeleton + tooling** — `pyproject.toml`, app structure, `db.py`,
+1. **Skeleton + tooling** — `pyproject.toml`, app structure, `db.py`,
    `GET /health`, pytest transactional fixture, ruff, Dockerfile, CI workflow.
 2. **User + auth seam** — `User` model, Alembic baseline, `seed.py` (dev user),
    `get_current_user` stub, `GET /me`. Test that `/me` returns seeded user.
