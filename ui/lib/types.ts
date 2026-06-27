@@ -6,6 +6,24 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export interface RecommenderCreate {
+  name: string;
+  email?: string | null;
+  institution?: string | null;
+  notes?: string | null;
+}
+
+export type RecommenderUpdate = Partial<RecommenderCreate>;
+
+export interface ProgramRecommenderCreate {
+  recommender_id: number;
+  status: "asked" | "confirmed" | "submitted";
+  due_date?: string | null;
+  notes?: string | null;
+}
+
+export type ProgramRecommenderUpdate = Partial<Omit<ProgramRecommenderCreate, "recommender_id">>;
+
 export type DeadlineKind = "application" | "fellowship" | "fee_waiver";
 
 export interface DeadlineCreate {

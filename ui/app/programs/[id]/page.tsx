@@ -18,6 +18,7 @@ import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
 import { DeadlineDialog } from "@/components/deadline-dialog";
+import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -278,27 +279,99 @@ function DeadlinesTab({ programId }: { programId: number }) {
   );
 }
 
+const REC_STATUS_LABEL: Record<string, string> = {
+  asked: "Asked",
+  confirmed: "Confirmed",
+  submitted: "Submitted",
+};
+
 function RecommendersTab({ programId }: { programId: number }) {
+  const queryClient = useQueryClient();
   const { data = [] } = useQuery<ProgramRecommender[]>({
     queryKey: ["program-recommenders", programId],
     queryFn: () => api.get(`/programs/${programId}/recommenders`),
   });
-  if (!data.length) return <p className="text-sm text-muted-foreground">None assigned yet.</p>;
+
+  const removeAssignment = useMutation({
+    mutationFn: (recommenderId: number) =>
+      api.delete(`/programs/${programId}/recommenders/${recommenderId}`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["program-recommenders", programId],
+      }),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   return (
-    <Section title="Recommenders">
-      {data.map((pr) => (
-        <Row
-          key={pr.id}
-          left={
-            <span className={REC_STATUS_COLOR[pr.status]}>
-              {pr.recommender.name}
-              {pr.recommender.institution ? ` — ${pr.recommender.institution}` : ""}
-            </span>
-          }
-          right={pr.status}
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <AssignRecommenderDialog
+          programId={programId}
+          trigger={<Button size="sm">Assign recommender</Button>}
         />
+      </div>
+      {data.length === 0 && (
+        <p className="text-sm text-muted-foreground">None assigned yet.</p>
+      )}
+      {data.map((pr) => (
+        <div
+          key={pr.id}
+          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+        >
+          <span className={`flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
+            {pr.recommender.name}
+            {pr.recommender.institution
+              ? ` — ${pr.recommender.institution}`
+              : ""}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {REC_STATUS_LABEL[pr.status]}
+          </span>
+          <AssignRecommenderDialog
+            programId={programId}
+            assignment={pr}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Edit
+              </Button>
+            }
+          />
+          {confirmDelete === pr.recommender_id ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  removeAssignment.mutate(pr.recommender_id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Remove
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setConfirmDelete(pr.recommender_id)}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
       ))}
-    </Section>
+    </div>
   );
 }
 
