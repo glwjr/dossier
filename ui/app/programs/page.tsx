@@ -5,8 +5,10 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { Program } from "@/lib/types";
 import { RequireAuth } from "@/components/require-auth";
+import { ProgramDialog } from "@/components/program-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const TIER_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   reach: "default",
@@ -37,7 +39,9 @@ function ProgramList() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{p.department}</p>
-              <p className="mt-1 text-sm capitalize text-muted-foreground">{p.status}</p>
+              <p className="mt-1 text-sm capitalize text-muted-foreground">
+                {p.status}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -49,7 +53,10 @@ function ProgramList() {
 export default function ProgramsPage() {
   return (
     <RequireAuth>
-      <h1 className="mb-6 text-2xl font-semibold">Programs</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Programs</h1>
+        <ProgramDialog trigger={<Button>New program</Button>} />
+      </div>
       <ProgramList />
     </RequireAuth>
   );

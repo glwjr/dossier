@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 import { api } from "@/lib/api";
 import {
@@ -13,7 +15,9 @@ import {
   Requirement,
 } from "@/lib/types";
 import { RequireAuth } from "@/components/require-auth";
+import { ProgramDialog } from "@/components/program-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -167,9 +171,22 @@ function DocumentsTab({ programId }: { programId: number }) {
 }
 
 function ProgramDetail({ id }: { id: number }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const { data: program, isLoading, error } = useQuery<Program>({
     queryKey: ["program", id],
     queryFn: () => api.get(`/programs/${id}`),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/programs/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      router.push("/programs");
+    },
   });
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
@@ -177,14 +194,50 @@ function ProgramDetail({ id }: { id: number }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{program.school}</h1>
-          <Badge variant="outline" className="capitalize">
-            {program.status}
-          </Badge>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold">{program.school}</h1>
+            <Badge variant="outline" className="capitalize">
+              {program.status}
+            </Badge>
+          </div>
+          <p className="text-muted-foreground">{program.department}</p>
         </div>
-        <p className="text-muted-foreground">{program.department}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <ProgramDialog
+            program={program}
+            trigger={<Button variant="outline" size="sm">Edit</Button>}
+          />
+          {confirmDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Are you sure?</span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="requirements">

@@ -6,6 +6,19 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export interface ProgramCreate {
+  school: string;
+  department: string;
+  degree: string;
+  url?: string | null;
+  tier: Tier;
+  status: ProgramStatus;
+  app_fee?: number | null;
+  notes?: string | null;
+}
+
+export type ProgramUpdate = Partial<ProgramCreate>;
+
 export interface Program {
   id: number;
   user_id: number;
