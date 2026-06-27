@@ -6,6 +6,25 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export type DocumentKind =
+  | "sop"
+  | "personal_statement"
+  | "cv"
+  | "writing_sample"
+  | "other";
+
+export type DocumentStatus = "draft" | "in_progress" | "final";
+
+export interface DocumentCreate {
+  kind: DocumentKind;
+  title: string;
+  status: DocumentStatus;
+  url?: string | null;
+  notes?: string | null;
+}
+
+export type DocumentUpdate = Partial<DocumentCreate>;
+
 export type OutreachResponse =
   | "none"
   | "positive"
@@ -156,6 +175,7 @@ export interface Document {
   kind: "sop" | "personal_statement" | "cv" | "writing_sample" | "other";
   title: string;
   status: "draft" | "in_progress" | "final";
+  url: string | null;
   notes: string | null;
   updated_at: string;
 }

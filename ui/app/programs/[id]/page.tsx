@@ -29,6 +29,7 @@ import { RequirementDialog } from "@/components/requirement-dialog";
 import { DeadlineDialog } from "@/components/deadline-dialog";
 import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
 import { OutreachDialog } from "@/components/outreach-dialog";
+import { DocumentDialog } from "@/components/document-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -457,21 +458,117 @@ function OutreachTab({ programId }: { programId: number }) {
 }
 
 function DocumentsTab({ programId }: { programId: number }) {
+  const queryClient = useQueryClient();
   const { data = [] } = useQuery<Document[]>({
     queryKey: ["documents", programId],
     queryFn: () => api.get(`/programs/${programId}/documents`),
   });
-  if (!data.length) return <p className="text-sm text-muted-foreground">None yet.</p>;
+
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      api.patch(`/documents/${id}`, { status }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["documents", programId] }),
+  });
+
+  const deleteDoc = useMutation({
+    mutationFn: (id: number) => api.delete(`/documents/${id}`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["documents", programId] }),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   return (
-    <Section title="Documents">
-      {data.map((d) => (
-        <Row
-          key={d.id}
-          left={<span className={DOC_STATUS_COLOR[d.status]}>{d.title}</span>}
-          right={DOCUMENT_STATUS_LABEL[d.status]}
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <DocumentDialog
+          programId={programId}
+          trigger={<Button size="sm">Add document</Button>}
         />
+      </div>
+      {data.length === 0 && (
+        <p className="text-sm text-muted-foreground">None yet.</p>
+      )}
+      {data.map((d) => (
+        <div
+          key={d.id}
+          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+        >
+          <span className={`flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
+            {d.url ? (
+              <a
+                href={d.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:opacity-70"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {d.title}
+              </a>
+            ) : (
+              d.title
+            )}
+          </span>
+          <Select
+            value={d.status}
+            onValueChange={(v) =>
+              v && updateStatus.mutate({ id: d.id, status: v })
+            }
+          >
+            <SelectTrigger className="h-7 w-32 text-xs">
+              <SelectValue>{DOCUMENT_STATUS_LABEL[d.status]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
+              <SelectItem value="final">Final</SelectItem>
+            </SelectContent>
+          </Select>
+          <DocumentDialog
+            programId={programId}
+            document={d}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Edit
+              </Button>
+            }
+          />
+          {confirmDelete === d.id ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  deleteDoc.mutate(d.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setConfirmDelete(d.id)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       ))}
-    </Section>
+    </div>
   );
 }
 

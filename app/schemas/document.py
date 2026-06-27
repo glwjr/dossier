@@ -9,6 +9,7 @@ class DocumentCreate(BaseModel):
     kind: DocumentKind
     title: str
     status: DocumentStatus = DocumentStatus.draft
+    url: str | None = None
     notes: str | None = None
 
 
@@ -16,6 +17,7 @@ class DocumentUpdate(BaseModel):
     kind: DocumentKind | None = None
     title: str | None = None
     status: DocumentStatus | None = None
+    url: str | None = None
     notes: str | None = None
 
 
@@ -27,5 +29,6 @@ class DocumentRead(BaseModel):
     kind: DocumentKind
     title: str
     status: DocumentStatus
+    url: str | None
     notes: str | None
     updated_at: datetime

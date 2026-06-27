@@ -32,6 +32,7 @@ class Document(Base):
     status: Mapped[DocumentStatus] = mapped_column(
         SAEnum(DocumentStatus), default=DocumentStatus.draft
     )
+    url: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
