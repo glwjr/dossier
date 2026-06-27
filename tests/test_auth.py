@@ -48,6 +48,7 @@ def _mock_google(email="oauth-user@example.com", name="OAuth User"):
 def test_callback_creates_user_and_returns_jwt(raw_client, db_session, monkeypatch):
     monkeypatch.setattr(settings, "google_client_id", "test-client-id")
     monkeypatch.setattr(settings, "google_client_secret", "test-secret")
+    monkeypatch.setattr(settings, "frontend_url", "")
 
     # Hit /auth/login to get a real state + cookie
     login_resp = raw_client.get("/auth/login", follow_redirects=False)
@@ -64,6 +65,30 @@ def test_callback_creates_user_and_returns_jwt(raw_client, db_session, monkeypat
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
+
+
+def test_callback_redirects_to_frontend_when_configured(
+    raw_client, db_session, monkeypatch
+):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "google_client_secret", "test-secret")
+    monkeypatch.setattr(settings, "frontend_url", "http://localhost:3000")
+
+    login_resp = raw_client.get("/auth/login", follow_redirects=False)
+    state_cookie = login_resp.cookies.get("oauth_state")
+    state = parse_qs(urlparse(login_resp.headers["location"]).query)["state"][0]
+
+    with patch("app.routers.auth.httpx.Client", return_value=_mock_google()):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+            follow_redirects=False,
+        )
+
+    assert response.status_code in (302, 307)
+    assert response.headers["location"].startswith(
+        "http://localhost:3000/auth/callback?token="
+    )
 
 
 def test_callback_rejects_invalid_state(raw_client):
