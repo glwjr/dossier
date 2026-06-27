@@ -76,8 +76,8 @@ for auth-specific tests.
 ## Guardrails
 
 - **No async** — synchronous SQLAlchemy only.
-- **No Phase 2 entities** (Professor, OutreachLog, Recommender, etc.).
-- **No frontend** — API-first; `/docs` is the interim UI.
+- **No async** — synchronous SQLAlchemy only (backend).
+- Do not add libraries beyond the stack without flagging at a checkpoint.
 - Do not add libraries beyond the stack without flagging at a checkpoint.
 
 ---
@@ -95,7 +95,7 @@ for auth-specific tests.
 9. ~~**Recommender CRUD** — `Recommender` (person-level) + `ProgramRecommender` junction (status, due_date).~~ — done.
 10. ~~**OutreachContact CRUD** — per-program faculty contact log.~~ — done.
 11. ~~**Document CRUD** — per-program draft tracking.~~ — done.
-12. **UI** — Next.js on Vercel.
+12. ~~**UI** — Next.js on Vercel.~~ — done. Next.js 14 App Router in `ui/`, TanStack Query, shadcn/ui. Deploy with Vercel root directory = `ui/`.
 
 ---
 
@@ -114,23 +114,43 @@ kind (application|fellowship|fee_waiver), due_date, done, notes`
 
 ---
 
-## Suggested layout
+## Layout
 
 ```
 app/
   main.py          # app factory, router registration
+  config.py        # pydantic-settings Settings (DATABASE_URL, SECRET_KEY, FRONTEND_URL, etc.)
   db.py            # engine, SessionLocal, get_db
-  auth.py          # get_current_user seam
-  models/          # Base + User, Program, Requirement, Deadline
+  auth.py          # get_current_user (JWT Bearer validation)
+  models/          # Base + User, Program, Requirement, Deadline, Recommender, OutreachContact, Document
   schemas/         # Pydantic v2 Create/Update/Read per entity
-  routers/         # programs.py, requirements.py, deadlines.py, dashboard.py, me.py
+  routers/         # programs, requirements, deadlines, recommenders, outreach, documents, dashboard, auth, me
   seed.py          # dev user + six target programs
 tests/
 alembic/
+ui/                # Next.js 14 App Router (deploy via Vercel, root dir = ui/)
+  app/
+    page.tsx           # Dashboard
+    programs/page.tsx  # Program list
+    programs/[id]/page.tsx  # Program detail (tabbed)
+    recommenders/page.tsx
+    auth/callback/page.tsx  # extracts ?token= and stores in localStorage
+  components/
+    nav.tsx, providers.tsx, require-auth.tsx, ui/…
+  lib/
+    api.ts, auth.ts, types.ts
 Dockerfile
+render.yaml
 .github/workflows/ci.yml
 pyproject.toml
 ```
+
+## UI notes
+
+- `NEXT_PUBLIC_API_URL` must be set in Vercel (e.g. `https://dossier-nrgz.onrender.com`)
+- `FRONTEND_URL` must be set in Render (e.g. `https://your-app.vercel.app`) so OAuth redirect lands back on the UI
+- JWT is stored in `localStorage` under key `dossier_token`
+- `RequireAuth` wrapper redirects to `/auth/login` if no token found
 
 ## Seed programs
 
