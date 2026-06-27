@@ -4,6 +4,7 @@ from app.routers import (
     auth,
     dashboard,
     deadlines,
+    documents,
     me,
     outreach,
     programs,
@@ -20,6 +21,7 @@ app.include_router(requirements.router)
 app.include_router(deadlines.router)
 app.include_router(recommenders.router)
 app.include_router(outreach.router)
+app.include_router(documents.router)
 app.include_router(dashboard.router)
 
 

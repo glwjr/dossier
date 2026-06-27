@@ -94,7 +94,7 @@ for auth-specific tests.
 8. ~~**Google OAuth** — `/auth/login` + `/auth/callback`, JWT-based `get_current_user`.~~ — done.
 9. ~~**Recommender CRUD** — `Recommender` (person-level) + `ProgramRecommender` junction (status, due_date).~~ — done.
 10. ~~**OutreachContact CRUD** — per-program faculty contact log.~~ — done.
-11. **Document CRUD** — per-program draft tracking.
+11. ~~**Document CRUD** — per-program draft tracking.~~ — done.
 12. **UI** — Next.js on Vercel.
 
 ---
