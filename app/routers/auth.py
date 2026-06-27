@@ -91,7 +91,10 @@ def callback(
         user.name = name
         db.commit()
 
-    return {
-        "access_token": create_access_token({"sub": email}),
-        "token_type": "bearer",
-    }
+    access_token = create_access_token({"sub": email})
+
+    if settings.frontend_url:
+        return RedirectResponse(
+            f"{settings.frontend_url}/auth/callback?token={access_token}"
+        )
+    return {"access_token": access_token, "token_type": "bearer"}
