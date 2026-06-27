@@ -6,6 +6,23 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export type OutreachResponse =
+  | "none"
+  | "positive"
+  | "negative"
+  | "meeting_scheduled";
+
+export interface OutreachCreate {
+  name: string;
+  email?: string | null;
+  url?: string | null;
+  contacted_on?: string | null;
+  response?: OutreachResponse;
+  notes?: string | null;
+}
+
+export type OutreachUpdate = Partial<OutreachCreate>;
+
 export interface RecommenderCreate {
   name: string;
   email?: string | null;

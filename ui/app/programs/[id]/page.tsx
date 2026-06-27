@@ -28,6 +28,7 @@ import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
 import { DeadlineDialog } from "@/components/deadline-dialog";
 import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
+import { OutreachDialog } from "@/components/outreach-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -372,21 +373,86 @@ function RecommendersTab({ programId }: { programId: number }) {
 }
 
 function OutreachTab({ programId }: { programId: number }) {
+  const queryClient = useQueryClient();
   const { data = [] } = useQuery<OutreachContact[]>({
     queryKey: ["outreach", programId],
     queryFn: () => api.get(`/programs/${programId}/outreach`),
   });
-  if (!data.length) return <p className="text-sm text-muted-foreground">None yet.</p>;
+
+  const deleteContact = useMutation({
+    mutationFn: (id: number) => api.delete(`/outreach/${id}`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["outreach", programId] }),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   return (
-    <Section title="Faculty outreach">
-      {data.map((c) => (
-        <Row
-          key={c.id}
-          left={<span className={RESPONSE_COLOR[c.response]}>{c.name}</span>}
-          right={OUTREACH_RESPONSE_LABEL[c.response]}
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <OutreachDialog
+          programId={programId}
+          trigger={<Button size="sm">Add contact</Button>}
         />
+      </div>
+      {data.length === 0 && (
+        <p className="text-sm text-muted-foreground">None yet.</p>
+      )}
+      {data.map((c) => (
+        <div
+          key={c.id}
+          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+        >
+          <span className={`flex-1 ${RESPONSE_COLOR[c.response]}`}>
+            {c.name}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {OUTREACH_RESPONSE_LABEL[c.response]}
+          </span>
+          <OutreachDialog
+            programId={programId}
+            contact={c}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Edit
+              </Button>
+            }
+          />
+          {confirmDelete === c.id ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  deleteContact.mutate(c.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setConfirmDelete(c.id)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       ))}
-    </Section>
+    </div>
   );
 }
 
