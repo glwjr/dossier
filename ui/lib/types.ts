@@ -6,6 +6,17 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export type DeadlineKind = "application" | "fellowship" | "fee_waiver";
+
+export interface DeadlineCreate {
+  kind: DeadlineKind;
+  due_date: string;
+  done?: boolean;
+  notes?: string | null;
+}
+
+export type DeadlineUpdate = Partial<DeadlineCreate>;
+
 export type RequirementKind =
   | "sop"
   | "cv"

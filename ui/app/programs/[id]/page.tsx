@@ -17,6 +17,7 @@ import {
 import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
+import { DeadlineDialog } from "@/components/deadline-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -183,25 +184,97 @@ function RequirementsTab({ programId }: { programId: number }) {
 }
 
 function DeadlinesTab({ programId }: { programId: number }) {
+  const queryClient = useQueryClient();
   const { data = [] } = useQuery<Deadline[]>({
     queryKey: ["deadlines", programId],
     queryFn: () => api.get(`/programs/${programId}/deadlines`),
   });
-  if (!data.length) return <p className="text-sm text-muted-foreground">None yet.</p>;
+
+  const toggleDone = useMutation({
+    mutationFn: (d: Deadline) =>
+      api.patch(`/deadlines/${d.id}`, { done: !d.done }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  const deleteDeadline = useMutation({
+    mutationFn: (id: number) => api.delete(`/deadlines/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   return (
-    <Section title="Deadlines">
-      {data.map((d) => (
-        <Row
-          key={d.id}
-          left={
-            <span className={d.done ? "line-through text-muted-foreground" : ""}>
-              {d.kind.replace("_", " ")} — {d.due_date}
-            </span>
-          }
-          right={d.done ? "done" : undefined}
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <DeadlineDialog
+          programId={programId}
+          trigger={<Button size="sm">Add deadline</Button>}
         />
+      </div>
+      {data.length === 0 && (
+        <p className="text-sm text-muted-foreground">None yet.</p>
+      )}
+      {data.map((d) => (
+        <div
+          key={d.id}
+          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+        >
+          <button
+            className={`flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
+            onClick={() => toggleDone.mutate(d)}
+          >
+            {d.kind.replace(/_/g, " ")} — {d.due_date}
+          </button>
+          <DeadlineDialog
+            programId={programId}
+            deadline={d}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Edit
+              </Button>
+            }
+          />
+          {confirmDelete === d.id ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  deleteDeadline.mutate(d.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setConfirmDelete(d.id)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       ))}
-    </Section>
+    </div>
   );
 }
 
