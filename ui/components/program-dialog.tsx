@@ -4,6 +4,10 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Program, ProgramCreate } from "@/lib/types";
+import {
+  PROGRAM_STATUS_LABEL,
+  PROGRAM_TIER_LABEL,
+} from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -146,7 +150,7 @@ export function ProgramDialog({ program, trigger, onSuccess }: Props) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{PROGRAM_TIER_LABEL[form.tier]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="reach">Reach</SelectItem>
@@ -164,7 +168,7 @@ export function ProgramDialog({ program, trigger, onSuccess }: Props) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{PROGRAM_STATUS_LABEL[form.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="researching">Researching</SelectItem>

@@ -4,17 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Program } from "@/lib/types";
+import {
+  PROGRAM_STATUS_LABEL,
+  PROGRAM_TIER_LABEL,
+  PROGRAM_TIER_VARIANT,
+} from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-const TIER_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  reach: "default",
-  match: "secondary",
-  likely: "outline",
-};
 
 function ProgramList() {
   const { data, isLoading, error } = useQuery<Program[]>({
@@ -34,13 +33,15 @@ function ProgramList() {
             <CardHeader className="pb-1">
               <div className="flex items-start justify-between gap-2">
                 <CardTitle className="text-base">{p.school}</CardTitle>
-                <Badge variant={TIER_VARIANT[p.tier]}>{p.tier}</Badge>
+                <Badge variant={PROGRAM_TIER_VARIANT[p.tier]}>
+                  {PROGRAM_TIER_LABEL[p.tier]}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{p.department}</p>
-              <p className="mt-1 text-sm capitalize text-muted-foreground">
-                {p.status}
+              <p className="mt-1 text-sm text-muted-foreground">
+                {PROGRAM_STATUS_LABEL[p.status]}
               </p>
             </CardContent>
           </Card>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Deadline, DeadlineCreate } from "@/lib/types";
+import { DEADLINE_KIND_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -104,7 +105,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{DEADLINE_KIND_LABEL[form.kind]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="application">Application</SelectItem>

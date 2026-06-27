@@ -14,6 +14,15 @@ import {
   ProgramRecommender,
   Requirement,
 } from "@/lib/types";
+import {
+  DEADLINE_KIND_LABEL,
+  DOCUMENT_KIND_LABEL,
+  DOCUMENT_STATUS_LABEL,
+  OUTREACH_RESPONSE_LABEL,
+  PROGRAM_STATUS_LABEL,
+  REC_STATUS_LABEL,
+  REQUIREMENT_STATUS_LABEL,
+} from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
@@ -76,13 +85,6 @@ function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }
   );
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  todo: "Todo",
-  in_progress: "In progress",
-  done: "Done",
-  waived: "Waived",
-};
-
 function RequirementsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<Requirement[]>({
@@ -128,7 +130,7 @@ function RequirementsTab({ programId }: { programId: number }) {
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
           >
             <SelectTrigger className="h-7 w-32 text-xs">
-              <SelectValue>{STATUS_LABEL[r.status]}</SelectValue>
+              <SelectValue>{REQUIREMENT_STATUS_LABEL[r.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todo">Todo</SelectItem>
@@ -230,7 +232,7 @@ function DeadlinesTab({ programId }: { programId: number }) {
             className={`flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
             onClick={() => toggleDone.mutate(d)}
           >
-            {d.kind.replace(/_/g, " ")} — {d.due_date}
+            {DEADLINE_KIND_LABEL[d.kind]} — {d.due_date}
           </button>
           <DeadlineDialog
             programId={programId}
@@ -278,12 +280,6 @@ function DeadlinesTab({ programId }: { programId: number }) {
     </div>
   );
 }
-
-const REC_STATUS_LABEL: Record<string, string> = {
-  asked: "Asked",
-  confirmed: "Confirmed",
-  submitted: "Submitted",
-};
 
 function RecommendersTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
@@ -387,7 +383,7 @@ function OutreachTab({ programId }: { programId: number }) {
         <Row
           key={c.id}
           left={<span className={RESPONSE_COLOR[c.response]}>{c.name}</span>}
-          right={c.contacted_on ?? undefined}
+          right={OUTREACH_RESPONSE_LABEL[c.response]}
         />
       ))}
     </Section>
@@ -406,7 +402,7 @@ function DocumentsTab({ programId }: { programId: number }) {
         <Row
           key={d.id}
           left={<span className={DOC_STATUS_COLOR[d.status]}>{d.title}</span>}
-          right={d.status.replace("_", " ")}
+          right={DOCUMENT_STATUS_LABEL[d.status]}
         />
       ))}
     </Section>
@@ -441,8 +437,8 @@ function ProgramDetail({ id }: { id: number }) {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">{program.school}</h1>
-            <Badge variant="outline" className="capitalize">
-              {program.status}
+            <Badge variant="outline">
+              {PROGRAM_STATUS_LABEL[program.status]}
             </Badge>
           </div>
           <p className="text-muted-foreground">{program.department}</p>

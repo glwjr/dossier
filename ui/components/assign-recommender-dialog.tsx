@@ -9,6 +9,7 @@ import {
   ProgramRecommenderUpdate,
   Recommender,
 } from "@/lib/types";
+import { REC_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -151,7 +152,7 @@ export function AssignRecommenderDialog({
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{REC_STATUS_LABEL[status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_OPTIONS.map((o) => (

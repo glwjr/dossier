@@ -4,23 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { DashboardEntry } from "@/lib/types";
+import {
+  PROGRAM_STATUS_LABEL,
+  PROGRAM_TIER_LABEL,
+  PROGRAM_TIER_VARIANT,
+} from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const TIER_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  reach: "default",
-  match: "secondary",
-  likely: "outline",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  researching: "Researching",
-  drafting: "Drafting",
-  submitted: "Submitted",
-  interview: "Interview",
-  decision: "Decision",
-};
 
 function ProgramCard({ entry }: { entry: DashboardEntry }) {
   const { program, completion_pct, next_deadline, days_remaining, blocking_requirements } =
@@ -36,8 +27,10 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
               <p className="text-sm text-muted-foreground">{program.department}</p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Badge variant={TIER_VARIANT[program.tier]}>{program.tier}</Badge>
-              <Badge variant="outline">{STATUS_LABEL[program.status]}</Badge>
+              <Badge variant={PROGRAM_TIER_VARIANT[program.tier]}>
+                {PROGRAM_TIER_LABEL[program.tier]}
+              </Badge>
+              <Badge variant="outline">{PROGRAM_STATUS_LABEL[program.status]}</Badge>
             </div>
           </div>
         </CardHeader>

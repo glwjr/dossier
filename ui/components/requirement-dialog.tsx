@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Requirement, RequirementCreate } from "@/lib/types";
+import { REQUIREMENT_KIND_LABEL, REQUIREMENT_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -121,7 +122,7 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{REQUIREMENT_KIND_LABEL[form.kind]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="sop">SOP</SelectItem>
@@ -143,7 +144,7 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{REQUIREMENT_STATUS_LABEL[form.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todo">Todo</SelectItem>
