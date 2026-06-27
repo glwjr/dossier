@@ -16,8 +16,16 @@ import {
 } from "@/lib/types";
 import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
+import { RequirementDialog } from "@/components/requirement-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -66,22 +74,111 @@ function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }
   );
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  todo: "Todo",
+  in_progress: "In progress",
+  done: "Done",
+  waived: "Waived",
+};
+
 function RequirementsTab({ programId }: { programId: number }) {
+  const queryClient = useQueryClient();
   const { data = [] } = useQuery<Requirement[]>({
     queryKey: ["requirements", programId],
     queryFn: () => api.get(`/programs/${programId}/requirements`),
   });
-  if (!data.length) return <p className="text-sm text-muted-foreground">None yet.</p>;
+
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      api.patch(`/requirements/${id}`, { status }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["requirements", programId] }),
+  });
+
+  const deleteReq = useMutation({
+    mutationFn: (id: number) => api.delete(`/requirements/${id}`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["requirements", programId] }),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   return (
-    <Section title="Requirements">
-      {data.map((r) => (
-        <Row
-          key={r.id}
-          left={<span className={STATUS_COLOR[r.status]}>{r.label}</span>}
-          right={r.due_date ?? undefined}
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <RequirementDialog
+          programId={programId}
+          trigger={<Button size="sm">Add requirement</Button>}
         />
+      </div>
+      {data.length === 0 && (
+        <p className="text-sm text-muted-foreground">None yet.</p>
+      )}
+      {data.map((r) => (
+        <div
+          key={r.id}
+          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+        >
+          <span className={`flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+          <span className="text-xs text-muted-foreground">{r.due_date}</span>
+          <Select
+            value={r.status}
+            onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
+          >
+            <SelectTrigger className="h-7 w-32 text-xs">
+              <SelectValue>{STATUS_LABEL[r.status]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todo">Todo</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+              <SelectItem value="waived">Waived</SelectItem>
+            </SelectContent>
+          </Select>
+          <RequirementDialog
+            programId={programId}
+            requirement={r}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                Edit
+              </Button>
+            }
+          />
+          {confirmDelete === r.id ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  deleteReq.mutate(r.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setConfirmDelete(r.id)}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       ))}
-    </Section>
+    </div>
   );
 }
 

@@ -6,6 +6,27 @@ export type ProgramStatus =
   | "interview"
   | "decision";
 
+export type RequirementKind =
+  | "sop"
+  | "cv"
+  | "transcript"
+  | "gre"
+  | "writing_sample"
+  | "fee"
+  | "other";
+
+export type RequirementStatus = "todo" | "in_progress" | "done" | "waived";
+
+export interface RequirementCreate {
+  label: string;
+  kind: RequirementKind;
+  status: RequirementStatus;
+  due_date?: string | null;
+  notes?: string | null;
+}
+
+export type RequirementUpdate = Partial<RequirementCreate>;
+
 export interface ProgramCreate {
   school: string;
   department: string;
