@@ -1,6 +1,14 @@
 from fastapi import FastAPI
 
-from app.routers import auth, dashboard, deadlines, me, programs, requirements
+from app.routers import (
+    auth,
+    dashboard,
+    deadlines,
+    me,
+    programs,
+    recommenders,
+    requirements,
+)
 
 app = FastAPI(title="Dossier")
 
@@ -9,6 +17,7 @@ app.include_router(me.router)
 app.include_router(programs.router)
 app.include_router(requirements.router)
 app.include_router(deadlines.router)
+app.include_router(recommenders.router)
 app.include_router(dashboard.router)
 
 

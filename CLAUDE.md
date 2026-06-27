@@ -92,6 +92,10 @@ for auth-specific tests.
 6. ~~**Dashboard** aggregation endpoint~~ — done.
 7. ~~**Seed the six programs**, README, final green pass.~~ — done. Phase 1 complete.
 8. ~~**Google OAuth** — `/auth/login` + `/auth/callback`, JWT-based `get_current_user`.~~ — done.
+9. ~~**Recommender CRUD** — `Recommender` (person-level) + `ProgramRecommender` junction (status, due_date).~~ — done.
+10. **OutreachContact CRUD** — per-program faculty contact log.
+11. **Document CRUD** — per-program draft tracking.
+12. **UI** — Next.js on Vercel.
 
 ---
 
