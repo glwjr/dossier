@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { formatDate } from "@/lib/display";
 import { DashboardEntry } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
@@ -51,7 +52,7 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Next deadline</span>
             <span>
-              {next_deadline ? `${next_deadline} (${days_remaining}d)` : "—"}
+              {next_deadline ? `${formatDate(next_deadline)} (${days_remaining}d)` : "—"}
             </span>
           </div>
 

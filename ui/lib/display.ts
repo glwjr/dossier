@@ -1,3 +1,15 @@
+// Formats a YYYY-MM-DD string as "Dec 1, 2025". Returns "" for falsy input.
+export function formatDate(date: string | null | undefined): string {
+  if (!date) return "";
+  // Parse as local date to avoid UTC-offset day shift
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export const PROGRAM_TIER_LABEL: Record<string, string> = {
   reach: "Reach",
   match: "Match",

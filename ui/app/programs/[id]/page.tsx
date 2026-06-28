@@ -22,6 +22,7 @@ import {
   PROGRAM_STATUS_LABEL,
   REC_STATUS_LABEL,
   REQUIREMENT_STATUS_LABEL,
+  formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ProgramDialog } from "@/components/program-dialog";
@@ -126,7 +127,7 @@ function RequirementsTab({ programId }: { programId: number }) {
           className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
         >
           <span className={`flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
-          <span className="text-xs text-muted-foreground">{r.due_date}</span>
+          <span className="text-xs text-muted-foreground">{formatDate(r.due_date)}</span>
           <Select
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
@@ -234,7 +235,7 @@ function DeadlinesTab({ programId }: { programId: number }) {
             className={`flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
             onClick={() => toggleDone.mutate(d)}
           >
-            {DEADLINE_KIND_LABEL[d.kind]} — {d.due_date}
+            {DEADLINE_KIND_LABEL[d.kind]} — {formatDate(d.due_date)}
           </button>
           <DeadlineDialog
             programId={programId}
@@ -325,6 +326,7 @@ function RecommendersTab({ programId }: { programId: number }) {
           </span>
           <span className="text-xs text-muted-foreground">
             {REC_STATUS_LABEL[pr.status]}
+            {pr.due_date ? ` · ${formatDate(pr.due_date)}` : ""}
           </span>
           <AssignRecommenderDialog
             programId={programId}
@@ -408,7 +410,7 @@ function OutreachTab({ programId }: { programId: number }) {
             {c.name}
           </span>
           <span className="text-xs text-muted-foreground">
-            {OUTREACH_RESPONSE_LABEL[c.response]}
+            {c.contacted_on ? formatDate(c.contacted_on) : OUTREACH_RESPONSE_LABEL[c.response]}
           </span>
           <OutreachDialog
             programId={programId}
@@ -605,16 +607,19 @@ function ProgramDetail({ id }: { id: number }) {
             </Badge>
           </div>
           <p className="text-muted-foreground">{program.department}</p>
-          {program.url && (
-            <a
-              href={program.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground underline underline-offset-2 hover:opacity-70"
-            >
-              {program.url}
-            </a>
-          )}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {program.app_fee != null && <span>${program.app_fee} application fee</span>}
+            {program.url && (
+              <a
+                href={program.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:opacity-70"
+              >
+                Program website
+              </a>
+            )}
+          </div>
           {program.notes && (
             <p className="text-sm text-muted-foreground">{program.notes}</p>
           )}
