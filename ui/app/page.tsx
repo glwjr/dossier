@@ -138,6 +138,9 @@ function Dashboard() {
   ).length;
   const blockingCount = visible.reduce((sum, e) => sum + e.blocking_requirements.length, 0);
   const totalFees = visible.reduce((sum, e) => sum + (e.program.app_fee ?? 0), 0);
+  const acceptedCount = visible.filter((e) => e.program.status === "accepted").length;
+  const waitlistedCount = visible.filter((e) => e.program.status === "waitlisted").length;
+  const rejectedCount = visible.filter((e) => e.program.status === "rejected").length;
 
   const sorted = [...visible].sort((a, b) => {
     if (a.days_remaining === null) return 1;
@@ -157,51 +160,74 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:flex-1 sm:grid-cols-4">
           <div className="rounded-md border px-3 py-1.5 text-sm">
             <span className="font-medium">{totalPrograms}</span>
             <span className="ml-1 text-muted-foreground">
               {totalPrograms === 1 ? "program" : "programs"}
             </span>
           </div>
-          {totalFees > 0 && (
+          {filter === "decided" ? (
             <div className="rounded-md border px-3 py-1.5 text-sm">
-              <span className="font-medium">${totalFees.toLocaleString()}</span>
+              <span className="font-medium text-green-600 dark:text-green-500">{acceptedCount}</span>
+              <span className="ml-1 text-muted-foreground">accepted</span>
+            </div>
+          ) : (
+            <div className="rounded-md border px-3 py-1.5 text-sm">
+              <span className="font-medium">
+                {totalFees > 0 ? `$${totalFees.toLocaleString()}` : "—"}
+              </span>
               <span className="ml-1 text-muted-foreground">in fees</span>
             </div>
           )}
-          <div className="rounded-md border px-3 py-1.5 text-sm">
-            <span className={`font-medium ${upcomingDeadlines > 0 ? "text-destructive" : ""}`}>
-              {upcomingDeadlines}
-            </span>
-            <span className="ml-1 text-muted-foreground">
-              {upcomingDeadlines === 1 ? "deadline" : "deadlines"} this month
-            </span>
-          </div>
-          <div className="rounded-md border px-3 py-1.5 text-sm">
-            <span className={`font-medium ${blockingCount > 0 ? "text-destructive" : "text-green-600 dark:text-green-500"}`}>
-              {blockingCount}
-            </span>
-            <span className="ml-1 text-muted-foreground">
-              {blockingCount === 1 ? "requirement" : "requirements"} blocking
-            </span>
-          </div>
+          {filter === "decided" ? (
+            <div className="rounded-md border px-3 py-1.5 text-sm">
+              <span className="font-medium">{waitlistedCount}</span>
+              <span className="ml-1 text-muted-foreground">waitlisted</span>
+            </div>
+          ) : (
+            <div className="rounded-md border px-3 py-1.5 text-sm">
+              <span className={`font-medium ${upcomingDeadlines > 0 ? "text-destructive" : ""}`}>
+                {upcomingDeadlines}
+              </span>
+              <span className="ml-1 text-muted-foreground">
+                {upcomingDeadlines === 1 ? "deadline" : "deadlines"} this month
+              </span>
+            </div>
+          )}
+          {filter === "decided" ? (
+            <div className="rounded-md border px-3 py-1.5 text-sm">
+              <span className="font-medium text-muted-foreground">{rejectedCount}</span>
+              <span className="ml-1 text-muted-foreground">rejected</span>
+            </div>
+          ) : (
+            <div className="rounded-md border px-3 py-1.5 text-sm">
+              <span className={`font-medium ${blockingCount > 0 ? "text-destructive" : "text-green-600 dark:text-green-500"}`}>
+                {blockingCount}
+              </span>
+              <span className="ml-1 text-muted-foreground">
+                {blockingCount === 1 ? "requirement" : "requirements"} blocking
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center rounded-md border text-sm">
-          {FILTERS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setFilter(value)}
-              className={`px-3 py-1.5 transition-colors first:rounded-l-md last:rounded-r-md ${
-                filter === value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex sm:justify-start">
+          <div className="flex w-full shrink-0 items-center rounded-md border text-sm sm:w-auto">
+            {FILTERS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setFilter(value)}
+                className={`flex-1 px-3 py-1.5 text-center transition-colors first:rounded-l-md last:rounded-r-md sm:flex-none ${
+                  filter === value
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {upcomingList.length > 0 && (
