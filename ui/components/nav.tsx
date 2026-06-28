@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser } from "lucide-react";
+import { CircleUser, FileText, Search } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -38,6 +38,21 @@ export function Nav() {
               {label}
             </Link>
           ))}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+            title="Search (⌘K)"
+            aria-label="Search"
+            className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          <Link
+            href="/documents"
+            title="Documents"
+            className={`transition-colors hover:text-foreground ${pathname === "/documents" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <FileText className="h-4 w-4" />
+          </Link>
           <Link
             href="/account"
             title="Account"
@@ -97,6 +112,19 @@ export function Nav() {
                 {label}
               </Link>
             ))}
+            <button
+              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}
+            >
+              Search
+            </button>
+            <Link
+              href="/documents"
+              className={linkClass("/documents")}
+              onClick={() => setOpen(false)}
+            >
+              Documents
+            </Link>
             <Link
               href="/account"
               className={linkClass("/account")}
