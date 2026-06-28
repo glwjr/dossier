@@ -110,7 +110,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
         {trigger}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-full max-w-lg">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit program" : "New program"}</DialogTitle>
           </DialogHeader>

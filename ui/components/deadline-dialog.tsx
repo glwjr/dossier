@@ -91,7 +91,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
         {trigger}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-full max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Edit deadline" : "Add deadline"}

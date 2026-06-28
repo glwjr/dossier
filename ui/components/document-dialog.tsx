@@ -92,7 +92,7 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
         {trigger}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-full max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Edit document" : "Add document"}
