@@ -80,7 +80,21 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
   if (error)
     return <p className="text-destructive">Failed to load recommenders.</p>;
   if (!data?.length)
-    return <p className="text-muted-foreground">No recommenders yet.</p>;
+    return (
+      <div className="rounded-lg border border-dashed px-6 py-12 text-center">
+        <p className="text-sm font-medium">No recommenders yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add the people writing your letters and track their status per program.
+        </p>
+        <RecommenderDialog
+          trigger={
+            <button className="mt-4 text-sm underline underline-offset-4">
+              Add your first recommender →
+            </button>
+          }
+        />
+      </div>
+    );
 
   const filtered =
     statusFilter === "all"

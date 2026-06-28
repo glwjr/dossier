@@ -99,13 +99,18 @@ function TimelineInner() {
 
   if (data.length === 0)
     return (
-      <p className="text-muted-foreground">
-        No deadlines yet.{" "}
-        <Link href="/programs" className="underline">
-          Add one from a program
+      <div className="rounded-lg border border-dashed px-6 py-12 text-center">
+        <p className="text-sm font-medium">No deadlines yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add deadlines from a program's detail page and they'll appear here.
+        </p>
+        <Link
+          href="/programs"
+          className="mt-4 inline-block text-sm underline underline-offset-4"
+        >
+          Go to programs →
         </Link>
-        .
-      </p>
+      </div>
     );
 
   return (
