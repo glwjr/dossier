@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { User } from "@/lib/types";
-import { clearToken, redirectToHome } from "@/lib/auth";
+import { clearToken, getToken, redirectToHome } from "@/lib/auth";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { formatDate } from "@/lib/display";
@@ -20,6 +20,22 @@ function AccountInner() {
   function handleSignOut() {
     clearToken();
     redirectToHome();
+  }
+
+  async function handleExport() {
+    const token = getToken();
+    if (!token) return;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/export`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dossier-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   if (isLoading)
@@ -52,9 +68,14 @@ function AccountInner() {
           </p>
         </div>
       </div>
-      <Button variant="outline" onClick={handleSignOut}>
-        Sign out
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={handleExport}>
+          Export my data
+        </Button>
+        <Button variant="outline" onClick={handleSignOut}>
+          Sign out
+        </Button>
+      </div>
     </div>
   );
 }
