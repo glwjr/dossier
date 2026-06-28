@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { DeadlineWithProgram } from "@/lib/types";
 import { DEADLINE_KIND_LABEL, formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -227,6 +228,7 @@ function TimelineInner() {
 }
 
 export default function TimelinePage() {
+  usePageTitle("Timeline");
   return (
     <RequireAuth>
       <h1 className="mb-6 text-2xl font-semibold">Timeline</h1>

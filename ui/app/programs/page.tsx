@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type SortKey = "school" | "tier" | "status";
 
@@ -155,6 +156,7 @@ function ProgramList({
 }
 
 export default function ProgramsPage() {
+  usePageTitle("Programs");
   const [sort, setSort] = useState<SortKey>("school");
   const [tierFilter, setTierFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");

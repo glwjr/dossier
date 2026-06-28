@@ -12,6 +12,7 @@ import {
   PROGRAM_TIER_VARIANT,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { usePageTitle } from "@/lib/use-page-title";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -147,6 +148,7 @@ function Dashboard() {
 }
 
 export default function DashboardPage() {
+  usePageTitle("Dashboard");
   return (
     <RequireAuth>
       <h1 className="mb-6 text-2xl font-semibold">Dashboard</h1>

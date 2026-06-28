@@ -42,7 +42,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 
 const STATUS_COLOR: Record<string, string> = {
   todo: "text-muted-foreground",
@@ -539,10 +541,11 @@ function DocumentsTab({ programId }: { programId: number }) {
                 href={d.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:opacity-70"
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
                 onClick={(e) => e.stopPropagation()}
               >
                 {d.title}
+                <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             ) : (
               d.title
@@ -624,6 +627,8 @@ function ProgramDetail({ id }: { id: number }) {
     queryKey: ["program", id],
     queryFn: () => api.get(`/programs/${id}`),
   });
+
+  usePageTitle(program ? program.school : "Program");
 
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/programs/${id}`),

@@ -12,7 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   asked: "outline",
@@ -20,7 +28,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   submitted: "default",
 };
 
-function RecommenderList() {
+function RecommenderList({ statusFilter }: { statusFilter: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<Recommender[]>({
     queryKey: ["recommenders"],
@@ -61,9 +69,19 @@ function RecommenderList() {
   if (!data?.length)
     return <p className="text-muted-foreground">No recommenders yet.</p>;
 
+  const filtered =
+    statusFilter === "all"
+      ? data
+      : data.filter((r) =>
+          r.program_assignments.some((a) => a.status === statusFilter)
+        );
+
+  if (filtered.length === 0)
+    return <p className="text-muted-foreground">No recommenders match the current filter.</p>;
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {data.map((r) => (
+      {filtered.map((r) => (
         <Card key={r.id}>
           <CardHeader className="pb-1">
             <div className="flex items-start justify-between gap-2">
@@ -155,13 +173,31 @@ function RecommenderList() {
 }
 
 export default function RecommendersPage() {
+  usePageTitle("Recommenders");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   return (
     <RequireAuth>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Recommenders</h1>
-        <RecommenderDialog trigger={<Button>Add recommender</Button>} />
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
+            <SelectTrigger className="h-9 w-36 text-sm">
+              <SelectValue>
+                {statusFilter === "all" ? "All statuses" : REC_STATUS_LABEL[statusFilter as keyof typeof REC_STATUS_LABEL]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="asked">Asked</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="submitted">Submitted</SelectItem>
+            </SelectContent>
+          </Select>
+          <RecommenderDialog trigger={<Button>Add recommender</Button>} />
+        </div>
       </div>
-      <RecommenderList />
+      <RecommenderList statusFilter={statusFilter} />
     </RequireAuth>
   );
 }
