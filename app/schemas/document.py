@@ -32,3 +32,15 @@ class DocumentRead(BaseModel):
     url: str | None
     notes: str | None
     updated_at: datetime
+
+
+class ProgramSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    school: str
+    department: str
+
+
+class DocumentWithProgramRead(DocumentRead):
+    program: ProgramSummary

@@ -96,6 +96,12 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
       </div>
     );
 
+  const pending = data.flatMap((r) =>
+    r.program_assignments
+      .filter((a) => a.status !== "submitted")
+      .map((a) => ({ rec: r, assignment: a }))
+  );
+
   const filtered =
     statusFilter === "all"
       ? data
@@ -107,7 +113,27 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
     return <p className="text-muted-foreground">No recommenders match the current filter.</p>;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="space-y-6">
+      {pending.length > 0 && (
+        <div className="rounded-lg border border-yellow-500/40 bg-yellow-500/5 px-4 py-3">
+          <p className="mb-2 text-sm font-medium">Pending letters ({pending.length})</p>
+          <div className="space-y-1">
+            {pending.map(({ rec, assignment }) => (
+              <div key={`${rec.id}-${assignment.program_id}`} className="flex items-center justify-between gap-4 text-xs">
+                <span className="font-medium">{rec.name}</span>
+                <span className="text-muted-foreground">
+                  <Link href={`/programs/${assignment.program_id}?tab=recommenders`} className="hover:underline">
+                    {assignment.program.school}
+                  </Link>
+                  {" · "}
+                  {REC_STATUS_LABEL[assignment.status]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2">
       {filtered.map((r) => (
         <Card key={r.id}>
           <CardHeader className="pb-1">
@@ -216,6 +242,7 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
           </CardContent>
         </Card>
       ))}
+      </div>
     </div>
   );
 }

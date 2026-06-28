@@ -246,6 +246,12 @@ function TimelineInner() {
                   key={key}
                   className={`flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-opacity ${
                     item.isDone ? "opacity-50" : ""
+                  } ${
+                    !item.isDone && days < 0
+                      ? "border-l-4 border-l-destructive"
+                      : !item.isDone && days <= 7
+                      ? "border-l-4 border-l-yellow-500"
+                      : ""
                   }`}
                 >
                   <Checkbox

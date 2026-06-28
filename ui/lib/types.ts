@@ -202,6 +202,10 @@ export interface Document {
   updated_at: string;
 }
 
+export interface DocumentWithProgram extends Document {
+  program: { id: number; school: string; department: string };
+}
+
 export interface DashboardRequirement {
   id: number;
   label: string;

@@ -7,9 +7,22 @@ from app.db import get_db
 from app.models.document import Document
 from app.models.program import Program
 from app.models.user import User
-from app.schemas.document import DocumentCreate, DocumentRead, DocumentUpdate
+from app.schemas.document import DocumentCreate, DocumentRead, DocumentUpdate, DocumentWithProgramRead
 
 router = APIRouter(tags=["documents"])
+
+
+@router.get("/documents", response_model=list[DocumentWithProgramRead])
+def list_all_documents(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.scalars(
+        select(Document)
+        .join(Program, Document.program_id == Program.id)
+        .where(Program.user_id == current_user.id)
+        .order_by(Document.program_id, Document.id)
+    ).all()
 
 
 def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:
