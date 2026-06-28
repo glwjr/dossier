@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -9,6 +9,14 @@ import { DEADLINE_KIND_LABEL, formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const KIND_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   application: "default",
@@ -19,6 +27,8 @@ const KIND_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
 function TimelineInner() {
   const queryClient = useQueryClient();
   const [showAll, setShowAll] = useState(false);
+  const [programFilter, setProgramFilter] = useState("all");
+  const [kindFilter, setKindFilter] = useState("all");
 
   const { data = [], isLoading } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
@@ -34,7 +44,18 @@ function TimelineInner() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const visible = showAll ? data : data.filter((d) => !d.done);
+  const programs = useMemo(() => {
+    const seen = new Map<number, { id: number; school: string }>();
+    for (const d of data) {
+      if (!seen.has(d.program.id)) seen.set(d.program.id, d.program);
+    }
+    return [...seen.values()].sort((a, b) => a.school.localeCompare(b.school));
+  }, [data]);
+
+  const visible = data
+    .filter((d) => showAll || !d.done)
+    .filter((d) => programFilter === "all" || d.program.id === Number(programFilter))
+    .filter((d) => kindFilter === "all" || d.kind === kindFilter);
 
   const grouped = visible.reduce<Record<string, DeadlineWithProgram[]>>(
     (acc, d) => {
@@ -58,11 +79,21 @@ function TimelineInner() {
   function daysRemaining(dueDateStr: string) {
     const [y, m, d] = dueDateStr.split("-").map(Number);
     const due = new Date(y, m - 1, d);
-    const diff = Math.ceil((due.getTime() - today.getTime()) / 86400000);
-    return diff;
+    return Math.ceil((due.getTime() - today.getTime()) / 86400000);
   }
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full" />
+        ))}
+      </div>
+    );
 
   if (data.length === 0)
     return (
@@ -76,30 +107,54 @@ function TimelineInner() {
     );
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {data.filter((d) => !d.done).length} upcoming ·{" "}
-          {data.filter((d) => d.done).length} done
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAll((v) => !v)}
-        >
-          {showAll ? "Hide done" : "Show all"}
-        </Button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={programFilter} onValueChange={(v) => v && setProgramFilter(v)}>
+          <SelectTrigger className="h-9 w-44 text-sm">
+            <SelectValue>
+              {programFilter === "all"
+                ? "All programs"
+                : programs.find((p) => String(p.id) === programFilter)?.school ?? "All programs"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All programs</SelectItem>
+            {programs.map((p) => (
+              <SelectItem key={p.id} value={String(p.id)}>
+                {p.school}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={kindFilter} onValueChange={(v) => v && setKindFilter(v)}>
+          <SelectTrigger className="h-9 w-36 text-sm">
+            <SelectValue>
+              {kindFilter === "all" ? "All types" : DEADLINE_KIND_LABEL[kindFilter as keyof typeof DEADLINE_KIND_LABEL]}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            <SelectItem value="application">Application</SelectItem>
+            <SelectItem value="fellowship">Fellowship</SelectItem>
+            <SelectItem value="fee_waiver">Fee waiver</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="ml-auto flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {data.filter((d) => !d.done).length} upcoming ·{" "}
+            {data.filter((d) => d.done).length} done
+          </p>
+          <Button variant="outline" size="sm" onClick={() => setShowAll((v) => !v)}>
+            {showAll ? "Hide done" : "Show all"}
+          </Button>
+        </div>
       </div>
 
       {visible.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          All deadlines are done.{" "}
-          <button
-            className="underline"
-            onClick={() => setShowAll(true)}
-          >
-            Show anyway
-          </button>
+          Nothing matches the current filters.
         </p>
       )}
 
