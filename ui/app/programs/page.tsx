@@ -25,7 +25,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
-import { LayoutList, LayoutGrid } from "lucide-react";
+import { LayoutList, LayoutGrid, Download } from "lucide-react";
+import { toast } from "sonner";
 
 type SortKey = "school" | "tier" | "status";
 
@@ -201,9 +202,23 @@ function ProgramList({
 
 function BoardView({ tierFilter, search }: { tierFilter: string; search: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<ProgramStatus | null>(null);
+
   const { data, isLoading, error } = useQuery<Program[]>({
     queryKey: ["programs"],
     queryFn: () => api.get("/programs"),
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: ProgramStatus }) =>
+      api.patch<Program>(`/programs/${id}`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   if (isLoading)
@@ -250,8 +265,29 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
       <div className="flex gap-3 min-w-max">
         {BOARD_STATUSES.map((status) => {
           const col = filtered.filter((p) => p.status === status);
+          const isOver = dragOverStatus === status;
           return (
-            <div key={status} className="w-56 shrink-0 space-y-2">
+            <div
+              key={status}
+              className={`w-56 shrink-0 space-y-2 rounded-lg p-1 transition-colors ${isOver ? "bg-muted/60" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOverStatus(status); }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setDragOverStatus(null);
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedId !== null) {
+                  const program = data.find((p) => p.id === draggedId);
+                  if (program && program.status !== status) {
+                    updateStatus.mutate({ id: draggedId, status });
+                  }
+                }
+                setDraggedId(null);
+                setDragOverStatus(null);
+              }}
+            >
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {PROGRAM_STATUS_LABEL[status]}
@@ -259,15 +295,21 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
                 <span className="text-xs text-muted-foreground">{col.length}</span>
               </div>
               {col.length === 0 && (
-                <div className="rounded-md border border-dashed px-3 py-5 text-center text-xs text-muted-foreground">
-                  None
+                <div className={`rounded-md border border-dashed px-3 py-5 text-center text-xs text-muted-foreground transition-colors ${isOver ? "border-primary/40 bg-primary/5" : ""}`}>
+                  Drop here
                 </div>
               )}
               {col.map((p) => (
                 <Card
                   key={p.id}
-                  className="cursor-pointer transition-shadow hover:shadow-md"
-                  onClick={() => router.push(`/programs/${p.id}`)}
+                  draggable
+                  className={`cursor-grab transition-shadow hover:shadow-md active:cursor-grabbing ${draggedId === p.id ? "opacity-50" : ""}`}
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    setDraggedId(p.id);
+                  }}
+                  onDragEnd={() => { setDraggedId(null); setDragOverStatus(null); }}
+                  onClick={() => { if (draggedId === null) router.push(`/programs/${p.id}`); }}
                 >
                   <CardHeader className="px-3 pb-1 pt-3">
                     <div className="flex items-start justify-between gap-1">
@@ -298,6 +340,33 @@ function ProgramsInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [newProgramOpen, setNewProgramOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  function handleExport() {
+    const programs = queryClient.getQueryData<Program[]>(["programs"]);
+    if (!programs?.length) return;
+    const headers = ["School", "Department", "Degree", "Tier", "Status", "App Fee", "URL", "Notes"];
+    const rows = programs.map((p) => [
+      p.school,
+      p.department,
+      p.degree,
+      p.tier,
+      p.status,
+      p.app_fee ?? "",
+      p.url ?? "",
+      p.notes ?? "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dossier-programs.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -355,6 +424,9 @@ function ProgramsInner() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
+          <Button variant="outline" size="icon" onClick={handleExport} aria-label="Export CSV" title="Export CSV">
+            <Download className="h-4 w-4" />
+          </Button>
           <ProgramDialog
             trigger={<Button>New program</Button>}
             open={newProgramOpen}
