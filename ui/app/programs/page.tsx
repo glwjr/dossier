@@ -128,14 +128,21 @@ function ProgramCard({ program }: { program: Program }) {
             className="w-full resize-none rounded border border-border bg-background px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             rows={2}
           />
-        ) : (
-          <p
-            className={`cursor-pointer truncate text-xs ${program.notes ? "text-muted-foreground hover:opacity-70" : "text-muted-foreground/0 group-hover:text-muted-foreground/40"}`}
-            onClick={(e) => { e.stopPropagation(); setEditingNotes(true); setNotesValue(program.notes ?? ""); }}
-          >
-            {program.notes || "Add note…"}
-          </p>
-        )}
+        ) : program.notes ? (
+            <p
+              className="cursor-pointer truncate text-xs text-muted-foreground hover:opacity-70"
+              onClick={(e) => { e.stopPropagation(); setEditingNotes(true); setNotesValue(program.notes ?? ""); }}
+            >
+              {program.notes}
+            </p>
+          ) : (
+            <button
+              className="w-full rounded border border-dashed border-transparent px-2 py-0.5 text-left text-xs text-muted-foreground/0 opacity-0 transition-opacity group-hover:border-muted-foreground/20 group-hover:text-muted-foreground/50 group-hover:opacity-100 hover:!border-muted-foreground/40 hover:!text-muted-foreground"
+              onClick={(e) => { e.stopPropagation(); setEditingNotes(true); setNotesValue(""); }}
+            >
+              + Add note
+            </button>
+          )}
         <div onClick={(e) => e.stopPropagation()}>
           <Select
             value={program.status}
