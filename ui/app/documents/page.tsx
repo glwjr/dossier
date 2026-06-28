@@ -167,7 +167,7 @@ function DocumentsInner() {
             className="h-9 w-48 text-sm"
           />
           <Select value={kindFilter} onValueChange={(v) => v && setParam("kind", v)}>
-            <SelectTrigger className="h-9 w-40 text-sm">
+            <SelectTrigger className="h-9 w-52 text-sm">
               <SelectValue>
                 {kindFilter === "all" ? "All kinds" : DOCUMENT_KIND_LABEL[kindFilter]}
               </SelectValue>
@@ -207,7 +207,7 @@ function DocumentsPageSkeleton() {
       <div className="mb-6 flex items-center justify-between">
         <Skeleton className="h-8 w-36" />
         <div className="flex gap-2">
-          <Skeleton className="h-9 w-40" />
+          <Skeleton className="h-9 w-52" />
           <Skeleton className="h-9 w-36" />
         </div>
       </div>
