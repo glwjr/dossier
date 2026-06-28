@@ -596,31 +596,31 @@ function ProgramsInner() {
           />
         </div>
       </div>
-      <div className="mb-6 flex flex-wrap items-center gap-2">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search school or department…"
           value={search}
           onChange={(e) => setParam("q", e.target.value)}
-          className="h-9 w-56 text-sm"
+          className="h-9 text-sm sm:flex-1"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={tierFilter} onValueChange={(v) => v && setParam("tier", v)}>
-            <SelectTrigger className="h-9 w-28 text-sm">
-              <SelectValue>
-                {tierFilter === "all" ? "All tiers" : PROGRAM_TIER_LABEL[tierFilter as keyof typeof PROGRAM_TIER_LABEL]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tiers</SelectItem>
-              <SelectItem value="reach">Reach</SelectItem>
-              <SelectItem value="match">Match</SelectItem>
-              <SelectItem value="likely">Likely</SelectItem>
-            </SelectContent>
-          </Select>
-          {view === "list" && (
-            <>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex gap-2">
+            <Select value={tierFilter} onValueChange={(v) => v && setParam("tier", v)}>
+              <SelectTrigger className="h-9 flex-1 text-sm sm:w-28 sm:flex-none">
+                <SelectValue>
+                  {tierFilter === "all" ? "All tiers" : PROGRAM_TIER_LABEL[tierFilter as keyof typeof PROGRAM_TIER_LABEL]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All tiers</SelectItem>
+                <SelectItem value="reach">Reach</SelectItem>
+                <SelectItem value="match">Match</SelectItem>
+                <SelectItem value="likely">Likely</SelectItem>
+              </SelectContent>
+            </Select>
+            {view === "list" && (
               <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
-                <SelectTrigger className="h-9 w-36 text-sm">
+                <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
                   <SelectValue>
                     {statusFilter === "all" ? "All statuses" : PROGRAM_STATUS_LABEL[statusFilter as keyof typeof PROGRAM_STATUS_LABEL]}
                   </SelectValue>
@@ -636,20 +636,22 @@ function ProgramsInner() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
-                <SelectTrigger className="h-9 w-36 text-sm">
-                  <SelectValue>
-                    {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : sort === "status" ? "Sort: Status" : "Sort: Deadline"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="school">Sort: Name</SelectItem>
-                  <SelectItem value="tier">Sort: Tier</SelectItem>
-                  <SelectItem value="status">Sort: Status</SelectItem>
-                  <SelectItem value="deadline">Sort: Deadline</SelectItem>
-                </SelectContent>
-              </Select>
-            </>
+            )}
+          </div>
+          {view === "list" && (
+            <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
+              <SelectTrigger className="h-9 w-auto text-sm sm:w-36">
+                <SelectValue>
+                  {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : sort === "status" ? "Sort: Status" : "Sort: Deadline"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="school">Sort: Name</SelectItem>
+                <SelectItem value="tier">Sort: Tier</SelectItem>
+                <SelectItem value="status">Sort: Status</SelectItem>
+                <SelectItem value="deadline">Sort: Deadline</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         </div>
       </div>
