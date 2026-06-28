@@ -133,12 +133,12 @@ function ProgramList({
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
         <p className="text-sm font-medium">No programs yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add the schools you're applying to and track everything in one place.
+          Hit the button above or add one here.
         </p>
         <ProgramDialog
           trigger={
             <button className="mt-4 text-sm underline underline-offset-4">
-              Add your first program →
+              Add a program →
             </button>
           }
         />

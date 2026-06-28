@@ -107,9 +107,9 @@ function Dashboard() {
   if (!data?.length)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
-        <p className="text-sm font-medium">No programs yet</p>
+        <p className="text-sm font-medium">Welcome to Dossier</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Start by adding the schools you're applying to.
+          Track every school, deadline, and letter of recommendation in one place.
         </p>
         <Link
           href="/programs"
