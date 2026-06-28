@@ -14,21 +14,21 @@ from app.models.user import User
 _PROGRAMS = [
     {
         "school": "State University",
-        "department": "Computer Science",
+        "department": "Linguistics",
         "degree": "PhD",
         "tier": Tier.likely,
         "status": ProgramStatus.researching,
     },
     {
         "school": "Tech Institute",
-        "department": "Computer Science",
+        "department": "Cognitive Science",
         "degree": "PhD",
         "tier": Tier.match,
         "status": ProgramStatus.researching,
     },
     {
         "school": "Prestige University",
-        "department": "Computer Science",
+        "department": "Linguistics",
         "degree": "PhD",
         "tier": Tier.reach,
         "status": ProgramStatus.researching,

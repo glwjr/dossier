@@ -3,6 +3,7 @@ services:
     name: dossier
     runtime: docker
     plan: free
+    healthCheckPath: /
     envVars:
       - key: DATABASE_URL
         fromDatabase:
