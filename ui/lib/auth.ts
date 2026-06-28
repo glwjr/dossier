@@ -20,3 +20,7 @@ export function clearToken(): void {
 export function redirectToLogin(): void {
   window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
 }
+
+export function redirectToHome(): void {
+  window.location.href = "https://dossiertool.com";
+}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clearToken, redirectToLogin } from "@/lib/auth";
+import { clearToken, redirectToHome } from "@/lib/auth";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -21,7 +21,7 @@ export function Nav() {
 
   function handleLogout() {
     clearToken();
-    redirectToLogin();
+    redirectToHome();
   }
 
   const linkClass = (href: string) =>
