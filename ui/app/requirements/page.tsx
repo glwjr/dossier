@@ -45,7 +45,13 @@ function RequirementsList({
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -158,12 +164,14 @@ function RequirementsList({
             {r.program.school} · {r.program.department}
           </Link>
         )}
-        <Checkbox
-          checked={selectedIds.has(r.id)}
-          onCheckedChange={() => toggleSelect(r.id)}
-          onClick={(e) => e.stopPropagation()}
-          className="shrink-0"
-        />
+        {selectMode && (
+          <Checkbox
+            checked={selectedIds.has(r.id)}
+            onCheckedChange={() => toggleSelect(r.id)}
+            onClick={(e) => e.stopPropagation()}
+            className="shrink-0"
+          />
+        )}
         <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
         <div className="ml-auto flex items-center gap-2">
           {r.due_date && (
@@ -223,7 +231,7 @@ function RequirementsList({
     );
   }
 
-  const actionBar = selectedIds.size > 0 && (
+  const toolbar = selectMode ? (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-4 py-2">
       <div className="flex items-center gap-2">
         <Checkbox
@@ -232,28 +240,40 @@ function RequirementsList({
             setSelectedIds(checked ? new Set(filtered.map((r) => r.id)) : new Set())
           }
         />
-        <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+        <span className="text-sm text-muted-foreground">
+          {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
+        </span>
       </div>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-          Clear
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={bulkUpdate.isPending}
-          onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
-        >
-          In progress
-        </Button>
-        <Button
-          size="sm"
-          disabled={bulkUpdate.isPending}
-          onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
-        >
-          Mark done
+        {selectedIds.size > 0 && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkUpdate.isPending}
+              onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
+            >
+              In progress
+            </Button>
+            <Button
+              size="sm"
+              disabled={bulkUpdate.isPending}
+              onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
+            >
+              Mark done
+            </Button>
+          </>
+        )}
+        <Button size="sm" variant="ghost" onClick={exitSelectMode}>
+          Cancel
         </Button>
       </div>
+    </div>
+  ) : (
+    <div className="flex justify-end">
+      <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setSelectMode(true)}>
+        Select
+      </Button>
     </div>
   );
 
@@ -266,7 +286,7 @@ function RequirementsList({
     });
     return (
       <div className="space-y-2">
-        {actionBar}
+        {toolbar}
         {sorted.map((r) => renderRow(r, true))}
       </div>
     );
@@ -285,7 +305,7 @@ function RequirementsList({
 
   return (
     <div className="space-y-6">
-      {actionBar}
+      {toolbar}
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
         <div key={programId} className="space-y-2">
           <div className="flex items-baseline gap-2">
