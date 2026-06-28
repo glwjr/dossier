@@ -35,7 +35,7 @@ export function Nav() {
           {link("/recommenders", "Recommenders")}
           <button
             onClick={handleLogout}
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Sign out
           </button>
