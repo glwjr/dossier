@@ -8,7 +8,8 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
   // Mirror to a cookie so Next.js middleware can read it server-side.
-  document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax; Secure`;
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax${secure}`;
 }
 
 export function clearToken(): void {
