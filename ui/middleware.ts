@@ -5,8 +5,11 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("dossier_token")?.value;
 
   if (!token) {
-    const loginUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
-    return NextResponse.redirect(loginUrl);
+    // Send to /auth/sync first — it checks localStorage and sets the cookie
+    // if a token already exists (e.g. from a previous session before cookies
+    // were introduced), then redirects to / or to the API login.
+    const syncUrl = new URL("/auth/sync", request.url);
+    return NextResponse.redirect(syncUrl);
   }
 
   return NextResponse.next();
