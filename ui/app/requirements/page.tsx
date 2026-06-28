@@ -213,7 +213,7 @@ function RequirementsList({
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
           >
-            <SelectTrigger className="h-7 w-24 text-xs sm:w-32">
+            <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
               <SelectValue>{REQUIREMENT_STATUS_LABEL[r.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
