@@ -128,11 +128,17 @@ function Dashboard() {
       : "all requirements on track",
   ];
 
+  const sorted = [...data].sort((a, b) => {
+    if (a.days_remaining === null) return 1;
+    if (b.days_remaining === null) return -1;
+    return a.days_remaining - b.days_remaining;
+  });
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">{summaryParts.join(" · ")}</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        {data.map((entry) => (
+        {sorted.map((entry) => (
           <ProgramCard key={entry.program.id} entry={entry} />
         ))}
       </div>

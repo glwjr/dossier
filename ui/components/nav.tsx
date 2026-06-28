@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clearToken, redirectToLogin } from "@/lib/auth";
+import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
@@ -15,6 +16,7 @@ const LINKS = [
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   function handleLogout() {
     clearToken();
@@ -40,6 +42,21 @@ export function Nav() {
               {label}
             </Link>
           ))}
+          <button
+            onClick={toggle}
+            className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+              </svg>
+            )}
+          </button>
           <button
             onClick={handleLogout}
             className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -83,6 +100,12 @@ export function Nav() {
                 {label}
               </Link>
             ))}
+            <button
+              onClick={() => { toggle(); setOpen(false); }}
+              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
             <button
               onClick={handleLogout}
               className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
