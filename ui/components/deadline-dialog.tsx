@@ -97,7 +97,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
               {isEdit ? "Edit deadline" : "Add deadline"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <form onSubmit={handleSubmit} className="min-w-0 space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Kind</Label>
