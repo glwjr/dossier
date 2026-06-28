@@ -208,7 +208,6 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
   const queryClient = useQueryClient();
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<ProgramStatus | null>(null);
-  const [mobileStatus, setMobileStatus] = useState<ProgramStatus>("researching");
 
   const { data, isLoading, error } = useQuery<Program[]>({
     queryKey: ["programs"],
@@ -264,50 +263,8 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
         p.department.toLowerCase().includes(q)
     );
 
-  const mobileCol = filtered.filter((p) => p.status === mobileStatus);
-
   return (
-    <>
-    {/* Mobile: single-column with status selector */}
-    <div className="md:hidden space-y-3">
-      <Select value={mobileStatus} onValueChange={(v) => v && setMobileStatus(v as ProgramStatus)}>
-        <SelectTrigger className="h-9 w-full text-sm">
-          <SelectValue>{PROGRAM_STATUS_LABEL[mobileStatus]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {BOARD_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>
-              {PROGRAM_STATUS_LABEL[s]} ({filtered.filter((p) => p.status === s).length})
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {mobileCol.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">No programs here.</p>
-      ) : (
-        mobileCol.map((p) => (
-          <Card
-            key={p.id}
-            className="cursor-pointer transition-shadow hover:shadow-md"
-            onClick={() => router.push(`/programs/${p.id}`)}
-          >
-            <CardHeader className="px-3 pb-1 pt-3">
-              <div className="flex items-start justify-between gap-1">
-                <CardTitle className="text-sm leading-snug">{p.school}</CardTitle>
-                <Badge variant={PROGRAM_TIER_VARIANT[p.tier]} className="shrink-0 text-xs">
-                  {PROGRAM_TIER_LABEL[p.tier]}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <p className="text-xs text-muted-foreground">{p.department}</p>
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </div>
-    {/* Desktop: full kanban */}
-    <div className="hidden md:block overflow-x-auto pb-4">
+    <div className="overflow-x-auto pb-4">
       <div className="flex gap-3 min-w-max">
         {BOARD_STATUSES.map((status) => {
           const col = filtered.filter((p) => p.status === status);
@@ -378,7 +335,6 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
         })}
       </div>
     </div>
-    </>
   );
 }
 
@@ -495,7 +451,7 @@ function ProgramsInner() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-md border">
+          <div className="hidden items-center rounded-md border md:flex">
             <Button
               variant="ghost"
               size="sm"
@@ -607,11 +563,17 @@ function ProgramsInner() {
           )}
         </div>
       </div>
-      {view === "board" ? (
-        <BoardView tierFilter={tierFilter} search={search} />
-      ) : (
+      {/* Mobile always shows list; desktop respects saved view preference */}
+      <div className="md:hidden">
         <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
-      )}
+      </div>
+      <div className="hidden md:block">
+        {view === "board" ? (
+          <BoardView tierFilter={tierFilter} search={search} />
+        ) : (
+          <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
+        )}
+      </div>
     </>
   );
 }
