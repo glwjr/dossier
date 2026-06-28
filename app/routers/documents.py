@@ -7,7 +7,12 @@ from app.db import get_db
 from app.models.document import Document
 from app.models.program import Program
 from app.models.user import User
-from app.schemas.document import DocumentCreate, DocumentRead, DocumentUpdate, DocumentWithProgramRead
+from app.schemas.document import (
+    DocumentCreate,
+    DocumentRead,
+    DocumentUpdate,
+    DocumentWithProgramRead,
+)
 
 router = APIRouter(tags=["documents"])
 
