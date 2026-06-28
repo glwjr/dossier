@@ -9,6 +9,7 @@ import { RequirementWithProgram } from "@/lib/types";
 import {
   REQUIREMENT_STATUS_LABEL,
   REQUIREMENT_KIND_LABEL,
+  formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,6 +113,11 @@ function RequirementsList({ statusFilter }: { statusFilter: string }) {
                 {r.label}
               </span>
               <div className="ml-auto flex items-center gap-2">
+                {r.due_date && (
+                  <span className="hidden text-xs text-muted-foreground sm:block">
+                    {formatDate(r.due_date)}
+                  </span>
+                )}
                 <span className="hidden text-xs text-muted-foreground sm:block">
                   {REQUIREMENT_KIND_LABEL[r.kind]}
                 </span>

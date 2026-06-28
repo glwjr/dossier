@@ -84,6 +84,42 @@ def test_delete_contact(client, contact):
     assert response.status_code == 404
 
 
+def test_list_all_outreach(client, program, contact):
+    # GET /outreach returns all contacts across programs with nested program info.
+    r = client.get("/outreach")
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 1
+    assert items[0]["id"] == contact["id"]
+    assert items[0]["program"]["school"] == "Stanford"
+    assert items[0]["program"]["id"] == program["id"]
+
+
+def test_list_all_outreach_isolation(client, db_session):
+    # Contacts from other users' programs must not appear.
+    user_b = User(email="user-b-outreach-all@example.com", name="User B")
+    db_session.add(user_b)
+    db_session.flush()
+    prog_b = Program(
+        user_id=user_b.id,
+        school="Caltech",
+        department="Biology",
+        degree="PhD",
+        tier="reach",
+        status="researching",
+    )
+    db_session.add(prog_b)
+    db_session.flush()
+    db_session.add(
+        OutreachContact(program_id=prog_b.id, name="Prof. X", response="none")
+    )
+    db_session.flush()
+
+    r = client.get("/outreach")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999/outreach")
     assert response.status_code == 404

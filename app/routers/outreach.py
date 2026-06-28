@@ -11,9 +11,23 @@ from app.schemas.outreach import (
     OutreachContactCreate,
     OutreachContactRead,
     OutreachContactUpdate,
+    OutreachContactWithProgramRead,
 )
 
 router = APIRouter(tags=["outreach"])
+
+
+@router.get("/outreach", response_model=list[OutreachContactWithProgramRead])
+def list_all_outreach(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.scalars(
+        select(OutreachContact)
+        .join(Program, OutreachContact.program_id == Program.id)
+        .where(Program.user_id == current_user.id)
+        .order_by(OutreachContact.id)
+    ).all()
 
 
 def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:

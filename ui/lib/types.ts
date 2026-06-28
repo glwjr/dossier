@@ -185,6 +185,10 @@ export interface OutreachContact {
   notes: string | null;
 }
 
+export interface OutreachContactWithProgram extends OutreachContact {
+  program: { id: number; school: string; department: string };
+}
+
 export interface Document {
   id: number;
   program_id: number;

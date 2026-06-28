@@ -23,6 +23,14 @@ class OutreachContactUpdate(BaseModel):
     notes: str | None = None
 
 
+class ProgramSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    school: str
+    department: str
+
+
 class OutreachContactRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,3 +42,7 @@ class OutreachContactRead(BaseModel):
     contacted_on: date | None
     response: OutreachResponse
     notes: str | None
+
+
+class OutreachContactWithProgramRead(OutreachContactRead):
+    program: ProgramSummary

@@ -25,8 +25,17 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
+import { LayoutList, LayoutGrid } from "lucide-react";
 
 type SortKey = "school" | "tier" | "status";
+
+const BOARD_STATUSES: ProgramStatus[] = [
+  "researching",
+  "drafting",
+  "submitted",
+  "interview",
+  "decision",
+];
 
 const TIER_ORDER = { reach: 0, match: 1, likely: 2 };
 const STATUS_ORDER = {
@@ -184,6 +193,100 @@ function ProgramList({
   );
 }
 
+function BoardView({ tierFilter, search }: { tierFilter: string; search: string }) {
+  const router = useRouter();
+  const { data, isLoading, error } = useQuery<Program[]>({
+    queryKey: ["programs"],
+    queryFn: () => api.get("/programs"),
+  });
+
+  if (isLoading)
+    return (
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {BOARD_STATUSES.map((s) => (
+          <div key={s} className="w-56 shrink-0 space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ))}
+      </div>
+    );
+  if (error) return <p className="text-destructive">Failed to load programs.</p>;
+  if (!data?.length)
+    return (
+      <div className="rounded-lg border border-dashed px-6 py-12 text-center">
+        <p className="text-sm font-medium">No programs yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hit the button above or add one here.
+        </p>
+        <ProgramDialog
+          trigger={
+            <button className="mt-4 text-sm underline underline-offset-4">
+              Add a program →
+            </button>
+          }
+        />
+      </div>
+    );
+
+  const q = search.toLowerCase();
+  const filtered = data
+    .filter((p) => tierFilter === "all" || p.tier === tierFilter)
+    .filter(
+      (p) =>
+        !q ||
+        p.school.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q)
+    );
+
+  return (
+    <div className="overflow-x-auto pb-4">
+      <div className="flex gap-3 min-w-max">
+        {BOARD_STATUSES.map((status) => {
+          const col = filtered.filter((p) => p.status === status);
+          return (
+            <div key={status} className="w-56 shrink-0 space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {PROGRAM_STATUS_LABEL[status]}
+                </h2>
+                <span className="text-xs text-muted-foreground">{col.length}</span>
+              </div>
+              {col.length === 0 && (
+                <div className="rounded-md border border-dashed px-3 py-5 text-center text-xs text-muted-foreground">
+                  None
+                </div>
+              )}
+              {col.map((p) => (
+                <Card
+                  key={p.id}
+                  className="cursor-pointer transition-shadow hover:shadow-md"
+                  onClick={() => router.push(`/programs/${p.id}`)}
+                >
+                  <CardHeader className="px-3 pb-1 pt-3">
+                    <div className="flex items-start justify-between gap-1">
+                      <CardTitle className="text-sm leading-snug">{p.school}</CardTitle>
+                      <Badge
+                        variant={PROGRAM_TIER_VARIANT[p.tier]}
+                        className="shrink-0 text-xs"
+                      >
+                        {PROGRAM_TIER_LABEL[p.tier]}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3">
+                    <p className="text-xs text-muted-foreground">{p.department}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ProgramsInner() {
   const router = useRouter();
   const pathname = usePathname();
@@ -193,11 +296,12 @@ function ProgramsInner() {
   const tierFilter = searchParams.get("tier") ?? "all";
   const statusFilter = searchParams.get("status") ?? "all";
   const search = searchParams.get("q") ?? "";
+  const view = searchParams.get("view") ?? "list";
 
   const setParam = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value === "all" || value === "" || (key === "sort" && value === "school")) {
+      if (value === "all" || value === "" || (key === "sort" && value === "school") || (key === "view" && value === "list")) {
         params.delete(key);
       } else {
         params.set(key, value);
@@ -211,7 +315,29 @@ function ProgramsInner() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
-        <ProgramDialog trigger={<Button>New program</Button>} />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-r-none px-2 ${view === "list" ? "bg-muted" : ""}`}
+              onClick={() => setParam("view", "list")}
+              aria-label="List view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-l-none px-2 ${view === "board" ? "bg-muted" : ""}`}
+              onClick={() => setParam("view", "board")}
+              aria-label="Board view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+          <ProgramDialog trigger={<Button>New program</Button>} />
+        </div>
       </div>
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Input
@@ -234,36 +360,44 @@ function ProgramsInner() {
               <SelectItem value="likely">Likely</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
-            <SelectTrigger className="h-9 w-36 text-sm">
-              <SelectValue>
-                {statusFilter === "all" ? "All statuses" : PROGRAM_STATUS_LABEL[statusFilter as keyof typeof PROGRAM_STATUS_LABEL]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="researching">Researching</SelectItem>
-              <SelectItem value="drafting">Drafting</SelectItem>
-              <SelectItem value="submitted">Submitted</SelectItem>
-              <SelectItem value="interview">Interview</SelectItem>
-              <SelectItem value="decision">Decision</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
-            <SelectTrigger className="h-9 w-32 text-sm">
-              <SelectValue>
-                {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : "Sort: Status"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="school">Sort: Name</SelectItem>
-              <SelectItem value="tier">Sort: Tier</SelectItem>
-              <SelectItem value="status">Sort: Status</SelectItem>
-            </SelectContent>
-          </Select>
+          {view === "list" && (
+            <>
+              <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
+                <SelectTrigger className="h-9 w-36 text-sm">
+                  <SelectValue>
+                    {statusFilter === "all" ? "All statuses" : PROGRAM_STATUS_LABEL[statusFilter as keyof typeof PROGRAM_STATUS_LABEL]}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="researching">Researching</SelectItem>
+                  <SelectItem value="drafting">Drafting</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="interview">Interview</SelectItem>
+                  <SelectItem value="decision">Decision</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
+                <SelectTrigger className="h-9 w-32 text-sm">
+                  <SelectValue>
+                    {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : "Sort: Status"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="school">Sort: Name</SelectItem>
+                  <SelectItem value="tier">Sort: Tier</SelectItem>
+                  <SelectItem value="status">Sort: Status</SelectItem>
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </div>
       </div>
-      <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
+      {view === "board" ? (
+        <BoardView tierFilter={tierFilter} search={search} />
+      ) : (
+        <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
+      )}
     </>
   );
 }
