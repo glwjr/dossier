@@ -1,85 +1,76 @@
 # Dossier
 
-Backend API for tracking PhD applications — programs, requirements, and deadlines.
+Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, faculty outreach, and draft documents — all in one place.
 
-## Prerequisites
+- **Backend**: FastAPI + SQLAlchemy, deployed on Render
+- **Frontend**: Next.js 14 App Router, deployed on Vercel
+- **Auth**: Google OAuth — sign in with your Google account
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+---
 
-## Setup
+## Local development
+
+### Prerequisites
+
+- Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- Node.js 18+
+
+### Backend
 
 ```bash
 git clone https://github.com/glwjr/dossier.git
 cd dossier
+
+# Install dependencies
 uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
-```
 
-## Run
+# Configure environment
+cp .env.example .env
+# Edit .env — at minimum set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 
-```bash
+# Run migrations
+alembic upgrade head
+
+# (Optional) seed placeholder programs
+python seed.py
+
+# Start the API
 uvicorn app.main:app --reload
 ```
 
-The API is available at `http://localhost:8000`. Interactive docs at `/docs`.
+API available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
 
-## Migrate
-
-```bash
-alembic upgrade head
-```
-
-## Seed
-
-Populates the dev user and the six target programs:
+### Frontend
 
 ```bash
-python seed.py
+cd ui
+
+# Create ui/.env.local
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+
+npm install
+npm run dev
 ```
 
-The dev user email defaults to `dev@example.com`. Override with the
-`DEV_USER_EMAIL` environment variable.
+UI available at `http://localhost:3000`.
 
-## Test
-
-```bash
-pytest
-```
-
-## Docker
-
-```bash
-# Build
-docker build -t dossier .
-
-# Run (SQLite, ephemeral)
-docker run -p 8000:8000 dossier
-
-# Run with a persistent database and custom settings
-docker run -p 8000:8000 \
-  -e DATABASE_URL=postgresql://user:pass@host/db \
-  -e DEV_USER_EMAIL=you@example.com \
-  dossier
-```
+---
 
 ## Authentication
 
-Navigate to `http://localhost:8000/auth/login` — the server redirects to Google's
-consent screen. After you grant access, Google redirects back to `/auth/callback`,
-which returns a JWT:
+Navigate to `http://localhost:8000/auth/login` — the server redirects to Google's consent screen. After granting access, Google redirects back to `/auth/callback`.
 
-```json
-{ "access_token": "eyJ...", "token_type": "bearer" }
-```
+- **With `FRONTEND_URL` set**: the backend redirects to `{FRONTEND_URL}/auth/callback?token=…` and the UI stores the JWT in `localStorage`.
+- **Without `FRONTEND_URL`**: the backend returns `{"access_token": "eyJ...", "token_type": "bearer"}` as JSON — useful for testing with `/docs`.
 
-Pass it as a `Bearer` token on every API request, or paste it into the
-`/docs` **Authorize** button.
+To use the API directly, paste the token into the `/docs` **Authorize** button.
 
-Copy `.env.example` to `.env` and fill in your Google credentials before using
-the OAuth flow locally.
+---
 
 ## Environment variables
+
+### Backend (`.env`)
 
 | Variable | Default | Description |
 |---|---|---|
@@ -87,11 +78,31 @@ the OAuth flow locally.
 | `SECRET_KEY` | *(dev default)* | JWT signing key — **change in production** |
 | `GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Registered redirect URI |
+| `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Must match Google Cloud Console |
+| `FRONTEND_URL` | *(empty)* | When set, OAuth redirects here with `?token=` instead of returning JSON |
 | `DEV_USER_EMAIL` | `dev@example.com` | Email seeded by `seed.py` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` (7 days) | JWT lifetime |
 
-## Endpoints
+### Frontend (`ui/.env.local`)
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Base URL of the backend API |
+
+---
+
+## Google OAuth setup
+
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
+2. Enable the **Google+ API** (or People API)
+3. Create OAuth 2.0 credentials (Web application)
+4. Add your backend callback as an authorized redirect URI:
+   - Local: `http://localhost:8000/auth/callback`
+   - Production: `https://your-api-domain.com/auth/callback`
+
+---
+
+## API endpoints
 
 | Method | Path | Description |
 |---|---|---|
@@ -99,10 +110,75 @@ the OAuth flow locally.
 | `GET` | `/auth/login` | Redirect to Google OAuth |
 | `GET` | `/auth/callback` | Exchange code for JWT |
 | `GET` | `/me` | Current user |
+| `GET` | `/dashboard` | Per-program summary (completion %, next deadline, blocking requirements) |
 | `GET` `POST` | `/programs` | List / create programs |
 | `GET` `PATCH` `DELETE` | `/programs/{id}` | Get / update / delete a program |
 | `GET` `POST` | `/programs/{id}/requirements` | List / create requirements |
 | `PATCH` `DELETE` | `/requirements/{id}` | Update / delete a requirement |
 | `GET` `POST` | `/programs/{id}/deadlines` | List / create deadlines |
 | `PATCH` `DELETE` | `/deadlines/{id}` | Update / delete a deadline |
-| `GET` | `/dashboard` | Per-program completion %, next deadline, blocking requirements |
+| `GET` `POST` | `/recommenders` | List / create recommenders (person-level) |
+| `PATCH` `DELETE` | `/recommenders/{id}` | Update / delete a recommender |
+| `GET` `POST` | `/programs/{id}/recommenders` | List / assign recommenders to a program |
+| `PATCH` `DELETE` | `/programs/{id}/recommenders/{rec_id}` | Update / remove assignment |
+| `GET` `POST` | `/programs/{id}/outreach` | List / create faculty outreach contacts |
+| `PATCH` `DELETE` | `/outreach/{id}` | Update / delete a contact |
+| `GET` `POST` | `/programs/{id}/documents` | List / create documents |
+| `PATCH` `DELETE` | `/documents/{id}` | Update / delete a document |
+
+---
+
+## Deployment
+
+### Backend — Render
+
+The `render.yaml` in this repo configures a Docker-based web service and a managed Postgres database. Set the following env vars in the Render dashboard:
+
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI` — `https://your-api-domain.com/auth/callback`
+- `FRONTEND_URL` — `https://your-frontend-domain.com`
+
+`DATABASE_URL` and `SECRET_KEY` are handled automatically by Render.
+
+### Frontend — Vercel
+
+Deploy the `ui/` directory. Set root directory to `ui/` in the Vercel project settings, then add:
+
+- `NEXT_PUBLIC_API_URL` — `https://your-api-domain.com`
+
+---
+
+## Docker
+
+```bash
+# Build
+docker build -t dossier .
+
+# Run with SQLite (ephemeral)
+docker run -p 8000:8000 dossier
+
+# Run with Postgres and custom settings
+docker run -p 8000:8000 \
+  -e DATABASE_URL=postgresql://user:pass@host/db \
+  -e SECRET_KEY=your-secret \
+  -e GOOGLE_CLIENT_ID=... \
+  -e GOOGLE_CLIENT_SECRET=... \
+  dossier
+```
+
+---
+
+## Development
+
+```bash
+# Run tests
+pytest
+
+# Lint + format
+ruff check .
+ruff format .
+
+# Create a migration after model changes
+alembic revision --autogenerate -m "description"
+alembic upgrade head
+```
