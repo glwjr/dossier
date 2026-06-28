@@ -132,3 +132,33 @@ def test_deadline_isolation(client, dev_user, db_session):
 
     # DELETE on user B's deadline → 404
     assert client.delete(f"/deadlines/{deadline_b.id}").status_code == 404
+
+
+def test_list_all_deadlines(client, program, deadline):
+    """GET /deadlines returns deadlines with program info, sorted by due_date."""
+    # Create a second program and deadline with an earlier due date
+    program2 = client.post(
+        "/programs",
+        json={
+            "school": "MIT",
+            "department": "Brain & Cognitive Sciences",
+            "degree": "PhD",
+            "tier": "reach",
+            "status": "researching",
+        },
+    ).json()
+    client.post(
+        f"/programs/{program2['id']}/deadlines",
+        json={"kind": "fellowship", "due_date": "2025-11-01"},
+    )
+
+    response = client.get("/deadlines")
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) == 2
+    # Sorted ascending by due_date
+    assert items[0]["due_date"] == "2025-11-01"
+    assert items[1]["due_date"] == "2025-12-15"
+    # Each item includes program info
+    assert items[0]["program"]["school"] == "MIT"
+    assert items[1]["program"]["school"] == "NYU"

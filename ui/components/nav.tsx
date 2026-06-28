@@ -32,6 +32,7 @@ export function Nav() {
         <nav className="flex items-center gap-6">
           {link("/", "Dashboard")}
           {link("/programs", "Programs")}
+          {link("/timeline", "Timeline")}
           {link("/recommenders", "Recommenders")}
           <button
             onClick={handleLogout}

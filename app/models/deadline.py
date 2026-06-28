@@ -1,11 +1,15 @@
 import enum
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, ForeignKey, Text
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.program import Program
 
 
 class DeadlineKind(str, enum.Enum):
@@ -23,3 +27,5 @@ class Deadline(Base):
     due_date: Mapped[date] = mapped_column(Date)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
     notes: Mapped[str | None] = mapped_column(Text)
+
+    program: Mapped["Program"] = relationship("Program", lazy="joined")

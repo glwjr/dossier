@@ -19,6 +19,14 @@ class DeadlineUpdate(BaseModel):
     notes: str | None = None
 
 
+class ProgramSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    school: str
+    department: str
+
+
 class DeadlineRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,3 +36,7 @@ class DeadlineRead(BaseModel):
     due_date: date
     done: bool
     notes: str | None
+
+
+class DeadlineWithProgramRead(DeadlineRead):
+    program: ProgramSummary

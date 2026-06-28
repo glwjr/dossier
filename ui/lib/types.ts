@@ -139,6 +139,10 @@ export interface Deadline {
   notes: string | null;
 }
 
+export interface DeadlineWithProgram extends Deadline {
+  program: { id: number; school: string; department: string };
+}
+
 export interface Recommender {
   id: number;
   user_id: number;

@@ -7,7 +7,12 @@ from app.db import get_db
 from app.models.deadline import Deadline
 from app.models.program import Program
 from app.models.user import User
-from app.schemas.deadline import DeadlineCreate, DeadlineRead, DeadlineUpdate
+from app.schemas.deadline import (
+    DeadlineCreate,
+    DeadlineRead,
+    DeadlineUpdate,
+    DeadlineWithProgramRead,
+)
 
 router = APIRouter(tags=["deadlines"])
 
@@ -38,6 +43,19 @@ def _get_deadline_or_404(deadline_id: int, current_user: User, db: Session) -> D
             status_code=status.HTTP_404_NOT_FOUND, detail="Deadline not found"
         )
     return deadline
+
+
+@router.get("/deadlines", response_model=list[DeadlineWithProgramRead])
+def list_all_deadlines(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.scalars(
+        select(Deadline)
+        .join(Program, Deadline.program_id == Program.id)
+        .where(Program.user_id == current_user.id)
+        .order_by(Deadline.due_date)
+    ).all()
 
 
 @router.get("/programs/{program_id}/deadlines", response_model=list[DeadlineRead])
