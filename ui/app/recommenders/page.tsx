@@ -8,8 +8,8 @@ import { Recommender } from "@/lib/types";
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { RecommenderDialog } from "@/components/recommender-dialog";
+import { AssignToProgramDialog } from "@/components/assign-to-program-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -22,17 +22,30 @@ import {
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  asked: "outline",
-  confirmed: "secondary",
-  submitted: "default",
-};
 
 function RecommenderList({ statusFilter }: { statusFilter: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<Recommender[]>({
     queryKey: ["recommenders"],
     queryFn: () => api.get("/recommenders"),
+  });
+
+  const updateAssignmentStatus = useMutation({
+    mutationFn: ({
+      programId,
+      recommenderId,
+      status,
+    }: {
+      programId: number;
+      recommenderId: number;
+      status: string;
+    }) =>
+      api.patch(`/programs/${programId}/recommenders/${recommenderId}`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      toast.success("Status updated");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const deleteRec = useMutation({
@@ -145,9 +158,8 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
               {r.notes && <p className="text-foreground">{r.notes}</p>}
             </div>
 
-            {r.program_assignments.length > 0 && (
-              <div className="space-y-1.5">
-                {r.program_assignments.map((a) => (
+            <div className="space-y-1.5">
+              {r.program_assignments.map((a) => (
                   <div key={a.program_id} className="flex items-center justify-between gap-2">
                     <Link
                       href={`/programs/${a.program_id}`}
@@ -155,16 +167,38 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
                     >
                       {a.program.school} — {a.program.department}
                     </Link>
-                    <Badge
-                      variant={STATUS_VARIANT[a.status]}
-                      className="shrink-0 text-xs"
+                    <Select
+                      value={a.status}
+                      onValueChange={(v) =>
+                        v &&
+                        updateAssignmentStatus.mutate({
+                          programId: a.program_id,
+                          recommenderId: r.id,
+                          status: v,
+                        })
+                      }
                     >
-                      {REC_STATUS_LABEL[a.status]}
-                    </Badge>
+                      <SelectTrigger className="h-6 w-28 shrink-0 text-xs">
+                        <SelectValue>{REC_STATUS_LABEL[a.status]}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="asked">Asked</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 ))}
-              </div>
-            )}
+              <AssignToProgramDialog
+                recommenderId={r.id}
+                existingAssignments={r.program_assignments}
+                trigger={
+                  <Button variant="outline" size="sm" className="h-7 w-full text-xs">
+                    + Assign to program
+                  </Button>
+                }
+              />
+            </div>
           </CardContent>
         </Card>
       ))}
