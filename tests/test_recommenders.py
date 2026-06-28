@@ -165,6 +165,18 @@ def test_assign_nonexistent_recommender_returns_404(client, program):
     assert response.status_code == 404
 
 
+def test_delete_program_cascades_assignments(client, assignment, program, recommender):
+    # Deleting a program must remove its junction rows; GET /recommenders must not 500.
+    r = client.delete(f"/programs/{program['id']}")
+    assert r.status_code == 204
+
+    r = client.get("/recommenders")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["program_assignments"] == []
+
+
 # --- Isolation ---
 
 

@@ -26,7 +26,9 @@ class Document(Base):
     __tablename__ = "documents"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id"), index=True)
+    program_id: Mapped[int] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+    )
     kind: Mapped[DocumentKind] = mapped_column(SAEnum(DocumentKind))
     title: Mapped[str] = mapped_column(String)
     status: Mapped[DocumentStatus] = mapped_column(

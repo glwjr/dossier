@@ -39,7 +39,9 @@ class ProgramRecommender(Base):
     recommender_id: Mapped[int] = mapped_column(
         ForeignKey("recommenders.id"), index=True
     )
-    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id"), index=True)
+    program_id: Mapped[int] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+    )
     status: Mapped[RecommenderStatus] = mapped_column(
         SAEnum(RecommenderStatus), default=RecommenderStatus.asked
     )

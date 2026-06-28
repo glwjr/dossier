@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
@@ -20,6 +20,13 @@ _engine = create_engine(
     _TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
 )
+
+
+@event.listens_for(_engine, "connect")
+def _set_sqlite_pragma(dbapi_conn, _):
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 @pytest.fixture(scope="session", autouse=True)

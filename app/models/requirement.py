@@ -29,7 +29,9 @@ class Requirement(Base):
     __tablename__ = "requirements"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id"), index=True)
+    program_id: Mapped[int] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+    )
     label: Mapped[str] = mapped_column(String)
     kind: Mapped[RequirementKind] = mapped_column(SAEnum(RequirementKind))
     status: Mapped[RequirementStatus] = mapped_column(

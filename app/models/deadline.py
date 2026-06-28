@@ -22,7 +22,9 @@ class Deadline(Base):
     __tablename__ = "deadlines"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id"), index=True)
+    program_id: Mapped[int] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+    )
     kind: Mapped[DeadlineKind] = mapped_column(SAEnum(DeadlineKind))
     due_date: Mapped[date] = mapped_column(Date)
     done: Mapped[bool] = mapped_column(Boolean, default=False)

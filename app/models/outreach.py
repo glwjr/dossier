@@ -19,7 +19,9 @@ class OutreachContact(Base):
     __tablename__ = "outreach_contacts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id"), index=True)
+    program_id: Mapped[int] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String)
     email: Mapped[str | None] = mapped_column(String)
     url: Mapped[str | None] = mapped_column(String)
