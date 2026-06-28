@@ -4,8 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { DeadlineWithProgram } from "@/lib/types";
-import { DEADLINE_KIND_LABEL, formatDate } from "@/lib/display";
+import { DeadlineWithProgram, RequirementWithProgram } from "@/lib/types";
+import {
+  DEADLINE_KIND_LABEL,
+  REQUIREMENT_KIND_LABEL,
+  formatDate,
+} from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
@@ -20,11 +24,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const KIND_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
+const DEADLINE_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   application: "default",
   fellowship: "secondary",
   fee_waiver: "outline",
 };
+
+type TimelineItem =
+  | { itemType: "deadline"; dueDate: string; isDone: boolean; programId: number; school: string; department: string; notes: string | null; raw: DeadlineWithProgram }
+  | { itemType: "requirement"; dueDate: string; isDone: boolean; programId: number; school: string; department: string; notes: string | null; raw: RequirementWithProgram };
 
 function TimelineInner() {
   const queryClient = useQueryClient();
@@ -32,43 +40,90 @@ function TimelineInner() {
   const [programFilter, setProgramFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
 
-  const { data = [], isLoading } = useQuery<DeadlineWithProgram[]>({
+  const { data: deadlines = [], isLoading: dlLoading } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
     queryFn: () => api.get("/deadlines"),
   });
 
-  const toggleDone = useMutation({
+  const { data: requirements = [], isLoading: reqLoading } = useQuery<RequirementWithProgram[]>({
+    queryKey: ["requirements-all"],
+    queryFn: () => api.get("/requirements"),
+  });
+
+  const isLoading = dlLoading || reqLoading;
+
+  const toggleDeadline = useMutation({
     mutationFn: (d: DeadlineWithProgram) =>
       api.patch(`/deadlines/${d.id}`, { done: !d.done }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["deadlines"] }),
   });
 
+  const toggleRequirement = useMutation({
+    mutationFn: (r: RequirementWithProgram) =>
+      api.patch(`/requirements/${r.id}`, {
+        status: r.status === "done" ? "todo" : "done",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+    },
+  });
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const items: TimelineItem[] = useMemo(() => {
+    const dl: TimelineItem[] = deadlines.map((d) => ({
+      itemType: "deadline",
+      dueDate: d.due_date,
+      isDone: d.done,
+      programId: d.program.id,
+      school: d.program.school,
+      department: d.program.department,
+      notes: d.notes,
+      raw: d,
+    }));
+
+    const req: TimelineItem[] = requirements
+      .filter((r) => r.due_date !== null)
+      .map((r) => ({
+        itemType: "requirement",
+        dueDate: r.due_date as string,
+        isDone: r.status === "done" || r.status === "waived",
+        programId: r.program.id,
+        school: r.program.school,
+        department: r.program.department,
+        notes: r.notes,
+        raw: r,
+      }));
+
+    return [...dl, ...req].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  }, [deadlines, requirements]);
+
   const programs = useMemo(() => {
     const seen = new Map<number, { id: number; school: string }>();
-    for (const d of data) {
-      if (!seen.has(d.program.id)) seen.set(d.program.id, d.program);
+    for (const item of items) {
+      if (!seen.has(item.programId))
+        seen.set(item.programId, { id: item.programId, school: item.school });
     }
     return [...seen.values()].sort((a, b) => a.school.localeCompare(b.school));
-  }, [data]);
+  }, [items]);
 
-  const visible = data
-    .filter((d) => showAll || !d.done)
-    .filter((d) => programFilter === "all" || d.program.id === Number(programFilter))
-    .filter((d) => kindFilter === "all" || d.kind === kindFilter);
+  const visible = items
+    .filter((item) => showAll || !item.isDone)
+    .filter((item) => programFilter === "all" || item.programId === Number(programFilter))
+    .filter((item) => {
+      if (kindFilter === "all") return true;
+      return item.itemType === kindFilter;
+    });
 
-  const grouped = visible.reduce<Record<string, DeadlineWithProgram[]>>(
-    (acc, d) => {
-      const [year, month] = d.due_date.split("-");
-      const key = `${year}-${month}`;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(d);
-      return acc;
-    },
-    {}
-  );
+  const grouped = visible.reduce<Record<string, TimelineItem[]>>((acc, item) => {
+    const [year, month] = item.dueDate.split("-");
+    const key = `${year}-${month}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 
   function monthLabel(key: string) {
     const [year, month] = key.split("-").map(Number);
@@ -84,6 +139,11 @@ function TimelineInner() {
     return Math.ceil((due.getTime() - today.getTime()) / 86400000);
   }
 
+  function toggleItem(item: TimelineItem) {
+    if (item.itemType === "deadline") toggleDeadline.mutate(item.raw);
+    else toggleRequirement.mutate(item.raw);
+  }
+
   if (isLoading)
     return (
       <div className="space-y-6">
@@ -97,12 +157,12 @@ function TimelineInner() {
       </div>
     );
 
-  if (data.length === 0)
+  if (items.length === 0)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
-        <p className="text-sm font-medium">No deadlines yet</p>
+        <p className="text-sm font-medium">Nothing on the timeline yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add deadlines from a program's detail page and they'll appear here.
+          Add deadlines or requirement due dates from a program's detail page.
         </p>
         <Link
           href="/programs"
@@ -137,21 +197,24 @@ function TimelineInner() {
         <Select value={kindFilter} onValueChange={(v) => v && setKindFilter(v)}>
           <SelectTrigger className="h-9 w-36 text-sm">
             <SelectValue>
-              {kindFilter === "all" ? "All types" : DEADLINE_KIND_LABEL[kindFilter as keyof typeof DEADLINE_KIND_LABEL]}
+              {kindFilter === "all"
+                ? "All types"
+                : kindFilter === "deadline"
+                ? "Deadlines"
+                : "Requirements"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="application">Application</SelectItem>
-            <SelectItem value="fellowship">Fellowship</SelectItem>
-            <SelectItem value="fee_waiver">Fee waiver</SelectItem>
+            <SelectItem value="deadline">Deadlines</SelectItem>
+            <SelectItem value="requirement">Requirements</SelectItem>
           </SelectContent>
         </Select>
 
         <div className="ml-auto flex items-center gap-3">
           <p className="text-sm text-muted-foreground">
-            {data.filter((d) => !d.done).length} upcoming ·{" "}
-            {data.filter((d) => d.done).length} done
+            {items.filter((d) => !d.isDone).length} upcoming ·{" "}
+            {items.filter((d) => d.isDone).length} done
           </p>
           <Button variant="outline" size="sm" onClick={() => setShowAll((v) => !v)}>
             {showAll ? "Hide done" : "Show all"}
@@ -165,51 +228,67 @@ function TimelineInner() {
         </p>
       )}
 
-      {Object.entries(grouped).map(([key, items]) => (
+      {Object.entries(grouped).map(([key, groupItems]) => (
         <div key={key} className="space-y-2">
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
             {monthLabel(key)}
           </h2>
           <div className="space-y-2">
-            {items.map((d) => {
-              const days = daysRemaining(d.due_date);
-              const overdue = days < 0 && !d.done;
+            {groupItems.map((item) => {
+              const days = daysRemaining(item.dueDate);
+              const overdue = days < 0 && !item.isDone;
+              const key =
+                item.itemType === "deadline"
+                  ? `dl-${item.raw.id}`
+                  : `req-${item.raw.id}`;
               return (
                 <div
-                  key={d.id}
+                  key={key}
                   className={`flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-opacity ${
-                    d.done ? "opacity-50" : ""
+                    item.isDone ? "opacity-50" : ""
                   }`}
                 >
                   <Checkbox
-                    checked={d.done}
-                    onCheckedChange={() => toggleDone.mutate(d)}
+                    checked={item.isDone}
+                    onCheckedChange={() => toggleItem(item)}
                     className="cursor-pointer"
                   />
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/programs/${d.program.id}`}
+                      href={
+                        item.itemType === "deadline"
+                          ? `/programs/${item.programId}?tab=deadlines`
+                          : `/programs/${item.programId}?tab=requirements`
+                      }
                       className="font-medium hover:underline"
                     >
-                      {d.program.school}
+                      {item.school}
                     </Link>
                     <p className="text-xs text-muted-foreground truncate">
-                      {d.program.department}
+                      {item.itemType === "deadline"
+                        ? `${DEADLINE_KIND_LABEL[item.raw.kind]} deadline`
+                        : item.raw.label}
                     </p>
-                    {d.notes && (
+                    {item.notes && (
                       <p className="text-xs text-muted-foreground truncate">
-                        {d.notes}
+                        {item.notes}
                       </p>
                     )}
                   </div>
-                  <Badge variant={KIND_VARIANT[d.kind]}>
-                    {DEADLINE_KIND_LABEL[d.kind]}
-                  </Badge>
+                  {item.itemType === "deadline" ? (
+                    <Badge variant={DEADLINE_BADGE_VARIANT[item.raw.kind]}>
+                      {DEADLINE_KIND_LABEL[item.raw.kind]}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline">
+                      {REQUIREMENT_KIND_LABEL[item.raw.kind]}
+                    </Badge>
+                  )}
                   <div className="text-right shrink-0">
                     <p className={overdue ? "text-destructive font-medium" : ""}>
-                      {formatDate(d.due_date)}
+                      {formatDate(item.dueDate)}
                     </p>
-                    {!d.done && (
+                    {!item.isDone && (
                       <p
                         className={`text-xs ${
                           overdue
