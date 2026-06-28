@@ -128,16 +128,7 @@ function Dashboard() {
     (sum, e) => sum + e.blocking_requirements.length,
     0
   );
-
-  const summaryParts = [
-    `${totalPrograms} program${totalPrograms !== 1 ? "s" : ""}`,
-    upcomingDeadlines > 0
-      ? `${upcomingDeadlines} deadline${upcomingDeadlines !== 1 ? "s" : ""} in the next 30 days`
-      : "no upcoming deadlines",
-    blockingCount > 0
-      ? `${blockingCount} requirement${blockingCount !== 1 ? "s" : ""} incomplete`
-      : "all requirements on track",
-  ];
+  const totalFees = data.reduce((sum, e) => sum + (e.program.app_fee ?? 0), 0);
 
   const sorted = [...data].sort((a, b) => {
     if (a.days_remaining === null) return 1;
@@ -147,7 +138,36 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">{summaryParts.join(" · ")}</p>
+      <div className="flex flex-wrap gap-2">
+        <div className="rounded-md border px-3 py-1.5 text-sm">
+          <span className="font-medium">{totalPrograms}</span>
+          <span className="ml-1 text-muted-foreground">
+            {totalPrograms === 1 ? "program" : "programs"}
+          </span>
+        </div>
+        {totalFees > 0 && (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className="font-medium">${totalFees.toLocaleString()}</span>
+            <span className="ml-1 text-muted-foreground">in fees</span>
+          </div>
+        )}
+        <div className="rounded-md border px-3 py-1.5 text-sm">
+          <span className={`font-medium ${upcomingDeadlines > 0 ? "text-destructive" : ""}`}>
+            {upcomingDeadlines}
+          </span>
+          <span className="ml-1 text-muted-foreground">
+            {upcomingDeadlines === 1 ? "deadline" : "deadlines"} this month
+          </span>
+        </div>
+        <div className="rounded-md border px-3 py-1.5 text-sm">
+          <span className={`font-medium ${blockingCount > 0 ? "text-destructive" : "text-green-600 dark:text-green-500"}`}>
+            {blockingCount}
+          </span>
+          <span className="ml-1 text-muted-foreground">
+            {blockingCount === 1 ? "requirement" : "requirements"} blocking
+          </span>
+        </div>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {sorted.map((entry) => (
           <ProgramCard key={entry.program.id} entry={entry} />

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { use } from "react";
 import { api } from "@/lib/api";
 import {
@@ -618,10 +618,29 @@ function DocumentsTab({ programId }: { programId: number }) {
   );
 }
 
+const VALID_TABS = ["requirements", "deadlines", "recommenders", "outreach", "documents"];
+
 function ProgramDetail({ id }: { id: number }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const activeTab = VALID_TABS.includes(searchParams.get("tab") ?? "")
+    ? (searchParams.get("tab") as string)
+    : "requirements";
+
+  function setTab(tab: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "requirements") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
 
   const { data: program, isLoading, error } = useQuery<Program>({
     queryKey: ["program", id],
@@ -729,7 +748,7 @@ function ProgramDetail({ id }: { id: number }) {
         </div>
       </div>
 
-      <Tabs defaultValue="requirements">
+      <Tabs value={activeTab} onValueChange={setTab}>
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="requirements">Requirements</TabsTrigger>
@@ -770,7 +789,9 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
           ← Programs
         </Link>
       </div>
-      <ProgramDetail id={Number(id)} />
+      <Suspense>
+        <ProgramDetail id={Number(id)} />
+      </Suspense>
     </RequireAuth>
   );
 }
