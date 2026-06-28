@@ -66,6 +66,8 @@ function sortPrograms(programs: Program[], key: SortKey): Program[] {
 function ProgramCard({ program }: { program: Program }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(program.notes ?? "");
 
   const updateStatus = useMutation({
     mutationFn: (status: ProgramStatus) =>
@@ -76,9 +78,16 @@ function ProgramCard({ program }: { program: Program }) {
     },
   });
 
+  const updateNotes = useMutation({
+    mutationFn: (notes: string) =>
+      api.patch(`/programs/${program.id}`, { notes: notes || null }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["programs"] }),
+    onError: () => toast.error("Something went wrong"),
+  });
+
   return (
     <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
+      className="group cursor-pointer transition-shadow hover:shadow-md"
       onClick={() => router.push(`/programs/${program.id}`)}
     >
       <CardHeader className="pb-1">
@@ -105,8 +114,27 @@ function ProgramCard({ program }: { program: Program }) {
             </a>
           )}
         </div>
-        {program.notes && (
-          <p className="truncate text-xs text-muted-foreground">{program.notes}</p>
+        {editingNotes ? (
+          <textarea
+            autoFocus
+            value={notesValue}
+            onChange={(e) => setNotesValue(e.target.value)}
+            onBlur={() => { updateNotes.mutate(notesValue); setEditingNotes(false); }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") { setNotesValue(program.notes ?? ""); setEditingNotes(false); }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); updateNotes.mutate(notesValue); setEditingNotes(false); }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full resize-none rounded border border-border bg-background px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            rows={2}
+          />
+        ) : (
+          <p
+            className={`cursor-pointer truncate text-xs ${program.notes ? "text-muted-foreground hover:opacity-70" : "text-muted-foreground/0 group-hover:text-muted-foreground/40"}`}
+            onClick={(e) => { e.stopPropagation(); setEditingNotes(true); setNotesValue(program.notes ?? ""); }}
+          >
+            {program.notes || "Add note…"}
+          </p>
         )}
         <div onClick={(e) => e.stopPropagation()}>
           <Select

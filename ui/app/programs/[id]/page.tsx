@@ -72,25 +72,6 @@ const RESPONSE_COLOR: Record<string, string> = {
   meeting_scheduled: "text-yellow-600",
 };
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
-function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-      <span>{left}</span>
-      {right && <span className="text-muted-foreground">{right}</span>}
-    </div>
-  );
-}
 
 function RequirementsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
@@ -141,7 +122,7 @@ function RequirementsTab({ programId }: { programId: number }) {
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
           >
-            <SelectTrigger className="h-7 w-24 text-xs sm:w-32">
+            <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
               <SelectValue>{REQUIREMENT_STATUS_LABEL[r.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -558,7 +539,7 @@ function DocumentsTab({ programId }: { programId: number }) {
               v && updateStatus.mutate({ id: d.id, status: v })
             }
           >
-            <SelectTrigger className="h-7 w-24 text-xs sm:w-32">
+            <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
               <SelectValue>{DOCUMENT_STATUS_LABEL[d.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>

@@ -6,7 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { OutreachContactWithProgram } from "@/lib/types";
-import { OUTREACH_RESPONSE_LABEL } from "@/lib/display";
+import { OUTREACH_RESPONSE_LABEL, formatDate } from "@/lib/display";
+import { Input } from "@/components/ui/input";
 import { RequireAuth } from "@/components/require-auth";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ function OutreachInner() {
   const searchParams = useSearchParams();
 
   const responseFilter = searchParams.get("response") ?? "all";
+  const search = searchParams.get("q") ?? "";
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -87,10 +89,16 @@ function OutreachInner() {
       </div>
     );
 
-  const filtered =
-    responseFilter === "all"
-      ? data
-      : data.filter((c) => c.response === responseFilter);
+  const q = search.toLowerCase();
+  const filtered = data
+    .filter((c) => responseFilter === "all" || c.response === responseFilter)
+    .filter(
+      (c) =>
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q) ||
+        c.program.school.toLowerCase().includes(q)
+    );
 
   const byProgram = filtered.reduce<ByProgram>((acc, c) => {
     const key = String(c.program.id);
@@ -108,7 +116,13 @@ function OutreachInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search…"
+          value={search}
+          onChange={(e) => setParam("q", e.target.value)}
+          className="h-9 w-48 text-sm"
+        />
         <Select value={responseFilter} onValueChange={(v) => v && setParam("response", v)}>
           <SelectTrigger className="h-9 w-44 text-sm">
             <SelectValue>
@@ -154,11 +168,7 @@ function OutreachInner() {
               <div className="ml-auto flex items-center gap-2">
                 {c.contacted_on && (
                   <span className="hidden text-xs text-muted-foreground sm:block">
-                    {new Date(c.contacted_on + "T00:00:00").toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {formatDate(c.contacted_on)}
                   </span>
                 )}
                 {c.email && (
