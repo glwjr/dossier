@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/callback"
     frontend_url: str = ""
+    admin_email: str = ""
 
 
 settings = Settings()
