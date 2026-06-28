@@ -216,3 +216,10 @@ export interface DashboardEntry {
   days_remaining: number | null;
   blocking_requirements: DashboardRequirement[];
 }
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  created_at: string;
+}

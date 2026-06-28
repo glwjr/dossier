@@ -31,6 +31,8 @@ interface Props {
   program?: Program;
   trigger: React.ReactElement;
   onSuccess?: (program: Program) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const EMPTY: ProgramCreate = {
@@ -57,9 +59,11 @@ function fromProgram(p: Program): ProgramCreate {
   };
 }
 
-export function ProgramDialog({ program, trigger, onSuccess }: Props) {
+export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpen, onOpenChange }: Props) {
   const isEdit = !!program;
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [form, setForm] = useState<ProgramCreate>(
     program ? fromProgram(program) : EMPTY
   );

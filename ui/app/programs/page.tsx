@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, Suspense } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
@@ -297,6 +297,19 @@ function ProgramsInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [newProgramOpen, setNewProgramOpen] = useState(false);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        setNewProgramOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const sort = (searchParams.get("sort") as SortKey) ?? "school";
   const tierFilter = searchParams.get("tier") ?? "all";
@@ -342,7 +355,11 @@ function ProgramsInner() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-          <ProgramDialog trigger={<Button>New program</Button>} />
+          <ProgramDialog
+            trigger={<Button>New program</Button>}
+            open={newProgramOpen}
+            onOpenChange={setNewProgramOpen}
+          />
         </div>
       </div>
       <div className="mb-6 flex flex-wrap items-center gap-2">

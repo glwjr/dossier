@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 
@@ -30,7 +31,7 @@ const STATUS_COLOR: Record<string, string> = {
   waived: "text-muted-foreground line-through",
 };
 
-function RequirementsList({ statusFilter }: { statusFilter: string }) {
+function RequirementsList({ statusFilter, search }: { statusFilter: string; search: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -73,8 +74,16 @@ function RequirementsList({ statusFilter }: { statusFilter: string }) {
       </div>
     );
 
-  const filtered =
-    statusFilter === "all" ? data : data.filter((r) => r.status === statusFilter);
+  const q = search.toLowerCase();
+  const filtered = data
+    .filter((r) => statusFilter === "all" || r.status === statusFilter)
+    .filter(
+      (r) =>
+        !q ||
+        r.program.school.toLowerCase().includes(q) ||
+        r.program.department.toLowerCase().includes(q) ||
+        r.label.toLowerCase().includes(q)
+    );
 
   if (filtered.length === 0)
     return <p className="text-sm text-muted-foreground">No requirements match the current filter.</p>;
@@ -152,11 +161,12 @@ function RequirementsInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
+  const search = searchParams.get("q") ?? "";
 
   const setParam = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value === "all") {
+      if (value === "all" || value === "") {
         params.delete(key);
       } else {
         params.set(key, value);
@@ -170,7 +180,14 @@ function RequirementsInner() {
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Requirements</h1>
-        <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            placeholder="Search…"
+            value={search}
+            onChange={(e) => setParam("q", e.target.value)}
+            className="h-9 w-48 text-sm"
+          />
+          <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
           <SelectTrigger className="h-9 w-36 text-sm">
             <SelectValue>
               {statusFilter === "all"
@@ -185,9 +202,10 @@ function RequirementsInner() {
             <SelectItem value="done">Done</SelectItem>
             <SelectItem value="waived">Waived</SelectItem>
           </SelectContent>
-        </Select>
+          </Select>
+        </div>
       </div>
-      <RequirementsList statusFilter={statusFilter} />
+      <RequirementsList statusFilter={statusFilter} search={search} />
     </>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clearToken, redirectToHome } from "@/lib/auth";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -12,17 +11,13 @@ const LINKS = [
   { href: "/requirements", label: "Requirements" },
   { href: "/timeline", label: "Timeline" },
   { href: "/recommenders", label: "Recommenders" },
+  { href: "/account", label: "Account" },
 ];
 
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { theme, toggle } = useTheme();
-
-  function handleLogout() {
-    clearToken();
-    redirectToHome();
-  }
 
   const linkClass = (href: string) =>
     `text-sm font-medium transition-colors hover:text-foreground ${
@@ -57,12 +52,6 @@ export function Nav() {
                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
               </svg>
             )}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Sign out
           </button>
         </nav>
 
@@ -106,12 +95,6 @@ export function Nav() {
               className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Sign out
             </button>
           </nav>
         </div>
