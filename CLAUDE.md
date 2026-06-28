@@ -15,7 +15,7 @@ PhD application tracker. Architectural decisions below are settled — don't re-
 - **pytest** + FastAPI `TestClient`
 - **ruff** for lint + format
 - **Docker** + **GitHub Actions** CI
-- **Next.js 14** App Router, TanStack Query, shadcn/ui (Base UI variant)
+- **Next.js 16** App Router, TanStack Query, shadcn/ui (Base UI variant)
 
 ---
 
@@ -50,7 +50,7 @@ There is a test proving one user cannot read or mutate another user's data.
 
 ## Data model
 
-**Program** — `id, user_id (FK), school, department, degree, url, tier (reach|match|likely), status (researching|drafting|submitted|interview|decision), app_fee, notes, created_at, updated_at`
+**Program** — `id, user_id (FK), school, department, degree, url, tier (reach|match|likely), status (researching|drafting|submitted|interview|accepted|waitlisted|rejected), app_fee, notes, created_at, updated_at`
 
 **Requirement** — `id, program_id (FK), label, kind (sop|cv|transcript|gre|writing_sample|fee|other), status (todo|in_progress|done|waived), due_date?, notes`
 
@@ -80,23 +80,31 @@ app/
 seed.py         # dev user + placeholder programs (replace with your own)
 tests/
 alembic/
-ui/             # Next.js 14 App Router (Vercel, root dir = ui/)
+ui/             # Next.js 16 App Router (Vercel, root dir = ui/)
+  middleware.ts → proxy.ts      # auth redirect middleware (renamed for Next.js 16)
   app/
-    page.tsx                    # Dashboard
-    programs/page.tsx           # Program list
+    page.tsx                    # Dashboard (status filter: All / Active / Decided)
+    programs/page.tsx           # Program list + board view (desktop only); CSV export
     programs/[id]/page.tsx      # Program detail (tabbed: requirements, deadlines, recommenders, outreach, documents)
-    recommenders/page.tsx       # Person-level recommender management
+    requirements/page.tsx       # Cross-program requirements (search, sort, filter, bulk status update)
+    timeline/page.tsx           # Cross-program deadline timeline with urgency indicators
+    recommenders/page.tsx       # Person-level recommender management + pending letters panel
+    outreach/page.tsx           # Outreach contacts (per-program, listed cross-program)
+    documents/page.tsx          # Cross-program documents view
+    account/page.tsx            # Account info + sign out
     auth/callback/page.tsx      # Extracts ?token= and stores in localStorage
   components/
     nav.tsx, providers.tsx, require-auth.tsx
+    command-palette.tsx         # Cmd+K search across programs, requirements, recommenders
     program-dialog.tsx, requirement-dialog.tsx, deadline-dialog.tsx
-    recommender-dialog.tsx, assign-recommender-dialog.tsx
+    recommender-dialog.tsx, assign-recommender-dialog.tsx, assign-to-program-dialog.tsx
     outreach-dialog.tsx, document-dialog.tsx
   lib/
-    api.ts      # fetch wrapper with Bearer auth, redirects to /auth/login on 401
-    auth.ts     # getToken / setToken / clearToken (localStorage key: dossier_token)
-    types.ts    # TypeScript interfaces for all entities
-    display.ts  # centralized display label maps for all enum values
+    api.ts           # fetch wrapper with Bearer auth, redirects to /auth/login on 401
+    auth.ts          # getToken / setToken / clearToken (localStorage key: dossier_token)
+    types.ts         # TypeScript interfaces for all entities
+    display.ts       # centralized display label maps for all enum values
+    use-page-title.ts  # sets document.title per page
 Dockerfile
 render.yaml
 .github/workflows/ci.yml
