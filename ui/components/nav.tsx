@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser, FileText, Search } from "lucide-react";
+import { CircleUser, FileText, Globe, Search } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -38,6 +38,13 @@ export function Nav() {
               {label}
             </Link>
           ))}
+          <Link
+            href="/outreach"
+            title="Outreach"
+            className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <Globe className="h-4 w-4" />
+          </Link>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
             title="Search (⌘K)"
@@ -112,6 +119,13 @@ export function Nav() {
                 {label}
               </Link>
             ))}
+            <Link
+              href="/outreach"
+              className={linkClass("/outreach")}
+              onClick={() => setOpen(false)}
+            >
+              Outreach
+            </Link>
             <button
               className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}

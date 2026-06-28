@@ -13,6 +13,8 @@ import {
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -43,6 +45,7 @@ function RequirementsList({
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -70,6 +73,28 @@ function RequirementsList({
     onError: () => toast.error("Something went wrong"),
   });
 
+  const bulkUpdate = useMutation({
+    mutationFn: async ({ ids, status }: { ids: number[]; status: string }) => {
+      await Promise.all(ids.map((id) => api.patch(`/requirements/${id}`, { status })));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+      setSelectedIds(new Set());
+      toast.success("Updated");
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function startEdit(r: RequirementWithProgram) {
     setEditingId(r.id);
     setEditingValue(r.notes ?? "");
@@ -96,10 +121,7 @@ function RequirementsList({
         <p className="mt-1 text-sm text-muted-foreground">
           Add requirements from each program&apos;s detail page.
         </p>
-        <Link
-          href="/programs"
-          className="mt-4 inline-block text-sm underline underline-offset-4"
-        >
+        <Link href="/programs" className="mt-4 inline-block text-sm underline underline-offset-4">
           Go to programs →
         </Link>
       </div>
@@ -119,6 +141,8 @@ function RequirementsList({
   if (filtered.length === 0)
     return <p className="text-sm text-muted-foreground">No requirements match the current filter.</p>;
 
+  const allSelected = filtered.every((r) => selectedIds.has(r.id));
+
   function renderRow(r: RequirementWithProgram, showProgram: boolean) {
     return (
       <div
@@ -134,9 +158,13 @@ function RequirementsList({
             {r.program.school} · {r.program.department}
           </Link>
         )}
-        <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>
-          {r.label}
-        </span>
+        <Checkbox
+          checked={selectedIds.has(r.id)}
+          onCheckedChange={() => toggleSelect(r.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        />
+        <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
         <div className="ml-auto flex items-center gap-2">
           {r.due_date && (
             <span className="hidden text-xs text-muted-foreground sm:block">
@@ -195,6 +223,40 @@ function RequirementsList({
     );
   }
 
+  const actionBar = selectedIds.size > 0 && (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-4 py-2">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={(checked) =>
+            setSelectedIds(checked ? new Set(filtered.map((r) => r.id)) : new Set())
+          }
+        />
+        <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+          Clear
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={bulkUpdate.isPending}
+          onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
+        >
+          In progress
+        </Button>
+        <Button
+          size="sm"
+          disabled={bulkUpdate.isPending}
+          onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
+        >
+          Mark done
+        </Button>
+      </div>
+    </div>
+  );
+
   if (sort === "due_date") {
     const sorted = [...filtered].sort((a, b) => {
       if (!a.due_date && !b.due_date) return 0;
@@ -202,7 +264,12 @@ function RequirementsList({
       if (!b.due_date) return -1;
       return a.due_date.localeCompare(b.due_date);
     });
-    return <div className="space-y-2">{sorted.map((r) => renderRow(r, true))}</div>;
+    return (
+      <div className="space-y-2">
+        {actionBar}
+        {sorted.map((r) => renderRow(r, true))}
+      </div>
+    );
   }
 
   // Default: grouped by program
@@ -218,13 +285,11 @@ function RequirementsList({
 
   return (
     <div className="space-y-6">
+      {actionBar}
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
         <div key={programId} className="space-y-2">
           <div className="flex items-baseline gap-2">
-            <Link
-              href={`/programs/${programId}?tab=requirements`}
-              className="text-sm font-medium hover:underline"
-            >
+            <Link href={`/programs/${programId}?tab=requirements`} className="text-sm font-medium hover:underline">
               {school}
             </Link>
             <span className="text-xs text-muted-foreground">{department}</span>
