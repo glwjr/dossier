@@ -620,6 +620,14 @@ function DocumentsTab({ programId }: { programId: number }) {
 
 const VALID_TABS = ["requirements", "deadlines", "recommenders", "outreach", "documents"];
 
+const TAB_LABEL: Record<string, string> = {
+  requirements: "Requirements",
+  deadlines: "Deadlines",
+  recommenders: "Recommenders",
+  outreach: "Outreach",
+  documents: "Documents",
+};
+
 function ProgramDetail({ id }: { id: number }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -775,8 +783,34 @@ function ProgramDetail({ id }: { id: number }) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setTab}>
-        <div className="overflow-x-auto">
-          <TabsList className="w-max">
+        {/* Mobile: select dropdown */}
+        <div className="sm:hidden">
+          <Select value={activeTab} onValueChange={setTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue>{TAB_LABEL[activeTab]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="requirements">
+                Requirements{requirements.length > 0 && ` (${requirements.length})`}
+              </SelectItem>
+              <SelectItem value="deadlines">
+                Deadlines{deadlines.length > 0 && ` (${deadlines.length})`}
+              </SelectItem>
+              <SelectItem value="recommenders">
+                Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
+              </SelectItem>
+              <SelectItem value="outreach">
+                Outreach{outreach.length > 0 && ` (${outreach.length})`}
+              </SelectItem>
+              <SelectItem value="documents">
+                Documents{documents.length > 0 && ` (${documents.length})`}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Desktop: tab bar */}
+        <div className="hidden sm:block">
+          <TabsList>
             <TabsTrigger value="requirements">
               Requirements{requirements.length > 0 && ` (${requirements.length})`}
             </TabsTrigger>
