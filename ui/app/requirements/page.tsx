@@ -45,13 +45,7 @@ function RequirementsList({
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
-  const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
-  function exitSelectMode() {
-    setSelectMode(false);
-    setSelectedIds(new Set());
-  }
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -93,12 +87,10 @@ function RequirementsList({
   });
 
   function toggleSelect(id: number) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
   }
 
   function startEdit(r: RequirementWithProgram) {
@@ -147,7 +139,44 @@ function RequirementsList({
   if (filtered.length === 0)
     return <p className="text-sm text-muted-foreground">No requirements match the current filter.</p>;
 
-  const allSelected = filtered.every((r) => selectedIds.has(r.id));
+  const allSelected = filtered.length > 0 && filtered.every((r) => selectedIds.has(r.id));
+
+  // Top bar: always visible, left-aligned to match row checkboxes
+  const selectionBar = (
+    <div className="flex items-center gap-2 px-3 py-1">
+      <Checkbox
+        checked={allSelected}
+        onCheckedChange={(checked) =>
+          setSelectedIds(checked ? new Set(filtered.map((r) => r.id)) : new Set())
+        }
+        aria-label="Select all"
+      />
+      {selectedIds.size > 0 ? (
+        <>
+          <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-xs"
+            disabled={bulkUpdate.isPending}
+            onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
+          >
+            In progress
+          </Button>
+          <Button
+            size="sm"
+            className="h-6 px-2 text-xs"
+            disabled={bulkUpdate.isPending}
+            onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
+          >
+            Done
+          </Button>
+        </>
+      ) : (
+        <span className="text-xs text-muted-foreground/50">Select all</span>
+      )}
+    </div>
+  );
 
   function renderRow(r: RequirementWithProgram, showProgram: boolean) {
     return (
@@ -164,14 +193,12 @@ function RequirementsList({
             {r.program.school} · {r.program.department}
           </Link>
         )}
-        {selectMode && (
-          <Checkbox
-            checked={selectedIds.has(r.id)}
-            onCheckedChange={() => toggleSelect(r.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="shrink-0"
-          />
-        )}
+        <Checkbox
+          checked={selectedIds.has(r.id)}
+          onCheckedChange={() => toggleSelect(r.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        />
         <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
         <div className="ml-auto flex items-center gap-2">
           {r.due_date && (
@@ -231,52 +258,6 @@ function RequirementsList({
     );
   }
 
-  const toolbar = selectMode ? (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-4 py-2">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={allSelected}
-          onCheckedChange={(checked) =>
-            setSelectedIds(checked ? new Set(filtered.map((r) => r.id)) : new Set())
-          }
-        />
-        <span className="text-sm text-muted-foreground">
-          {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        {selectedIds.size > 0 && (
-          <>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={bulkUpdate.isPending}
-              onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
-            >
-              In progress
-            </Button>
-            <Button
-              size="sm"
-              disabled={bulkUpdate.isPending}
-              onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
-            >
-              Mark done
-            </Button>
-          </>
-        )}
-        <Button size="sm" variant="ghost" onClick={exitSelectMode}>
-          Cancel
-        </Button>
-      </div>
-    </div>
-  ) : (
-    <div className="flex justify-end">
-      <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setSelectMode(true)}>
-        Select
-      </Button>
-    </div>
-  );
-
   if (sort === "due_date") {
     const sorted = [...filtered].sort((a, b) => {
       if (!a.due_date && !b.due_date) return 0;
@@ -286,7 +267,7 @@ function RequirementsList({
     });
     return (
       <div className="space-y-2">
-        {toolbar}
+        {selectionBar}
         {sorted.map((r) => renderRow(r, true))}
       </div>
     );
@@ -305,7 +286,7 @@ function RequirementsList({
 
   return (
     <div className="space-y-6">
-      {toolbar}
+      {selectionBar}
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
         <div key={programId} className="space-y-2">
           <div className="flex items-baseline gap-2">
