@@ -28,6 +28,16 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
     queryFn: () => api.get("/documents"),
   });
 
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      api.patch(`/documents/${id}`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
   if (isLoading)
     return (
       <div className="space-y-2">
@@ -49,16 +59,6 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
         </Link>
       </div>
     );
-
-  const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      api.patch(`/documents/${id}`, { status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-    },
-    onError: () => toast.error("Something went wrong"),
-  });
 
   const q = search.toLowerCase();
   const filtered = data
