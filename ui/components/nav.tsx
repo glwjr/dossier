@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CircleUser } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -11,7 +12,6 @@ const LINKS = [
   { href: "/requirements", label: "Requirements" },
   { href: "/timeline", label: "Timeline" },
   { href: "/recommenders", label: "Recommenders" },
-  { href: "/account", label: "Account" },
 ];
 
 export function Nav() {
@@ -38,6 +38,13 @@ export function Nav() {
               {label}
             </Link>
           ))}
+          <Link
+            href="/account"
+            title="Account"
+            className={`transition-colors hover:text-foreground ${pathname === "/account" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <CircleUser className="h-4 w-4" />
+          </Link>
           <button
             onClick={toggle}
             className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
@@ -90,6 +97,13 @@ export function Nav() {
                 {label}
               </Link>
             ))}
+            <Link
+              href="/account"
+              className={linkClass("/account")}
+              onClick={() => setOpen(false)}
+            >
+              Account
+            </Link>
             <button
               onClick={() => { toggle(); setOpen(false); }}
               className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
