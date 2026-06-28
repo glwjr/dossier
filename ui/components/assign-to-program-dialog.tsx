@@ -108,7 +108,9 @@ export function AssignToProgramDialog({
                 <SelectContent>
                   {available.length === 0 ? (
                     <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      Already assigned to all programs
+                      {programs.length === 0
+                        ? "No programs yet"
+                        : "Already assigned to all programs"}
                     </div>
                   ) : (
                     available.map((p) => (
