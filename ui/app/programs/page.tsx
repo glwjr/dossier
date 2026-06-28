@@ -27,6 +27,9 @@ import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
 import { LayoutList, LayoutGrid, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type SortKey = "school" | "tier" | "status";
 
@@ -340,25 +343,70 @@ function ProgramsInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [newProgramOpen, setNewProgramOpen] = useState(false);
+  const [view, setView] = useState<"list" | "board">("list");
   const queryClient = useQueryClient();
+
+  const EXPORT_FIELDS = [
+    { key: "department", label: "Department" },
+    { key: "degree", label: "Degree" },
+    { key: "tier", label: "Tier" },
+    { key: "status", label: "Status" },
+    { key: "app_fee", label: "App Fee" },
+    { key: "url", label: "URL" },
+    { key: "notes", label: "Notes" },
+  ] as const;
+
+  type ExportFieldKey = typeof EXPORT_FIELDS[number]["key"];
+
+  const [selectedFields, setSelectedFields] = useState<Set<ExportFieldKey>>(
+    new Set(EXPORT_FIELDS.map((f) => f.key))
+  );
+
+  function toggleField(key: ExportFieldKey) {
+    setSelectedFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem("programs_view");
+    if (saved === "board") setView("board");
+  }, []);
+
+  function handleViewChange(v: "list" | "board") {
+    setView(v);
+    localStorage.setItem("programs_view", v);
+  }
 
   function handleExport() {
     const programs = queryClient.getQueryData<Program[]>(["programs"]);
     if (!programs?.length) return;
-    const headers = ["School", "Department", "Degree", "Tier", "Status", "App Fee", "URL", "Notes"];
-    const rows = programs.map((p) => [
-      p.school,
-      p.department,
-      p.degree,
-      p.tier,
-      p.status,
-      p.app_fee ?? "",
-      p.url ?? "",
-      p.notes ?? "",
-    ]);
-    const csv = [headers, ...rows]
+
+    const allColumns: { key: string; label: string; value: (p: Program) => string | number }[] = [
+      { key: "school", label: "School", value: (p) => p.school },
+      { key: "department", label: "Department", value: (p) => p.department },
+      { key: "degree", label: "Degree", value: (p) => p.degree },
+      { key: "tier", label: "Tier", value: (p) => p.tier },
+      { key: "status", label: "Status", value: (p) => p.status },
+      { key: "app_fee", label: "App Fee", value: (p) => p.app_fee ?? "" },
+      { key: "url", label: "URL", value: (p) => p.url ?? "" },
+      { key: "notes", label: "Notes", value: (p) => p.notes ?? "" },
+    ];
+
+    const cols = allColumns.filter(
+      (c) => c.key === "school" || selectedFields.has(c.key as ExportFieldKey)
+    );
+
+    const csv = [
+      cols.map((c) => c.label),
+      ...programs.map((p) => cols.map((c) => c.value(p))),
+    ]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -384,12 +432,11 @@ function ProgramsInner() {
   const tierFilter = searchParams.get("tier") ?? "all";
   const statusFilter = searchParams.get("status") ?? "all";
   const search = searchParams.get("q") ?? "";
-  const view = searchParams.get("view") ?? "list";
 
   const setParam = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value === "all" || value === "" || (key === "sort" && value === "school") || (key === "view" && value === "list")) {
+      if (value === "all" || value === "" || (key === "sort" && value === "school")) {
         params.delete(key);
       } else {
         params.set(key, value);
@@ -409,7 +456,7 @@ function ProgramsInner() {
               variant="ghost"
               size="sm"
               className={`h-8 rounded-r-none px-2 ${view === "list" ? "bg-muted" : ""}`}
-              onClick={() => setParam("view", "list")}
+              onClick={() => handleViewChange("list")}
               aria-label="List view"
             >
               <LayoutList className="h-4 w-4" />
@@ -418,15 +465,41 @@ function ProgramsInner() {
               variant="ghost"
               size="sm"
               className={`h-8 rounded-l-none px-2 ${view === "board" ? "bg-muted" : ""}`}
-              onClick={() => setParam("view", "board")}
+              onClick={() => handleViewChange("board")}
               aria-label="Board view"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" size="icon" onClick={handleExport} aria-label="Export CSV" title="Export CSV">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Popover>
+            <PopoverTrigger render={<Button variant="outline" size="icon" aria-label="Export CSV" title="Export CSV" />}>
+              <Download className="h-4 w-4" />
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-52">
+              <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Export fields</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 opacity-50">
+                  <Checkbox checked disabled />
+                  <Label className="text-sm font-normal">School</Label>
+                </div>
+                {EXPORT_FIELDS.map(({ key, label }) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`field-${key}`}
+                      checked={selectedFields.has(key)}
+                      onCheckedChange={() => toggleField(key)}
+                    />
+                    <Label htmlFor={`field-${key}`} className="text-sm font-normal cursor-pointer">
+                      {label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <Button className="mt-4 w-full" size="sm" onClick={handleExport}>
+                Download CSV
+              </Button>
+            </PopoverContent>
+          </Popover>
           <ProgramDialog
             trigger={<Button>New program</Button>}
             open={newProgramOpen}
