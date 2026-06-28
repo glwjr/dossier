@@ -10,6 +10,7 @@ import { RequireAuth } from "@/components/require-auth";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -175,11 +176,10 @@ function TimelineInner() {
                     d.done ? "opacity-50" : ""
                   }`}
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={d.done}
-                    onChange={() => toggleDone.mutate(d)}
-                    className="h-4 w-4 cursor-pointer accent-primary"
+                    onCheckedChange={() => toggleDone.mutate(d)}
+                    className="cursor-pointer"
                   />
                   <div className="flex-1 min-w-0">
                     <Link
@@ -210,9 +210,9 @@ function TimelineInner() {
                         }`}
                       >
                         {overdue
-                          ? `${Math.abs(days)}d overdue`
+                          ? `${Math.abs(days)}d Overdue`
                           : days === 0
-                          ? "today"
+                          ? "Today"
                           : `${days}d`}
                       </p>
                     )}
