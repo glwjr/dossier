@@ -1,7 +1,6 @@
 # Dossier — CLAUDE.md
 
-PhD application tracker. Every architectural decision below is **settled** —
-implement as written, don't re-litigate.
+PhD application tracker. Architectural decisions below are settled — don't re-litigate them.
 
 ---
 
@@ -9,108 +8,61 @@ implement as written, don't re-litigate.
 
 - Python 3.12, **uv** (`pyproject.toml`)
 - **FastAPI**
-- **SQLAlchemy 2.0**, declarative, `Mapped[]` / `mapped_column()` — **sync only, no async**
+- **SQLAlchemy 2.0** declarative, `Mapped[]` / `mapped_column()` — **sync only, no async**
 - **Alembic** for migrations
 - **Pydantic v2** — separate Create / Update / Read schemas; `ConfigDict(from_attributes=True)`
-- SQLite (file) in dev, **Postgres** in prod — selected via `DATABASE_URL` env var
+- SQLite in dev, **Postgres** in prod — selected via `DATABASE_URL` env var
 - **pytest** + FastAPI `TestClient`
 - **ruff** for lint + format
 - **Docker** + **GitHub Actions** CI
+- **Next.js 14** App Router, TanStack Query, shadcn/ui (Base UI variant)
 
 ---
 
-## The auth seam (critical — honor from commit one)
+## Auth
 
-There are two separable concerns:
+Two separable concerns kept deliberately separate:
 
-1. **Authorization model**: `User` entity, `user_id` owner on all data, every
-   query scoped to the current user, every endpoint gated by `current_user`.
-   Built from day one — retrofitting touches the entire data layer.
+1. **Authorization model** — `User` entity, `user_id` owner on every row, every query scoped to `current_user`, every endpoint gated by `Depends(get_current_user)`. Ownership of nested resources (requirements, deadlines, etc.) is verified through the parent program — load `Program` scoped to `current_user.id` first; 404 if not theirs.
 
-2. **Authentication mechanism**: the Google OAuth handshake. Deferred to
-   Phase 2, lives entirely behind one dependency.
+2. **Authentication mechanism** — Google OAuth + JWT, entirely behind `get_current_user` in `app/auth.py`. Validates a Bearer JWT issued by `/auth/callback` after the OAuth code exchange. Replacing the auth mechanism in the future touches only that one function.
 
-```python
-# app/auth.py  — Phase 1 stub
-def get_current_user(db: Session = Depends(get_db)) -> User:
-    # Phase 2: validate OAuth session / token here. Nothing else changes.
-    return db.scalar(select(User).where(User.email == DEV_USER_EMAIL))
-```
+Test fixtures: `client` overrides both `get_db` and `get_current_user` (no JWT needed for business-logic tests). `raw_client` overrides only `get_db` and is used for auth-specific tests.
 
-Every router takes `current_user: User = Depends(get_current_user)`.
-Every data query is scoped to `current_user.id`.
+There is a test proving one user cannot read or mutate another user's data.
 
-For nested resources (requirements, deadlines): verify ownership through the
-parent program — load `Program` scoped to `current_user.id` first; 404 if not
-theirs.
+---
 
-**There must be a test proving one user cannot read or mutate another user's data.**
+## Guardrails
+
+- **No async** — synchronous SQLAlchemy only.
+- Do not add libraries beyond the stack without discussion.
 
 ---
 
 ## Working agreement
 
 - **TDD**: write the failing test first, then implement to green.
-- **Small steps**: one entity or one endpoint group per increment. Explain
-  the plan before writing code.
-- **Verify before moving on**: run `pytest` and `ruff` after each increment.
-  Never proceed with a red suite.
+- **Verify before moving on**: run `pytest` and `ruff` after each change. Never proceed with a red suite.
 - **Commits**: one logical change per commit, conventional-commit style.
-- **Checkpoints**: stop, summarize done + next, wait for review.
 
 ---
 
-## Auth (Phase 2)
+## Data model
 
-`get_current_user` in `app/auth.py` now validates a Bearer JWT issued by
-`GET /auth/callback` after the Google OAuth code exchange. The seam is unchanged —
-all routers depend on `get_current_user` exactly as before.
+**Program** — `id, user_id (FK), school, department, degree, url, tier (reach|match|likely), status (researching|drafting|submitted|interview|decision), app_fee, notes, created_at, updated_at`
 
-New dependencies: `pydantic-settings`, `python-jose[cryptography]`, `httpx` (moved
-to main deps). Config centralized in `app/config.py` (`Settings`).
+**Requirement** — `id, program_id (FK), label, kind (sop|cv|transcript|gre|writing_sample|fee|other), status (todo|in_progress|done|waived), due_date?, notes`
 
-Test fixtures: `client` overrides both `get_db` and `get_current_user` (no JWT
-needed for business-logic tests). `raw_client` overrides only `get_db` and is used
-for auth-specific tests.
+**Deadline** — `id, program_id (FK), kind (application|fellowship|fee_waiver), due_date, done, notes`
 
-## Guardrails
+**Recommender** — `id, user_id (FK), name, institution?, email?, notes` (person-level)
 
-- **No async** — synchronous SQLAlchemy only.
-- **No async** — synchronous SQLAlchemy only (backend).
-- Do not add libraries beyond the stack without flagging at a checkpoint.
-- Do not add libraries beyond the stack without flagging at a checkpoint.
+**ProgramRecommender** — junction: `program_id, recommender_id, status (asked|confirmed|submitted), due_date?, notes`
 
----
+**OutreachContact** — `id, program_id (FK), name, email?, url?, contacted_on?, response (none|positive|negative|meeting_scheduled), notes`
 
-## Build sequence
-
-1. ~~**Skeleton + tooling**~~ — done.
-2. ~~**User + auth seam**~~ — done.
-3. ~~**Program CRUD**~~ — done.
-4. ~~**Requirement CRUD**~~ — done.
-5. ~~**Deadline CRUD**~~ — done.
-6. ~~**Dashboard** aggregation endpoint~~ — done.
-7. ~~**Seed the six programs**, README, final green pass.~~ — done. Phase 1 complete.
-8. ~~**Google OAuth** — `/auth/login` + `/auth/callback`, JWT-based `get_current_user`.~~ — done.
-9. ~~**Recommender CRUD** — `Recommender` (person-level) + `ProgramRecommender` junction (status, due_date).~~ — done.
-10. ~~**OutreachContact CRUD** — per-program faculty contact log.~~ — done.
-11. ~~**Document CRUD** — per-program draft tracking.~~ — done.
-12. ~~**UI** — Next.js on Vercel.~~ — done. Next.js 14 App Router in `ui/`, TanStack Query, shadcn/ui. Deploy with Vercel root directory = `ui/`.
-
----
-
-## Phase 1 entities
-
-**Program** — `id, user_id (FK), school, department, degree, url,
-tier (reach|match|likely), status (researching|drafting|submitted|interview|decision),
-app_fee, notes, created_at, updated_at`
-
-**Requirement** — `id, program_id (FK), label,
-kind (sop|cv|transcript|gre|writing_sample|fee|other),
-status (todo|in_progress|done|waived), due_date?, notes`
-
-**Deadline** — `id, program_id (FK),
-kind (application|fellowship|fee_waiver), due_date, done, notes`
+**Document** — `id, program_id (FK), kind (sop|personal_statement|cv|writing_sample|other), title, status (draft|in_progress|final), url?, notes`
 
 ---
 
@@ -118,60 +70,59 @@ kind (application|fellowship|fee_waiver), due_date, done, notes`
 
 ```
 app/
-  main.py          # app factory, router registration
-  config.py        # pydantic-settings Settings (DATABASE_URL, SECRET_KEY, FRONTEND_URL, etc.)
-  db.py            # engine, SessionLocal, get_db
-  auth.py          # get_current_user (JWT Bearer validation)
-  models/          # Base + User, Program, Requirement, Deadline, Recommender, OutreachContact, Document
-  schemas/         # Pydantic v2 Create/Update/Read per entity
-  routers/         # programs, requirements, deadlines, recommenders, outreach, documents, dashboard, auth, me
-  seed.py          # dev user + six target programs
+  main.py       # app factory, router registration, CORS
+  config.py     # pydantic-settings Settings
+  db.py         # engine, SessionLocal, get_db
+  auth.py       # get_current_user (JWT Bearer validation)
+  models/       # Base + one file per entity
+  schemas/      # Pydantic v2 Create/Update/Read per entity
+  routers/      # programs, requirements, deadlines, recommenders, outreach, documents, dashboard, auth, me
+seed.py         # dev user + placeholder programs (replace with your own)
 tests/
 alembic/
-ui/                # Next.js 14 App Router (deploy via Vercel, root dir = ui/)
+ui/             # Next.js 14 App Router (Vercel, root dir = ui/)
   app/
-    page.tsx           # Dashboard
-    programs/page.tsx  # Program list
-    programs/[id]/page.tsx  # Program detail (tabbed)
-    recommenders/page.tsx
-    auth/callback/page.tsx  # extracts ?token= and stores in localStorage
+    page.tsx                    # Dashboard
+    programs/page.tsx           # Program list
+    programs/[id]/page.tsx      # Program detail (tabbed: requirements, deadlines, recommenders, outreach, documents)
+    recommenders/page.tsx       # Person-level recommender management
+    auth/callback/page.tsx      # Extracts ?token= and stores in localStorage
   components/
-    nav.tsx, providers.tsx, require-auth.tsx, ui/…
+    nav.tsx, providers.tsx, require-auth.tsx
+    program-dialog.tsx, requirement-dialog.tsx, deadline-dialog.tsx
+    recommender-dialog.tsx, assign-recommender-dialog.tsx
+    outreach-dialog.tsx, document-dialog.tsx
   lib/
-    api.ts, auth.ts, types.ts
+    api.ts      # fetch wrapper with Bearer auth, redirects to /auth/login on 401
+    auth.ts     # getToken / setToken / clearToken (localStorage key: dossier_token)
+    types.ts    # TypeScript interfaces for all entities
+    display.ts  # centralized display label maps for all enum values
 Dockerfile
 render.yaml
 .github/workflows/ci.yml
 pyproject.toml
 ```
 
+---
+
+## UI patterns (Base UI / shadcn quirks)
+
+- **Dialog trigger**: Base UI has no `asChild` prop. Use controlled `open` state + a `<span style={{ display: "contents" }} onClick={handleOpen}>` wrapper instead of `DialogTrigger`.
+- **SelectValue**: Base UI renders the raw `value` string, not the item label. Always pass the display label as children: `<SelectValue>{LABEL_MAP[value]}</SelectValue>`.
+- **`onValueChange`** returns `string | null` — always null-guard before using: `v && doSomething(v)`.
+- All enum display labels live in `ui/lib/display.ts` — add new ones there, never inline.
+
+---
+
 ## Deployment
 
 - Backend: `https://api.dossiertool.com` (Render, Docker)
 - Frontend: `https://my.dossiertool.com` (Vercel, root dir = `ui/`)
 
-### Environment variables
+**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`
 
-**Render (backend):**
-- `DATABASE_URL` — from Render managed Postgres
-- `SECRET_KEY` — generated by Render
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`
-- `FRONTEND_URL=https://my.dossiertool.com`
+**Vercel env vars:** `NEXT_PUBLIC_API_URL=https://api.dossiertool.com`
 
-**Vercel (frontend):**
-- `NEXT_PUBLIC_API_URL=https://api.dossiertool.com`
+**Google Cloud Console:** register `https://api.dossiertool.com/auth/callback` as an authorized redirect URI. Google redirects to the backend, which issues a JWT and redirects to `{FRONTEND_URL}/auth/callback?token=…`.
 
-### Google OAuth redirect URI
-Must be registered in Google Cloud Console as:
-`https://api.dossiertool.com/auth/callback`
-(Google redirects to the backend, which then redirects to the frontend with `?token=`.)
-
-### UI notes
-- JWT is stored in `localStorage` under key `dossier_token`
-- `RequireAuth` wrapper redirects to `/auth/login` if no token found
-
-## Seed programs
-
-`seed.py` creates the dev user (from `DEV_USER_EMAIL`) and three placeholder programs
-(likely / match / reach) so the UI is non-empty on first run. Replace with your own.
+See `.env.example` for local dev setup.
