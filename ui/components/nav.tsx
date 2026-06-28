@@ -119,39 +119,54 @@ export function Nav() {
                 {label}
               </Link>
             ))}
-            <Link
-              href="/outreach"
-              className={linkClass("/outreach")}
-              onClick={() => setOpen(false)}
-            >
-              Outreach
-            </Link>
-            <button
-              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}
-            >
-              Search
-            </button>
-            <Link
-              href="/documents"
-              className={linkClass("/documents")}
-              onClick={() => setOpen(false)}
-            >
-              Documents
-            </Link>
-            <Link
-              href="/account"
-              className={linkClass("/account")}
-              onClick={() => setOpen(false)}
-            >
-              Account
-            </Link>
-            <button
-              onClick={() => { toggle(); setOpen(false); }}
-              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
+            <div className="flex items-center justify-center gap-5 border-t pt-3">
+              <Link
+                href="/outreach"
+                aria-label="Outreach"
+                className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
+                onClick={() => setOpen(false)}
+              >
+                <Globe className="h-5 w-5" />
+              </Link>
+              <button
+                onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}
+                aria-label="Search"
+                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              <Link
+                href="/documents"
+                aria-label="Documents"
+                className={`transition-colors hover:text-foreground ${pathname === "/documents" ? "text-foreground" : "text-muted-foreground"}`}
+                onClick={() => setOpen(false)}
+              >
+                <FileText className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/account"
+                aria-label="Account"
+                className={`transition-colors hover:text-foreground ${pathname === "/account" ? "text-foreground" : "text-muted-foreground"}`}
+                onClick={() => setOpen(false)}
+              >
+                <CircleUser className="h-5 w-5" />
+              </Link>
+              <button
+                onClick={() => { toggle(); setOpen(false); }}
+                aria-label="Toggle theme"
+                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {theme === "dark" ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </nav>
         </div>
       )}
