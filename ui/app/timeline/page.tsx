@@ -191,6 +191,11 @@ function TimelineInner() {
                     <p className="text-xs text-muted-foreground truncate">
                       {d.program.department}
                     </p>
+                    {d.notes && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {d.notes}
+                      </p>
+                    )}
                   </div>
                   <Badge variant={KIND_VARIANT[d.kind]}>
                     {DEADLINE_KIND_LABEL[d.kind]}

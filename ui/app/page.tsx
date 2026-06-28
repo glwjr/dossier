@@ -106,13 +106,18 @@ function Dashboard() {
   if (error) return <p className="text-destructive">Failed to load dashboard.</p>;
   if (!data?.length)
     return (
-      <p className="text-muted-foreground">
-        No programs yet.{" "}
-        <Link href="/programs" className="underline">
-          Add one
+      <div className="rounded-lg border border-dashed px-6 py-12 text-center">
+        <p className="text-sm font-medium">No programs yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Start by adding the schools you're applying to.
+        </p>
+        <Link
+          href="/programs"
+          className="mt-4 inline-block text-sm underline underline-offset-4"
+        >
+          Add your first program →
         </Link>
-        .
-      </p>
+      </div>
     );
 
   const totalPrograms = data.length;

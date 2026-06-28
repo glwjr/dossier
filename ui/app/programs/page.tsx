@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { Program, ProgramStatus } from "@/lib/types";
 import {
@@ -128,7 +128,22 @@ function ProgramList({
       </div>
     );
   if (error) return <p className="text-destructive">Failed to load programs.</p>;
-  if (!data?.length) return <p className="text-muted-foreground">No programs yet.</p>;
+  if (!data?.length)
+    return (
+      <div className="rounded-lg border border-dashed px-6 py-12 text-center">
+        <p className="text-sm font-medium">No programs yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add the schools you're applying to and track everything in one place.
+        </p>
+        <ProgramDialog
+          trigger={
+            <button className="mt-4 text-sm underline underline-offset-4">
+              Add your first program →
+            </button>
+          }
+        />
+      </div>
+    );
 
   const q = search.toLowerCase();
   const filtered = data
@@ -155,15 +170,31 @@ function ProgramList({
   );
 }
 
-export default function ProgramsPage() {
-  usePageTitle("Programs");
-  const [sort, setSort] = useState<SortKey>("school");
-  const [tierFilter, setTierFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+function ProgramsInner() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const sort = (searchParams.get("sort") as SortKey) ?? "school";
+  const tierFilter = searchParams.get("tier") ?? "all";
+  const statusFilter = searchParams.get("status") ?? "all";
+  const search = searchParams.get("q") ?? "";
+
+  const setParam = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "all" || value === "" || (key === "sort" && value === "school")) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, pathname]
+  );
 
   return (
-    <RequireAuth>
+    <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
         <ProgramDialog trigger={<Button>New program</Button>} />
@@ -172,11 +203,11 @@ export default function ProgramsPage() {
         <Input
           placeholder="Search school or department…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setParam("q", e.target.value)}
           className="h-9 w-56 text-sm"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={tierFilter} onValueChange={(v) => v && setTierFilter(v)}>
+          <Select value={tierFilter} onValueChange={(v) => v && setParam("tier", v)}>
             <SelectTrigger className="h-9 w-28 text-sm">
               <SelectValue>
                 {tierFilter === "all" ? "All tiers" : PROGRAM_TIER_LABEL[tierFilter as keyof typeof PROGRAM_TIER_LABEL]}
@@ -189,7 +220,7 @@ export default function ProgramsPage() {
               <SelectItem value="likely">Likely</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
+          <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
             <SelectTrigger className="h-9 w-36 text-sm">
               <SelectValue>
                 {statusFilter === "all" ? "All statuses" : PROGRAM_STATUS_LABEL[statusFilter as keyof typeof PROGRAM_STATUS_LABEL]}
@@ -204,7 +235,7 @@ export default function ProgramsPage() {
               <SelectItem value="decision">Decision</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={sort} onValueChange={(v) => v && setSort(v as SortKey)}>
+          <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
             <SelectTrigger className="h-9 w-32 text-sm">
               <SelectValue>
                 {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : "Sort: Status"}
@@ -219,6 +250,17 @@ export default function ProgramsPage() {
         </div>
       </div>
       <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
+    </>
+  );
+}
+
+export default function ProgramsPage() {
+  usePageTitle("Programs");
+  return (
+    <RequireAuth>
+      <Suspense>
+        <ProgramsInner />
+      </Suspense>
     </RequireAuth>
   );
 }
