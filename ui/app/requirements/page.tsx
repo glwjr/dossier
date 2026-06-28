@@ -192,11 +192,27 @@ function RequirementsInner() {
   );
 }
 
+function RequirementsPageSkeleton() {
+  return (
+    <>
+      <div className="mb-6 flex items-center justify-between">
+        <Skeleton className="h-8 w-36" />
+        <Skeleton className="h-9 w-36" />
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function RequirementsPage() {
   usePageTitle("Requirements");
   return (
     <RequireAuth>
-      <Suspense>
+      <Suspense fallback={<RequirementsPageSkeleton />}>
         <RequirementsInner />
       </Suspense>
     </RequireAuth>

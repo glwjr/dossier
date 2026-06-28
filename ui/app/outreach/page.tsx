@@ -187,7 +187,19 @@ export default function OutreachPage() {
   return (
     <RequireAuth>
       <h1 className="mb-6 text-2xl font-semibold">Outreach</h1>
-      <Suspense>
+      <Suspense
+        fallback={
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        }
+      >
         <OutreachInner />
       </Suspense>
     </RequireAuth>

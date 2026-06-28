@@ -410,11 +410,39 @@ function ProgramsInner() {
   );
 }
 
+function ProgramsPageSkeleton() {
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <Skeleton className="h-8 w-28" />
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <div className="mb-6 flex gap-2">
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-9 w-28" />
+        <Skeleton className="h-9 w-36" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function ProgramsPage() {
   usePageTitle("Programs");
   return (
     <RequireAuth>
-      <Suspense>
+      <Suspense fallback={<ProgramsPageSkeleton />}>
         <ProgramsInner />
       </Suspense>
     </RequireAuth>
