@@ -20,6 +20,8 @@ import {
   DOCUMENT_STATUS_LABEL,
   OUTREACH_RESPONSE_LABEL,
   PROGRAM_STATUS_LABEL,
+  PROGRAM_TIER_LABEL,
+  PROGRAM_TIER_VARIANT,
   REC_STATUS_LABEL,
   REQUIREMENT_STATUS_LABEL,
   formatDate,
@@ -703,8 +705,11 @@ function ProgramDetail({ id }: { id: number }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold">{program.school}</h1>
+            <Badge variant={PROGRAM_TIER_VARIANT[program.tier]}>
+              {PROGRAM_TIER_LABEL[program.tier]}
+            </Badge>
             <Badge variant="outline">
               {PROGRAM_STATUS_LABEL[program.status]}
             </Badge>

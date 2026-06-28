@@ -11,6 +11,7 @@ import { RecommenderDialog } from "@/components/recommender-dialog";
 import { AssignToProgramDialog } from "@/components/assign-to-program-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -23,7 +24,7 @@ import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 
 
-function RecommenderList({ statusFilter }: { statusFilter: string }) {
+function RecommenderList({ statusFilter, search }: { statusFilter: string; search: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<Recommender[]>({
     queryKey: ["recommenders"],
@@ -102,12 +103,17 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
       .map((a) => ({ rec: r, assignment: a }))
   );
 
-  const filtered =
-    statusFilter === "all"
-      ? data
-      : data.filter((r) =>
-          r.program_assignments.some((a) => a.status === statusFilter)
-        );
+  const q = search.toLowerCase();
+  const filtered = data
+    .filter((r) =>
+      statusFilter === "all" || r.program_assignments.some((a) => a.status === statusFilter)
+    )
+    .filter(
+      (r) =>
+        !q ||
+        r.name.toLowerCase().includes(q) ||
+        (r.institution ?? "").toLowerCase().includes(q)
+    );
 
   if (filtered.length === 0)
     return <p className="text-muted-foreground">No recommenders match the current filter.</p>;
@@ -250,12 +256,19 @@ function RecommenderList({ statusFilter }: { statusFilter: string }) {
 export default function RecommendersPage() {
   usePageTitle("Recommenders");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
   return (
     <RequireAuth>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Recommenders</h1>
         <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 w-48 text-sm"
+          />
           <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
             <SelectTrigger className="h-9 w-36 text-sm">
               <SelectValue>
@@ -272,7 +285,7 @@ export default function RecommendersPage() {
           <RecommenderDialog trigger={<Button>Add recommender</Button>} />
         </div>
       </div>
-      <RecommenderList statusFilter={statusFilter} />
+      <RecommenderList statusFilter={statusFilter} search={search} />
     </RequireAuth>
   );
 }

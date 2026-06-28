@@ -9,6 +9,7 @@ import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -25,7 +26,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   final: "default",
 };
 
-function DocumentsList({ statusFilter, kindFilter }: { statusFilter: string; kindFilter: string }) {
+function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: string; kindFilter: string; search: string }) {
   const { data, isLoading, error } = useQuery<DocumentWithProgram[]>({
     queryKey: ["documents-all"],
     queryFn: () => api.get("/documents"),
@@ -53,9 +54,11 @@ function DocumentsList({ statusFilter, kindFilter }: { statusFilter: string; kin
       </div>
     );
 
+  const q = search.toLowerCase();
   const filtered = data
     .filter((d) => statusFilter === "all" || d.status === statusFilter)
-    .filter((d) => kindFilter === "all" || d.kind === kindFilter);
+    .filter((d) => kindFilter === "all" || d.kind === kindFilter)
+    .filter((d) => !q || d.title.toLowerCase().includes(q) || d.program.school.toLowerCase().includes(q));
 
   if (filtered.length === 0)
     return <p className="text-sm text-muted-foreground">No documents match the current filter.</p>;
@@ -124,6 +127,7 @@ function DocumentsInner() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
   const kindFilter = searchParams.get("kind") ?? "all";
+  const search = searchParams.get("q") ?? "";
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -140,6 +144,12 @@ function DocumentsInner() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Documents</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <Input
+            placeholder="Search…"
+            value={search}
+            onChange={(e) => setParam("q", e.target.value)}
+            className="h-9 w-48 text-sm"
+          />
           <Select value={kindFilter} onValueChange={(v) => v && setParam("kind", v)}>
             <SelectTrigger className="h-9 w-40 text-sm">
               <SelectValue>
@@ -170,7 +180,7 @@ function DocumentsInner() {
           </Select>
         </div>
       </div>
-      <DocumentsList statusFilter={statusFilter} kindFilter={kindFilter} />
+      <DocumentsList statusFilter={statusFilter} kindFilter={kindFilter} search={search} />
     </>
   );
 }

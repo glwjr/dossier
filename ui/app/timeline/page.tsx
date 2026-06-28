@@ -15,6 +15,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -39,6 +40,7 @@ function TimelineInner() {
   const [showAll, setShowAll] = useState(false);
   const [programFilter, setProgramFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
   const { data: deadlines = [], isLoading: dlLoading } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
@@ -109,13 +111,17 @@ function TimelineInner() {
     return [...seen.values()].sort((a, b) => a.school.localeCompare(b.school));
   }, [items]);
 
+  const q = search.toLowerCase();
   const visible = items
     .filter((item) => showAll || !item.isDone)
     .filter((item) => programFilter === "all" || item.programId === Number(programFilter))
-    .filter((item) => {
-      if (kindFilter === "all") return true;
-      return item.itemType === kindFilter;
-    });
+    .filter((item) => kindFilter === "all" || item.itemType === kindFilter)
+    .filter(
+      (item) =>
+        !q ||
+        item.school.toLowerCase().includes(q) ||
+        (item.itemType === "requirement" && item.raw.label.toLowerCase().includes(q))
+    );
 
   const grouped = visible.reduce<Record<string, TimelineItem[]>>((acc, item) => {
     const [year, month] = item.dueDate.split("-");
@@ -176,6 +182,12 @@ function TimelineInner() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 w-48 text-sm"
+        />
         <Select value={programFilter} onValueChange={(v) => v && setProgramFilter(v)}>
           <SelectTrigger className="h-9 w-44 text-sm">
             <SelectValue>

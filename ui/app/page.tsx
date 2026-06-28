@@ -144,6 +144,10 @@ function Dashboard() {
     return a.days_remaining - b.days_remaining;
   });
 
+  const upcomingList = visible
+    .filter((e) => e.next_deadline !== null && e.days_remaining !== null && e.days_remaining >= 0 && e.days_remaining <= 14)
+    .sort((a, b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999));
+
   const FILTERS: { value: DashboardFilter; label: string }[] = [
     { value: "all", label: "All" },
     { value: "active", label: "Active" },
@@ -199,6 +203,24 @@ function Dashboard() {
           ))}
         </div>
       </div>
+      {upcomingList.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Next 14 days</h2>
+          {upcomingList.map((e) => (
+            <div
+              key={e.program.id}
+              className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+            >
+              <Link href={`/programs/${e.program.id}?tab=deadlines`} className="font-medium hover:underline">
+                {e.program.school}
+              </Link>
+              <span className={`text-xs ${(e.days_remaining ?? 99) <= 3 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                {formatDate(e.next_deadline!)} · {e.days_remaining === 0 ? "Today" : `${e.days_remaining}d`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No programs match the current filter.</p>
       ) : (

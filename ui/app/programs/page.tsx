@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
-import { Program, ProgramStatus } from "@/lib/types";
+import { Program, ProgramStatus, RequirementWithProgram } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
   PROGRAM_TIER_LABEL,
@@ -63,7 +63,7 @@ function sortPrograms(programs: Program[], key: SortKey): Program[] {
   });
 }
 
-function ProgramCard({ program }: { program: Program }) {
+function ProgramCard({ program, reqCount }: { program: Program; reqCount?: { done: number; total: number } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editingNotes, setEditingNotes] = useState(false);
@@ -99,7 +99,14 @@ function ProgramCard({ program }: { program: Program }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-muted-foreground">{program.department} · {program.degree}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-muted-foreground">{program.department} · {program.degree}</p>
+          {reqCount && reqCount.total > 0 && (
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {reqCount.done}/{reqCount.total} done
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {program.app_fee != null && <span>${program.app_fee} fee</span>}
           {program.url && (
@@ -183,6 +190,23 @@ function ProgramList({
     queryFn: () => api.get("/programs"),
   });
 
+  const { data: requirements = [] } = useQuery<RequirementWithProgram[]>({
+    queryKey: ["requirements-all"],
+    queryFn: () => api.get("/requirements"),
+  });
+
+  const reqCounts = useMemo(() => {
+    const counts = new Map<number, { done: number; total: number }>();
+    for (const r of requirements) {
+      const c = counts.get(r.program.id) ?? { done: 0, total: 0 };
+      counts.set(r.program.id, {
+        done: c.done + (r.status === "done" || r.status === "waived" ? 1 : 0),
+        total: c.total + 1,
+      });
+    }
+    return counts;
+  }, [requirements]);
+
   if (isLoading)
     return (
       <div className="grid gap-4 sm:grid-cols-2">
@@ -235,7 +259,7 @@ function ProgramList({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {sorted.map((p) => (
-        <ProgramCard key={p.id} program={p} />
+        <ProgramCard key={p.id} program={p} reqCount={reqCounts.get(p.id)} />
       ))}
     </div>
   );
