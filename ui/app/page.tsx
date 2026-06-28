@@ -86,11 +86,33 @@ function Dashboard() {
       </p>
     );
 
+  const totalPrograms = data.length;
+  const upcomingDeadlines = data.filter(
+    (e) => e.next_deadline !== null && e.days_remaining !== null && e.days_remaining <= 30
+  ).length;
+  const blockingCount = data.reduce(
+    (sum, e) => sum + e.blocking_requirements.length,
+    0
+  );
+
+  const summaryParts = [
+    `${totalPrograms} program${totalPrograms !== 1 ? "s" : ""}`,
+    upcomingDeadlines > 0
+      ? `${upcomingDeadlines} deadline${upcomingDeadlines !== 1 ? "s" : ""} in the next 30 days`
+      : "no upcoming deadlines",
+    blockingCount > 0
+      ? `${blockingCount} requirement${blockingCount !== 1 ? "s" : ""} incomplete`
+      : "all requirements on track",
+  ];
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {data.map((entry) => (
-        <ProgramCard key={entry.program.id} entry={entry} />
-      ))}
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">{summaryParts.join(" · ")}</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {data.map((entry) => (
+          <ProgramCard key={entry.program.id} entry={entry} />
+        ))}
+      </div>
     </div>
   );
 }

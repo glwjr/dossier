@@ -605,6 +605,19 @@ function ProgramDetail({ id }: { id: number }) {
             </Badge>
           </div>
           <p className="text-muted-foreground">{program.department}</p>
+          {program.url && (
+            <a
+              href={program.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground underline underline-offset-2 hover:opacity-70"
+            >
+              {program.url}
+            </a>
+          )}
+          {program.notes && (
+            <p className="text-sm text-muted-foreground">{program.notes}</p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <ProgramDialog

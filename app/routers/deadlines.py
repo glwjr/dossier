@@ -47,7 +47,11 @@ def list_deadlines(
     db: Session = Depends(get_db),
 ):
     _get_program_or_404(program_id, current_user, db)
-    return db.scalars(select(Deadline).where(Deadline.program_id == program_id)).all()
+    return db.scalars(
+        select(Deadline)
+        .where(Deadline.program_id == program_id)
+        .order_by(Deadline.due_date)
+    ).all()
 
 
 @router.post(
