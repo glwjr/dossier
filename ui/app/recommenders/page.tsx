@@ -260,9 +260,12 @@ export default function RecommendersPage() {
 
   return (
     <RequireAuth>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Recommenders</h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Recommenders</h1>
+          <RecommenderDialog trigger={<Button>Add recommender</Button>} />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             placeholder="Search…"
             value={search}
@@ -282,7 +285,6 @@ export default function RecommendersPage() {
               <SelectItem value="submitted">Submitted</SelectItem>
             </SelectContent>
           </Select>
-          <RecommenderDialog trigger={<Button>Add recommender</Button>} />
         </div>
       </div>
       <RecommenderList statusFilter={statusFilter} search={search} />
