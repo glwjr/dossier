@@ -12,6 +12,7 @@ import {
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -111,7 +112,7 @@ function RequirementsList({
         ))}
       </div>
     );
-  if (error) return <p className="text-destructive">Failed to load requirements.</p>;
+  if (error) return <ErrorState title="Failed to load requirements" message="Something went wrong. Try refreshing the page." />;
   if (!data?.length)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">

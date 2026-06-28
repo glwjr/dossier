@@ -13,6 +13,7 @@ import {
   PROGRAM_TIER_VARIANT,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +112,7 @@ function Dashboard() {
         </div>
       </div>
     );
-  if (error) return <p className="text-destructive">Failed to load dashboard.</p>;
+  if (error) return <ErrorState title="Failed to load dashboard" message="Something went wrong. Try refreshing the page." />;
   if (!data?.length)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">

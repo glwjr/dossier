@@ -9,6 +9,7 @@ import { OutreachContactWithProgram } from "@/lib/types";
 import { OUTREACH_RESPONSE_LABEL, formatDate } from "@/lib/display";
 import { Input } from "@/components/ui/input";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +72,7 @@ function OutreachInner() {
       </div>
     );
 
-  if (error) return <p className="text-destructive">Failed to load outreach contacts.</p>;
+  if (error) return <ErrorState title="Failed to load outreach contacts" message="Something went wrong. Try refreshing the page." />;
 
   if (data.length === 0)
     return (

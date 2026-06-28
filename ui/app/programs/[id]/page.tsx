@@ -27,6 +27,7 @@ import {
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
 import { DeadlineDialog } from "@/components/deadline-dialog";
@@ -699,7 +700,15 @@ function ProgramDetail({ id }: { id: number }) {
         </div>
       </div>
     );
-  if (error || !program) return <p className="text-destructive">Program not found.</p>;
+  if (error || !program)
+    return (
+      <ErrorState
+        title="Program not found"
+        message="It may have been deleted, or you may not have access."
+        backHref="/programs"
+        backLabel="Back to programs"
+      />
+    );
 
   return (
     <div className="space-y-6">

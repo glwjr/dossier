@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +41,7 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
         ))}
       </div>
     );
-  if (error) return <p className="text-destructive">Failed to load documents.</p>;
+  if (error) return <ErrorState title="Failed to load documents" message="Something went wrong. Try refreshing the page." />;
   if (!data?.length)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">

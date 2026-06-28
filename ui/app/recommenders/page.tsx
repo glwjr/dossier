@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { Recommender } from "@/lib/types";
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { RecommenderDialog } from "@/components/recommender-dialog";
 import { AssignToProgramDialog } from "@/components/assign-to-program-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,7 +80,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
       </div>
     );
   if (error)
-    return <p className="text-destructive">Failed to load recommenders.</p>;
+    return <ErrorState title="Failed to load recommenders" message="Something went wrong. Try refreshing the page." />;
   if (!data?.length)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
