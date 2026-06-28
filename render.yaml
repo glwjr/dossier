@@ -16,6 +16,8 @@ services:
         sync: false
       - key: GOOGLE_REDIRECT_URI
         sync: false
+      - key: FRONTEND_URL
+        sync: false
 
 databases:
   - name: dossier-db
