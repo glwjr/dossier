@@ -1,13 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Recommender } from "@/lib/types";
+import { REC_STATUS_LABEL } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { RecommenderDialog } from "@/components/recommender-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
+  asked: "outline",
+  confirmed: "secondary",
+  submitted: "default",
+};
 
 function RecommenderList() {
   const queryClient = useQueryClient();
@@ -24,7 +34,24 @@ function RecommenderList() {
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return (
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <Skeleton className="h-5 w-40" />
+              <div className="flex gap-1">
+                <Skeleton className="h-7 w-10" />
+                <Skeleton className="h-7 w-14" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-52" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+        ))}
+      </div>
+    );
   if (error)
     return <p className="text-destructive">Failed to load recommenders.</p>;
   if (!data?.length)
@@ -81,10 +108,41 @@ function RecommenderList() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm text-muted-foreground">
-            {r.institution && <p>{r.institution}</p>}
-            {r.email && <p>{r.email}</p>}
-            {r.notes && <p className="mt-2 text-foreground">{r.notes}</p>}
+          <CardContent className="space-y-3 text-sm">
+            <div className="space-y-1 text-muted-foreground">
+              {r.institution && <p>{r.institution}</p>}
+              {r.email && (
+                <a
+                  href={`mailto:${r.email}`}
+                  className="hover:text-foreground underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {r.email}
+                </a>
+              )}
+              {r.notes && <p className="text-foreground">{r.notes}</p>}
+            </div>
+
+            {r.program_assignments.length > 0 && (
+              <div className="space-y-1.5">
+                {r.program_assignments.map((a) => (
+                  <div key={a.program_id} className="flex items-center justify-between gap-2">
+                    <Link
+                      href={`/programs/${a.program_id}`}
+                      className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      {a.program.school} — {a.program.department}
+                    </Link>
+                    <Badge
+                      variant={STATUS_VARIANT[a.status]}
+                      className="shrink-0 text-xs"
+                    >
+                      {REC_STATUS_LABEL[a.status]}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}

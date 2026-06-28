@@ -15,6 +15,7 @@ from app.schemas.recommender import (
     RecommenderCreate,
     RecommenderRead,
     RecommenderUpdate,
+    RecommenderWithAssignmentsRead,
 )
 
 router = APIRouter(tags=["recommenders"])
@@ -72,7 +73,7 @@ def _get_pr_or_404(
 # --- Top-level recommender CRUD ---
 
 
-@router.get("/recommenders", response_model=list[RecommenderRead])
+@router.get("/recommenders", response_model=list[RecommenderWithAssignmentsRead])
 def list_recommenders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

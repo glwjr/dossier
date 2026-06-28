@@ -143,6 +143,13 @@ export interface DeadlineWithProgram extends Deadline {
   program: { id: number; school: string; department: string };
 }
 
+export interface ProgramAssignmentSummary {
+  program_id: number;
+  status: "asked" | "confirmed" | "submitted";
+  due_date: string | null;
+  program: { id: number; school: string; department: string };
+}
+
 export interface Recommender {
   id: number;
   user_id: number;
@@ -150,6 +157,7 @@ export interface Recommender {
   email: string | null;
   institution: string | null;
   notes: string | null;
+  program_assignments: ProgramAssignmentSummary[];
 }
 
 export interface ProgramRecommender {

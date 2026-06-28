@@ -19,6 +19,23 @@ class RecommenderUpdate(BaseModel):
     notes: str | None = None
 
 
+class ProgramSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    school: str
+    department: str
+
+
+class ProgramAssignmentSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    program_id: int
+    status: RecommenderStatus
+    due_date: date | None
+    program: ProgramSummary
+
+
 class RecommenderRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,6 +45,10 @@ class RecommenderRead(BaseModel):
     email: str | None
     institution: str | None
     notes: str | None
+
+
+class RecommenderWithAssignmentsRead(RecommenderRead):
+    program_assignments: list[ProgramAssignmentSummary] = []
 
 
 class ProgramRecommenderCreate(BaseModel):

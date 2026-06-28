@@ -1,11 +1,15 @@
 import enum
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, ForeignKey, String, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.program import Program
 
 
 class RecommenderStatus(str, enum.Enum):
@@ -23,6 +27,9 @@ class Recommender(Base):
     email: Mapped[str | None] = mapped_column(String)
     institution: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
+    program_assignments: Mapped[list["ProgramRecommender"]] = relationship(
+        "ProgramRecommender", lazy="selectin"
+    )
 
 
 class ProgramRecommender(Base):
@@ -39,4 +46,7 @@ class ProgramRecommender(Base):
     due_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
 
-    recommender: Mapped["Recommender"] = relationship("Recommender")
+    recommender: Mapped["Recommender"] = relationship(
+        "Recommender", overlaps="program_assignments"
+    )
+    program: Mapped["Program"] = relationship("Program", lazy="joined")
