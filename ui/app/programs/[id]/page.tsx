@@ -128,6 +128,7 @@ function RequirementsTab({ programId }: { programId: number }) {
         >
           <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
           <div className="ml-auto flex items-center gap-1">
+
           <span className="hidden text-xs text-muted-foreground sm:block">{formatDate(r.due_date)}</span>
           <Select
             value={r.status}
@@ -185,6 +186,9 @@ function RequirementsTab({ programId }: { programId: number }) {
             </Button>
           )}
           </div>
+          {r.notes && (
+            <p className="w-full text-xs text-muted-foreground">{r.notes}</p>
+          )}
         </div>
       ))}
     </div>
@@ -231,54 +235,59 @@ function DeadlinesTab({ programId }: { programId: number }) {
       {data.map((d) => (
         <div
           key={d.id}
-          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
           <button
-            className={`flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
+            className={`min-w-0 flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
             onClick={() => toggleDone.mutate(d)}
           >
             {DEADLINE_KIND_LABEL[d.kind]} — {formatDate(d.due_date)}
           </button>
-          <DeadlineDialog
-            programId={programId}
-            deadline={d}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                Edit
-              </Button>
-            }
-          />
-          {confirmDelete === d.id ? (
-            <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1">
+            <DeadlineDialog
+              programId={programId}
+              deadline={d}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                  Edit
+                </Button>
+              }
+            />
+            {confirmDelete === d.id ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    deleteDeadline.mutate(d.id);
+                    setConfirmDelete(null);
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
               <Button
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => {
-                  deleteDeadline.mutate(d.id);
-                  setConfirmDelete(null);
-                }}
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={() => setConfirmDelete(d.id)}
               >
                 Delete
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={() => setConfirmDelete(d.id)}
-            >
-              Delete
-            </Button>
+            )}
+          </div>
+          {d.notes && (
+            <p className="w-full text-xs text-muted-foreground">{d.notes}</p>
           )}
         </div>
       ))}
@@ -318,58 +327,63 @@ function RecommendersTab({ programId }: { programId: number }) {
       {data.map((pr) => (
         <div
           key={pr.id}
-          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
+          <span className={`min-w-0 flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
             {pr.recommender.name}
             {pr.recommender.institution
               ? ` — ${pr.recommender.institution}`
               : ""}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {REC_STATUS_LABEL[pr.status]}
-            {pr.due_date ? ` · ${formatDate(pr.due_date)}` : ""}
-          </span>
-          <AssignRecommenderDialog
-            programId={programId}
-            assignment={pr}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                Edit
-              </Button>
-            }
-          />
-          {confirmDelete === pr.recommender_id ? (
-            <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">
+              {REC_STATUS_LABEL[pr.status]}
+              {pr.due_date ? ` · ${formatDate(pr.due_date)}` : ""}
+            </span>
+            <AssignRecommenderDialog
+              programId={programId}
+              assignment={pr}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                  Edit
+                </Button>
+              }
+            />
+            {confirmDelete === pr.recommender_id ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    removeAssignment.mutate(pr.recommender_id);
+                    setConfirmDelete(null);
+                  }}
+                >
+                  Remove
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
               <Button
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => {
-                  removeAssignment.mutate(pr.recommender_id);
-                  setConfirmDelete(null);
-                }}
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={() => setConfirmDelete(pr.recommender_id)}
               >
                 Remove
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={() => setConfirmDelete(pr.recommender_id)}
-            >
-              Remove
-            </Button>
+            )}
+          </div>
+          {pr.notes && (
+            <p className="w-full text-xs text-muted-foreground">{pr.notes}</p>
           )}
         </div>
       ))}
@@ -406,54 +420,60 @@ function OutreachTab({ programId }: { programId: number }) {
       {data.map((c) => (
         <div
           key={c.id}
-          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`flex-1 ${RESPONSE_COLOR[c.response]}`}>
+          <span className={`min-w-0 flex-1 ${RESPONSE_COLOR[c.response]}`}>
             {c.name}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {c.contacted_on ? formatDate(c.contacted_on) : OUTREACH_RESPONSE_LABEL[c.response]}
-          </span>
-          <OutreachDialog
-            programId={programId}
-            contact={c}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                Edit
-              </Button>
-            }
-          />
-          {confirmDelete === c.id ? (
-            <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">
+              {OUTREACH_RESPONSE_LABEL[c.response]}
+              {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
+            </span>
+            <OutreachDialog
+              programId={programId}
+              contact={c}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                  Edit
+                </Button>
+              }
+            />
+            {confirmDelete === c.id ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    deleteContact.mutate(c.id);
+                    setConfirmDelete(null);
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
               <Button
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => {
-                  deleteContact.mutate(c.id);
-                  setConfirmDelete(null);
-                }}
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={() => setConfirmDelete(c.id)}
               >
                 Delete
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={() => setConfirmDelete(c.id)}
-            >
-              Delete
-            </Button>
+            )}
+          </div>
+          {c.notes && (
+            <p className="w-full text-xs text-muted-foreground">{c.notes}</p>
           )}
         </div>
       ))}
@@ -572,6 +592,9 @@ function DocumentsTab({ programId }: { programId: number }) {
             </Button>
           )}
           </div>
+          {d.notes && (
+            <p className="w-full text-xs text-muted-foreground">{d.notes}</p>
+          )}
         </div>
       ))}
     </div>
