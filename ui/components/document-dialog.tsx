@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Document, DocumentCreate } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -62,8 +63,10 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
         : api.post<Document>(`/programs/${programId}/documents`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", programId] });
+      toast.success("Saved");
       setOpen(false);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function set<K extends keyof DocumentCreate>(

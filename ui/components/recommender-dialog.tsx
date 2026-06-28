@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Recommender, RecommenderCreate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -51,8 +52,10 @@ export function RecommenderDialog({ recommender, trigger }: Props) {
         : api.post<Recommender>("/recommenders", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      toast.success("Saved");
       setOpen(false);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function set<K extends keyof RecommenderCreate>(

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Deadline, DeadlineCreate } from "@/lib/types";
 import { DEADLINE_KIND_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -61,8 +62,10 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Saved");
       setOpen(false);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function set<K extends keyof DeadlineCreate>(

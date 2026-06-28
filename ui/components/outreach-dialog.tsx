@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { OutreachContact, OutreachCreate } from "@/lib/types";
 import { OUTREACH_RESPONSE_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -64,8 +65,10 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
         : api.post<OutreachContact>(`/programs/${programId}/outreach`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
+      toast.success("Saved");
       setOpen(false);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function set<K extends keyof OutreachCreate>(

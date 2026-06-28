@@ -9,6 +9,7 @@ import {
   PROGRAM_TIER_LABEL,
 } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -73,9 +74,11 @@ export function ProgramDialog({ program, trigger, onSuccess }: Props) {
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       queryClient.invalidateQueries({ queryKey: ["program", result.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(isEdit ? "Program updated" : "Program created");
       setOpen(false);
       onSuccess?.(result);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function set<K extends keyof ProgramCreate>(key: K, value: ProgramCreate[K]) {

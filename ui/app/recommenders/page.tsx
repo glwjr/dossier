@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   asked: "outline",
@@ -28,8 +29,11 @@ function RecommenderList() {
 
   const deleteRec = useMutation({
     mutationFn: (id: number) => api.delete(`/recommenders/${id}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      toast.success("Deleted");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);

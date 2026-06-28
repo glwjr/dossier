@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const STATUS_COLOR: Record<string, string> = {
   todo: "text-muted-foreground",
@@ -105,8 +106,11 @@ function RequirementsTab({ programId }: { programId: number }) {
 
   const deleteReq = useMutation({
     mutationFn: (id: number) => api.delete(`/requirements/${id}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["requirements", programId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
+      toast.success("Deleted");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -217,7 +221,9 @@ function DeadlinesTab({ programId }: { programId: number }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Deleted");
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -306,10 +312,11 @@ function RecommendersTab({ programId }: { programId: number }) {
   const removeAssignment = useMutation({
     mutationFn: (recommenderId: number) =>
       api.delete(`/programs/${programId}/recommenders/${recommenderId}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["program-recommenders", programId],
-      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["program-recommenders", programId] });
+      toast.success("Removed");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -401,8 +408,11 @@ function OutreachTab({ programId }: { programId: number }) {
 
   const deleteContact = useMutation({
     mutationFn: (id: number) => api.delete(`/outreach/${id}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["outreach", programId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
+      toast.success("Deleted");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -498,8 +508,11 @@ function DocumentsTab({ programId }: { programId: number }) {
 
   const deleteDoc = useMutation({
     mutationFn: (id: number) => api.delete(`/documents/${id}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["documents", programId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", programId] });
+      toast.success("Deleted");
+    },
+    onError: () => toast.error("Something went wrong"),
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -617,8 +630,10 @@ function ProgramDetail({ id }: { id: number }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Program deleted");
       router.push("/programs");
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   if (isLoading)

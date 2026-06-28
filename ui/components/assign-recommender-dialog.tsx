@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -77,11 +78,11 @@ export function AssignRecommenderDialog({
             data
           ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["program-recommenders", programId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["program-recommenders", programId] });
+      toast.success("Saved");
       setOpen(false);
     },
+    onError: () => toast.error("Something went wrong"),
   });
 
   function handleOpen() {
