@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/display";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardEntry } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
@@ -74,7 +75,28 @@ function Dashboard() {
     queryFn: () => api.get("/dashboard"),
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-4 w-64" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <Skeleton className="h-5 w-40" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-5 w-14" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   if (error) return <p className="text-destructive">Failed to load dashboard.</p>;
   if (!data?.length)
     return (

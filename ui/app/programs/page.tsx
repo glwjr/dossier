@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortKey = "school" | "tier" | "status";
 
@@ -49,7 +50,21 @@ function ProgramList({ sort }: { sort: SortKey }) {
     queryFn: () => api.get("/programs"),
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return (
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+    );
   if (error) return <p className="text-destructive">Failed to load programs.</p>;
   if (!data?.length) return <p className="text-muted-foreground">No programs yet.</p>;
 

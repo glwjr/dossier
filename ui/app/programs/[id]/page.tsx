@@ -33,6 +33,7 @@ import { OutreachDialog } from "@/components/outreach-dialog";
 import { DocumentDialog } from "@/components/document-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -620,7 +621,28 @@ function ProgramDetail({ id }: { id: number }) {
     },
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-14" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-full" />
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      </div>
+    );
   if (error || !program) return <p className="text-destructive">Program not found.</p>;
 
   return (
