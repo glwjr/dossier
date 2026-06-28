@@ -105,6 +105,9 @@ function ProgramCard({ program }: { program: Program }) {
             </a>
           )}
         </div>
+        {program.notes && (
+          <p className="truncate text-xs text-muted-foreground">{program.notes}</p>
+        )}
         <div onClick={(e) => e.stopPropagation()}>
           <Select
             value={program.status}
