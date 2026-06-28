@@ -28,16 +28,19 @@ def upgrade() -> None:
         bind.execute(sa.text("UPDATE programs SET status = 'accepted' WHERE status = 'decision'"))
         return
 
-    # Postgres: create new enum, swap column, drop old enum.
+    # Postgres: create new enum, swap column (converting 'decision' in the USING
+    # clause so the UPDATE never touches the old enum type), drop old, rename.
     bind.execute(sa.text(
         "CREATE TYPE programstatus_new AS ENUM "
         "('researching', 'drafting', 'submitted', 'interview', 'accepted', 'waitlisted', 'rejected')"
     ))
-    bind.execute(sa.text("UPDATE programs SET status = 'accepted' WHERE status = 'decision'"))
     bind.execute(sa.text(
         "ALTER TABLE programs "
         "ALTER COLUMN status TYPE programstatus_new "
-        "USING status::text::programstatus_new"
+        "USING CASE status::text "
+        "  WHEN 'decision' THEN 'accepted'::programstatus_new "
+        "  ELSE status::text::programstatus_new "
+        "END"
     ))
     bind.execute(sa.text("DROP TYPE programstatus"))
     bind.execute(sa.text("ALTER TYPE programstatus_new RENAME TO programstatus"))

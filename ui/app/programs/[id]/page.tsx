@@ -785,7 +785,7 @@ function ProgramDetail({ id }: { id: number }) {
       <Tabs value={activeTab} onValueChange={setTab}>
         {/* Mobile: select dropdown */}
         <div className="sm:hidden">
-          <Select value={activeTab} onValueChange={setTab}>
+          <Select value={activeTab} onValueChange={(v) => v && setTab(v)}>
             <SelectTrigger className="w-full">
               <SelectValue>{TAB_LABEL[activeTab]}</SelectValue>
             </SelectTrigger>
