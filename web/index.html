@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dossier — Graduate School Application Tracker</title>
   <meta name="description" content="Track every school, deadline, requirement, and recommendation letter for your graduate school applications — all in one place." />
+  <!-- Prevent FOUC: apply saved theme before paint -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem("theme");
+      var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,16 +28,14 @@
       --max: 720px;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0a0a0a;
-        --fg: #fafafa;
-        --muted: #9ca3af;
-        --border: #1f1f1f;
-        --accent: #fafafa;
-        --accent-fg: #0a0a0a;
-        --card-bg: #111111;
-      }
+    :root[data-theme="dark"] {
+      --bg: #0a0a0a;
+      --fg: #fafafa;
+      --muted: #9ca3af;
+      --border: #1f1f1f;
+      --accent: #fafafa;
+      --accent-fg: #0a0a0a;
+      --card-bg: #111111;
     }
 
     body {
@@ -62,6 +68,28 @@
       font-size: 1rem;
       letter-spacing: -0.01em;
     }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+    .theme-toggle:hover { color: var(--fg); }
+
+    .icon-sun, .icon-moon { display: none; }
+    :root[data-theme="dark"]  .icon-sun  { display: block; }
+    :root[data-theme="light"] .icon-moon { display: block; }
 
     .btn {
       display: inline-block;
@@ -188,7 +216,19 @@
   <header>
     <nav>
       <span class="logo">Dossier</span>
-      <a href="https://my.dossiertool.com" class="btn btn-outline">Sign in</a>
+      <div class="nav-right">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+          <!-- Sun (shown in dark mode) -->
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+          <!-- Moon (shown in light mode) -->
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </button>
+        <a href="https://my.dossiertool.com" class="btn btn-outline">Sign in</a>
+      </div>
     </nav>
   </header>
 
@@ -241,7 +281,17 @@
   <footer>
     &copy; <span id="year"></span> Dossier
   </footer>
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+      var current = document.documentElement.getAttribute("data-theme");
+      var next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+    });
+  </script>
 
 </body>
 </html>
