@@ -160,8 +160,9 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        <div className="grid grid-cols-2 gap-2 sm:flex-1 sm:grid-cols-4">
+      {/* Desktop: stats + filter in one row */}
+      <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-3">
+        <div className="grid flex-1 grid-cols-4 gap-2">
           <div className="rounded-md border px-3 py-1.5 text-sm">
             <span className="font-medium">{totalPrograms}</span>
             <span className="ml-1 text-muted-foreground">
@@ -212,22 +213,90 @@ function Dashboard() {
             </div>
           )}
         </div>
-        <div className="flex sm:justify-start">
-          <div className="flex w-full shrink-0 items-center rounded-md border text-sm sm:w-auto">
-            {FILTERS.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setFilter(value)}
-                className={`flex-1 px-3 py-1.5 text-center transition-colors first:rounded-l-md last:rounded-r-md sm:flex-none ${
-                  filter === value
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+        <div className="flex shrink-0 items-center rounded-md border text-sm">
+          {FILTERS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setFilter(value)}
+              className={`px-3 py-1.5 transition-colors first:rounded-l-md last:rounded-r-md ${
+                filter === value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Mobile: 2x2 stats grid */}
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        <div className="rounded-md border px-3 py-1.5 text-sm">
+          <span className="font-medium">{totalPrograms}</span>
+          <span className="ml-1 text-muted-foreground">
+            {totalPrograms === 1 ? "program" : "programs"}
+          </span>
+        </div>
+        {filter === "decided" ? (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className="font-medium text-green-600 dark:text-green-500">{acceptedCount}</span>
+            <span className="ml-1 text-muted-foreground">accepted</span>
           </div>
+        ) : (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className="font-medium">
+              {totalFees > 0 ? `$${totalFees.toLocaleString()}` : "—"}
+            </span>
+            <span className="ml-1 text-muted-foreground">in fees</span>
+          </div>
+        )}
+        {filter === "decided" ? (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className="font-medium">{waitlistedCount}</span>
+            <span className="ml-1 text-muted-foreground">waitlisted</span>
+          </div>
+        ) : (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className={`font-medium ${upcomingDeadlines > 0 ? "text-destructive" : ""}`}>
+              {upcomingDeadlines}
+            </span>
+            <span className="ml-1 text-muted-foreground">
+              {upcomingDeadlines === 1 ? "deadline" : "deadlines"} this month
+            </span>
+          </div>
+        )}
+        {filter === "decided" ? (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className="font-medium text-muted-foreground">{rejectedCount}</span>
+            <span className="ml-1 text-muted-foreground">rejected</span>
+          </div>
+        ) : (
+          <div className="rounded-md border px-3 py-1.5 text-sm">
+            <span className={`font-medium ${blockingCount > 0 ? "text-destructive" : "text-green-600 dark:text-green-500"}`}>
+              {blockingCount}
+            </span>
+            <span className="ml-1 text-muted-foreground">
+              {blockingCount === 1 ? "requirement" : "requirements"} blocking
+            </span>
+          </div>
+        )}
+      </div>
+      {/* Mobile: sticky filter strip — must be a direct sibling, not inside a flex container */}
+      <div className="sticky top-0 z-10 -mx-4 bg-background px-4 py-2 sm:hidden">
+        <div className="flex w-full items-center rounded-md border text-sm">
+          {FILTERS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setFilter(value)}
+              className={`flex-1 py-1.5 text-center transition-colors first:rounded-l-md last:rounded-r-md ${
+                filter === value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
       {upcomingList.length > 0 && (
