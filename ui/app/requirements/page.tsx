@@ -154,23 +154,21 @@ function RequirementsList({
       {selectedIds.size > 0 ? (
         <>
           <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-6 px-2 text-xs"
+          <Select
+            defaultValue=""
+            onValueChange={(v) => v && bulkUpdate.mutate({ ids: [...selectedIds], status: v })}
             disabled={bulkUpdate.isPending}
-            onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "in_progress" })}
           >
-            In progress
-          </Button>
-          <Button
-            size="sm"
-            className="h-6 px-2 text-xs"
-            disabled={bulkUpdate.isPending}
-            onClick={() => bulkUpdate.mutate({ ids: [...selectedIds], status: "done" })}
-          >
-            Done
-          </Button>
+            <SelectTrigger className="h-6 w-28 text-xs">
+              <SelectValue>Set status</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todo">Todo</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+              <SelectItem value="waived">Waived</SelectItem>
+            </SelectContent>
+          </Select>
         </>
       ) : (
         <span className="text-xs text-muted-foreground/50">Select all</span>
