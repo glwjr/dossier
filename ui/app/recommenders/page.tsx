@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Recommender } from "@/lib/types";
-import { REC_STATUS_LABEL } from "@/lib/display";
+import { REC_STATUS_LABEL, formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { RecommenderDialog } from "@/components/recommender-dialog";
@@ -208,12 +208,17 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
             <div className="space-y-1.5">
               {r.program_assignments.map((a) => (
                   <div key={a.program_id} className="flex items-center justify-between gap-2">
-                    <Link
-                      href={`/programs/${a.program_id}`}
-                      className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
-                    >
-                      {a.program.school} — {a.program.department}
-                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/programs/${a.program_id}`}
+                        className="truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+                      >
+                        {a.program.school} — {a.program.department}
+                      </Link>
+                      {a.due_date && (
+                        <p className="text-xs text-muted-foreground/60">{formatDate(a.due_date)}</p>
+                      )}
+                    </div>
                     <Select
                       value={a.status}
                       onValueChange={(v) =>

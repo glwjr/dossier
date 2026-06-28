@@ -181,10 +181,24 @@ function OutreachInner() {
                     {c.email}
                   </a>
                 )}
+                {c.url && (
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground sm:block"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Profile
+                  </a>
+                )}
                 <Badge variant={RESPONSE_VARIANT[c.response]}>
                   {OUTREACH_RESPONSE_LABEL[c.response]}
                 </Badge>
               </div>
+              {c.notes && (
+                <p className="w-full text-xs text-muted-foreground">{c.notes}</p>
+              )}
             </div>
           ))}
         </div>

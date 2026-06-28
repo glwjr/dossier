@@ -86,14 +86,17 @@ function RequirementsTab({ programId }: { programId: number }) {
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/requirements/${id}`, { status }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["requirements", programId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+    },
   });
 
   const deleteReq = useMutation({
     mutationFn: (id: number) => api.delete(`/requirements/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
       toast.success("Deleted");
     },
     onError: () => toast.error("Something went wrong"),
@@ -300,6 +303,7 @@ function RecommendersTab({ programId }: { programId: number }) {
       api.delete(`/programs/${programId}/recommenders/${recommenderId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["program-recommenders", programId] });
+      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
       toast.success("Removed");
     },
     onError: () => toast.error("Something went wrong"),
@@ -396,6 +400,7 @@ function OutreachTab({ programId }: { programId: number }) {
     mutationFn: (id: number) => api.delete(`/outreach/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
+      queryClient.invalidateQueries({ queryKey: ["outreach-all"] });
       toast.success("Deleted");
     },
     onError: () => toast.error("Something went wrong"),
@@ -427,6 +432,17 @@ function OutreachTab({ programId }: { programId: number }) {
               {OUTREACH_RESPONSE_LABEL[c.response]}
               {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
             </span>
+            {c.url && (
+              <a
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Profile
+              </a>
+            )}
             <OutreachDialog
               programId={programId}
               contact={c}
@@ -488,14 +504,17 @@ function DocumentsTab({ programId }: { programId: number }) {
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/documents/${id}`, { status }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["documents", programId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", programId] });
+      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+    },
   });
 
   const deleteDoc = useMutation({
     mutationFn: (id: number) => api.delete(`/documents/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", programId] });
+      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
       toast.success("Deleted");
     },
     onError: () => toast.error("Something went wrong"),

@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import { User } from "@/lib/types";
 import { clearToken, redirectToHome } from "@/lib/auth";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
+import { formatDate } from "@/lib/display";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -29,7 +31,7 @@ function AccountInner() {
         <Skeleton className="mt-6 h-9 w-24" />
       </div>
     );
-  if (error) return <p className="text-destructive">Failed to load account.</p>;
+  if (error) return <ErrorState title="Failed to load account" message="Something went wrong. Try refreshing the page." />;
   if (!user) return null;
 
   return (
@@ -46,11 +48,7 @@ function AccountInner() {
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Member since</p>
           <p className="mt-0.5 text-sm font-medium">
-            {new Date(user.created_at).toLocaleDateString(undefined, {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {formatDate(user.created_at.slice(0, 10))}
           </p>
         </div>
       </div>

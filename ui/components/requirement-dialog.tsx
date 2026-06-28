@@ -63,6 +63,7 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
         : api.post<Requirement>(`/programs/${programId}/requirements`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
       toast.success("Saved");
       setOpen(false);
     },

@@ -65,6 +65,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
         : api.post<OutreachContact>(`/programs/${programId}/outreach`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
+      queryClient.invalidateQueries({ queryKey: ["outreach-all"] });
       toast.success("Saved");
       setOpen(false);
     },

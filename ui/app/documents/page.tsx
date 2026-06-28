@@ -2,16 +2,16 @@
 
 import { Suspense, useCallback } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
+import { toast } from "sonner";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -21,13 +21,8 @@ import {
 } from "@/components/ui/select";
 import { usePageTitle } from "@/lib/use-page-title";
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  draft: "outline",
-  in_progress: "secondary",
-  final: "default",
-};
-
 function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: string; kindFilter: string; search: string }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<DocumentWithProgram[]>({
     queryKey: ["documents-all"],
     queryFn: () => api.get("/documents"),
@@ -54,6 +49,16 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
         </Link>
       </div>
     );
+
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      api.patch(`/documents/${id}`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
 
   const q = search.toLowerCase();
   const filtered = data
@@ -97,9 +102,19 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
                 <span className="hidden text-xs text-muted-foreground sm:block">
                   {DOCUMENT_KIND_LABEL[d.kind]}
                 </span>
-                <Badge variant={STATUS_VARIANT[d.status]}>
-                  {DOCUMENT_STATUS_LABEL[d.status]}
-                </Badge>
+                <Select
+                  value={d.status}
+                  onValueChange={(v) => v && updateStatus.mutate({ id: d.id, status: v })}
+                >
+                  <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
+                    <SelectValue>{DOCUMENT_STATUS_LABEL[d.status]}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="in_progress">In progress</SelectItem>
+                    <SelectItem value="final">Final</SelectItem>
+                  </SelectContent>
+                </Select>
                 {d.url && (
                   <a
                     href={d.url}

@@ -63,6 +63,7 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
         : api.post<Document>(`/programs/${programId}/documents`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents", programId] });
+      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
       toast.success("Saved");
       setOpen(false);
     },

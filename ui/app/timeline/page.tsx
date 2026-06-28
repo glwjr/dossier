@@ -11,6 +11,7 @@ import {
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,12 +43,12 @@ function TimelineInner() {
   const [kindFilter, setKindFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const { data: deadlines = [], isLoading: dlLoading } = useQuery<DeadlineWithProgram[]>({
+  const { data: deadlines = [], isLoading: dlLoading, error: dlError } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
     queryFn: () => api.get("/deadlines"),
   });
 
-  const { data: requirements = [], isLoading: reqLoading } = useQuery<RequirementWithProgram[]>({
+  const { data: requirements = [], isLoading: reqLoading, error: reqError } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
     queryFn: () => api.get("/requirements"),
   });
@@ -149,6 +150,9 @@ function TimelineInner() {
     if (item.itemType === "deadline") toggleDeadline.mutate(item.raw);
     else toggleRequirement.mutate(item.raw);
   }
+
+  if (dlError || reqError)
+    return <ErrorState title="Failed to load timeline" message="Something went wrong. Try refreshing the page." />;
 
   if (isLoading)
     return (
