@@ -4,7 +4,9 @@ export type ProgramStatus =
   | "drafting"
   | "submitted"
   | "interview"
-  | "decision";
+  | "accepted"
+  | "waitlisted"
+  | "rejected";
 
 export type DocumentKind =
   | "sop"

@@ -30,7 +30,9 @@ export const PROGRAM_STATUS_LABEL: Record<string, string> = {
   drafting: "Drafting",
   submitted: "Submitted",
   interview: "Interview",
-  decision: "Decision",
+  accepted: "Accepted",
+  waitlisted: "Waitlisted",
+  rejected: "Rejected",
 };
 
 export const REQUIREMENT_KIND_LABEL: Record<string, string> = {

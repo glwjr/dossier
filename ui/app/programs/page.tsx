@@ -34,7 +34,9 @@ const BOARD_STATUSES: ProgramStatus[] = [
   "drafting",
   "submitted",
   "interview",
-  "decision",
+  "accepted",
+  "waitlisted",
+  "rejected",
 ];
 
 const TIER_ORDER = { reach: 0, match: 1, likely: 2 };
@@ -43,7 +45,9 @@ const STATUS_ORDER = {
   drafting: 1,
   submitted: 2,
   interview: 3,
-  decision: 4,
+  accepted: 4,
+  waitlisted: 5,
+  rejected: 6,
 };
 
 function sortPrograms(programs: Program[], key: SortKey): Program[] {
@@ -110,7 +114,9 @@ function ProgramCard({ program }: { program: Program }) {
               <SelectItem value="drafting">Drafting</SelectItem>
               <SelectItem value="submitted">Submitted</SelectItem>
               <SelectItem value="interview">Interview</SelectItem>
-              <SelectItem value="decision">Decision</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="waitlisted">Waitlisted</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -374,7 +380,9 @@ function ProgramsInner() {
                   <SelectItem value="drafting">Drafting</SelectItem>
                   <SelectItem value="submitted">Submitted</SelectItem>
                   <SelectItem value="interview">Interview</SelectItem>
-                  <SelectItem value="decision">Decision</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="waitlisted">Waitlisted</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>

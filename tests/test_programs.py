@@ -67,6 +67,16 @@ def test_delete_program(client, dev_user, program):
     assert response.status_code == 404
 
 
+def test_accepted_waitlisted_rejected_statuses(client, dev_user):
+    for status in ("accepted", "waitlisted", "rejected"):
+        r = client.post("/programs", json={**PROGRAM_PAYLOAD, "status": status})
+        assert r.status_code == 201, f"expected 201 for status={status}"
+        assert r.json()["status"] == status
+
+    r = client.post("/programs", json={**PROGRAM_PAYLOAD, "status": "decision"})
+    assert r.status_code == 422
+
+
 def test_get_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999")
     assert response.status_code == 404

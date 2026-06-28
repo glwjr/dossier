@@ -178,7 +178,9 @@ export function ProgramDialog({ program, trigger, onSuccess }: Props) {
                     <SelectItem value="drafting">Drafting</SelectItem>
                     <SelectItem value="submitted">Submitted</SelectItem>
                     <SelectItem value="interview">Interview</SelectItem>
-                    <SelectItem value="decision">Decision</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="waitlisted">Waitlisted</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

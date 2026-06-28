@@ -19,7 +19,9 @@ class ProgramStatus(str, enum.Enum):
     drafting = "drafting"
     submitted = "submitted"
     interview = "interview"
-    decision = "decision"
+    accepted = "accepted"
+    waitlisted = "waitlisted"
+    rejected = "rejected"
 
 
 class Program(Base):
