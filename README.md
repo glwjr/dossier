@@ -3,7 +3,7 @@
 Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, faculty outreach, and draft documents — all in one place.
 
 - **Backend**: FastAPI + SQLAlchemy, deployed on Render
-- **Frontend**: Next.js 14 App Router, deployed on Vercel
+- **Frontend**: Next.js 16 App Router, deployed on Vercel
 - **Auth**: Google OAuth — sign in with your Google account
 
 ---
@@ -22,21 +22,20 @@ git clone https://github.com/glwjr/dossier.git
 cd dossier
 
 # Install dependencies
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv sync
 
 # Configure environment
 cp .env.example .env
 # Edit .env — at minimum set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 
 # Run migrations
-alembic upgrade head
+uv run alembic upgrade head
 
 # (Optional) seed placeholder programs
-python seed.py
+uv run python seed.py
 
 # Start the API
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 API available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
@@ -172,13 +171,13 @@ docker run -p 8000:8000 \
 
 ```bash
 # Run tests
-pytest
+uv run pytest
 
 # Lint + format
-ruff check .
-ruff format .
+uv run ruff check .
+uv run ruff format .
 
 # Create a migration after model changes
-alembic revision --autogenerate -m "description"
-alembic upgrade head
+uv run alembic revision --autogenerate -m "description"
+uv run alembic upgrade head
 ```

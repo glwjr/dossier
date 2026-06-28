@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
-import { Program, ProgramStatus, RequirementWithProgram } from "@/lib/types";
+import { Program, ProgramStatus, RequirementWithProgram, DeadlineWithProgram } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
   PROGRAM_TIER_LABEL,
@@ -32,7 +32,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-type SortKey = "school" | "tier" | "status";
+type SortKey = "school" | "tier" | "status" | "deadline";
 
 const BOARD_STATUSES: ProgramStatus[] = [
   "researching",
@@ -55,11 +55,19 @@ const STATUS_ORDER = {
   rejected: 6,
 };
 
-function sortPrograms(programs: Program[], key: SortKey): Program[] {
+function sortPrograms(programs: Program[], key: SortKey, deadlineMap?: Map<number, string>): Program[] {
   return [...programs].sort((a, b) => {
     if (key === "school") return a.school.localeCompare(b.school);
     if (key === "tier") return TIER_ORDER[a.tier] - TIER_ORDER[b.tier];
     if (key === "status") return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+    if (key === "deadline") {
+      const aDate = deadlineMap?.get(a.id);
+      const bDate = deadlineMap?.get(b.id);
+      if (!aDate && !bDate) return a.school.localeCompare(b.school);
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
+    }
     return 0;
   });
 }
@@ -196,6 +204,24 @@ function ProgramList({
     queryFn: () => api.get("/requirements"),
   });
 
+  const { data: allDeadlines = [] } = useQuery<DeadlineWithProgram[]>({
+    queryKey: ["deadlines"],
+    queryFn: () => api.get("/deadlines"),
+    enabled: sort === "deadline",
+  });
+
+  const nextDeadlineMap = useMemo(() => {
+    if (sort !== "deadline") return undefined;
+    const today = new Date().toISOString().slice(0, 10);
+    const map = new Map<number, string>();
+    for (const d of allDeadlines) {
+      if (d.done || d.due_date < today) continue;
+      const existing = map.get(d.program.id);
+      if (!existing || d.due_date < existing) map.set(d.program.id, d.due_date);
+    }
+    return map;
+  }, [allDeadlines, sort]);
+
   const reqCounts = useMemo(() => {
     const counts = new Map<number, { done: number; total: number }>();
     for (const r of requirements) {
@@ -252,7 +278,7 @@ function ProgramList({
         p.department.toLowerCase().includes(q)
     );
 
-  const sorted = sortPrograms(filtered, sort);
+  const sorted = sortPrograms(filtered, sort, nextDeadlineMap);
 
   if (sorted.length === 0)
     return <p className="text-muted-foreground">No programs match the current filters.</p>;
@@ -611,15 +637,16 @@ function ProgramsInner() {
                 </SelectContent>
               </Select>
               <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
-                <SelectTrigger className="h-9 w-32 text-sm">
+                <SelectTrigger className="h-9 w-36 text-sm">
                   <SelectValue>
-                    {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : "Sort: Status"}
+                    {sort === "school" ? "Sort: Name" : sort === "tier" ? "Sort: Tier" : sort === "status" ? "Sort: Status" : "Sort: Deadline"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="school">Sort: Name</SelectItem>
                   <SelectItem value="tier">Sort: Tier</SelectItem>
                   <SelectItem value="status">Sort: Status</SelectItem>
+                  <SelectItem value="deadline">Sort: Deadline</SelectItem>
                 </SelectContent>
               </Select>
             </>

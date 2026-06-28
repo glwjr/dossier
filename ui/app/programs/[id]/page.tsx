@@ -104,6 +104,16 @@ function RequirementsTab({ programId }: { programId: number }) {
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
+  const REQ_STATUS_SORT: Record<string, number> = { todo: 0, in_progress: 1, done: 2, waived: 3 };
+  const sorted = [...data].sort((a, b) => {
+    const diff = REQ_STATUS_SORT[a.status] - REQ_STATUS_SORT[b.status];
+    if (diff !== 0) return diff;
+    if (!a.due_date && !b.due_date) return 0;
+    if (!a.due_date) return 1;
+    if (!b.due_date) return -1;
+    return a.due_date.localeCompare(b.due_date);
+  });
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
@@ -112,10 +122,10 @@ function RequirementsTab({ programId }: { programId: number }) {
           trigger={<Button size="sm">Add requirement</Button>}
         />
       </div>
-      {data.length === 0 && (
+      {sorted.length === 0 && (
         <p className="text-sm text-muted-foreground">None yet.</p>
       )}
-      {data.map((r) => (
+      {sorted.map((r) => (
         <div
           key={r.id}
           className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
@@ -217,6 +227,11 @@ function DeadlinesTab({ programId }: { programId: number }) {
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
+  const sortedDeadlines = [...data].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return a.due_date.localeCompare(b.due_date);
+  });
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
@@ -225,10 +240,10 @@ function DeadlinesTab({ programId }: { programId: number }) {
           trigger={<Button size="sm">Add deadline</Button>}
         />
       </div>
-      {data.length === 0 && (
+      {sortedDeadlines.length === 0 && (
         <p className="text-sm text-muted-foreground">None yet.</p>
       )}
-      {data.map((d) => (
+      {sortedDeadlines.map((d) => (
         <div
           key={d.id}
           className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
@@ -686,6 +701,16 @@ function ProgramDetail({ id }: { id: number }) {
 
   usePageTitle(program ? program.school : "Program");
 
+  const updateStatus = useMutation({
+    mutationFn: (status: string) => api.patch(`/programs/${id}`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["program", id] });
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/programs/${id}`),
     onSuccess: () => {
@@ -738,9 +763,20 @@ function ProgramDetail({ id }: { id: number }) {
             <Badge variant={PROGRAM_TIER_VARIANT[program.tier]}>
               {PROGRAM_TIER_LABEL[program.tier]}
             </Badge>
-            <Badge variant="outline">
-              {PROGRAM_STATUS_LABEL[program.status]}
-            </Badge>
+            <Select value={program.status} onValueChange={(v) => v && updateStatus.mutate(v)}>
+              <SelectTrigger className="h-7 w-auto min-w-24 border-dashed px-2 text-xs font-normal">
+                <SelectValue>{PROGRAM_STATUS_LABEL[program.status]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="researching">Researching</SelectItem>
+                <SelectItem value="drafting">Drafting</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="interview">Interview</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="waitlisted">Waitlisted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <p className="text-muted-foreground">{program.department}</p>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
