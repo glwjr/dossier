@@ -78,13 +78,15 @@ def export(
         docs_by_pid[d.program_id].append(d)
     for pr in prog_recs:
         rec = rec_by_id.get(pr.recommender_id)
-        recs_by_pid[pr.program_id].append({
-            "name": rec.name if rec else None,
-            "institution": rec.institution if rec else None,
-            "status": pr.status,
-            "due_date": pr.due_date.isoformat() if pr.due_date else None,
-            "notes": pr.notes,
-        })
+        recs_by_pid[pr.program_id].append(
+            {
+                "name": rec.name if rec else None,
+                "institution": rec.institution if rec else None,
+                "status": pr.status,
+                "due_date": pr.due_date.isoformat() if pr.due_date else None,
+                "notes": pr.notes,
+            }
+        )
 
     payload = {
         "exported_at": datetime.now(timezone.utc).isoformat(),
