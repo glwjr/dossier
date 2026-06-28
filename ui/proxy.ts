@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.dossiertool.com";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get("dossier_token")?.value;
   if (!token) {
     return NextResponse.redirect(`${API_URL}/auth/login`);
