@@ -647,6 +647,32 @@ function ProgramDetail({ id }: { id: number }) {
     queryFn: () => api.get(`/programs/${id}`),
   });
 
+  const { data: requirements = [] } = useQuery<Requirement[]>({
+    queryKey: ["requirements", id],
+    queryFn: () => api.get(`/programs/${id}/requirements`),
+    enabled: !!program,
+  });
+  const { data: deadlines = [] } = useQuery<Deadline[]>({
+    queryKey: ["deadlines", id],
+    queryFn: () => api.get(`/programs/${id}/deadlines`),
+    enabled: !!program,
+  });
+  const { data: programRecommenders = [] } = useQuery<ProgramRecommender[]>({
+    queryKey: ["program-recommenders", id],
+    queryFn: () => api.get(`/programs/${id}/recommenders`),
+    enabled: !!program,
+  });
+  const { data: outreach = [] } = useQuery<OutreachContact[]>({
+    queryKey: ["outreach", id],
+    queryFn: () => api.get(`/programs/${id}/outreach`),
+    enabled: !!program,
+  });
+  const { data: documents = [] } = useQuery<Document[]>({
+    queryKey: ["documents", id],
+    queryFn: () => api.get(`/programs/${id}/documents`),
+    enabled: !!program,
+  });
+
   usePageTitle(program ? program.school : "Program");
 
   const deleteMutation = useMutation({
@@ -751,11 +777,21 @@ function ProgramDetail({ id }: { id: number }) {
       <Tabs value={activeTab} onValueChange={setTab}>
         <div className="overflow-x-auto">
           <TabsList className="w-max">
-            <TabsTrigger value="requirements">Requirements</TabsTrigger>
-            <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
-            <TabsTrigger value="recommenders">Recommenders</TabsTrigger>
-            <TabsTrigger value="outreach">Outreach</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="requirements">
+              Requirements{requirements.length > 0 && ` (${requirements.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="deadlines">
+              Deadlines{deadlines.length > 0 && ` (${deadlines.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="recommenders">
+              Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="outreach">
+              Outreach{outreach.length > 0 && ` (${outreach.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="documents">
+              Documents{documents.length > 0 && ` (${documents.length})`}
+            </TabsTrigger>
           </TabsList>
         </div>
         <div className="mt-4">

@@ -73,7 +73,21 @@ function ProgramCard({ program }: { program: Program }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-muted-foreground">{program.department}</p>
+        <p className="text-sm text-muted-foreground">{program.department} · {program.degree}</p>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          {program.app_fee != null && <span>${program.app_fee} fee</span>}
+          {program.url && (
+            <a
+              href={program.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Website
+            </a>
+          )}
+        </div>
         <div onClick={(e) => e.stopPropagation()}>
           <Select
             value={program.status}

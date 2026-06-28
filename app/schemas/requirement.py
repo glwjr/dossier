@@ -21,6 +21,14 @@ class RequirementUpdate(BaseModel):
     notes: str | None = None
 
 
+class ProgramSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    school: str
+    department: str
+
+
 class RequirementRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,3 +39,7 @@ class RequirementRead(BaseModel):
     status: RequirementStatus
     due_date: date | None
     notes: str | None
+
+
+class RequirementWithProgramRead(RequirementRead):
+    program: ProgramSummary

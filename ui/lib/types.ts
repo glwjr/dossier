@@ -130,6 +130,10 @@ export interface Requirement {
   notes: string | null;
 }
 
+export interface RequirementWithProgram extends Requirement {
+  program: { id: number; school: string; department: string };
+}
+
 export interface Deadline {
   id: number;
   program_id: number;

@@ -82,6 +82,42 @@ def test_delete_requirement(client, req):
     assert response.status_code == 404
 
 
+def test_list_all_requirements(client, program, req):
+    # GET /requirements returns all requirements across programs with program info.
+    r = client.get("/requirements")
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 1
+    assert items[0]["id"] == req["id"]
+    assert items[0]["program"]["school"] == "Columbia"
+    assert items[0]["program"]["id"] == program["id"]
+
+
+def test_list_all_requirements_isolation(client, db_session, dev_user):
+    # Requirements from other users' programs must not appear.
+    user_b = User(email="user-b-req-all@example.com", name="User B")
+    db_session.add(user_b)
+    db_session.flush()
+    prog_b = Program(
+        user_id=user_b.id,
+        school="MIT",
+        department="CS",
+        degree="PhD",
+        tier="reach",
+        status="researching",
+    )
+    db_session.add(prog_b)
+    db_session.flush()
+    db_session.add(
+        Requirement(program_id=prog_b.id, label="CV", kind="cv", status="todo")
+    )
+    db_session.flush()
+
+    r = client.get("/requirements")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999/requirements")
     assert response.status_code == 404

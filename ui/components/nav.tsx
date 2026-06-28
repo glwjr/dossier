@@ -9,6 +9,7 @@ import { useTheme } from "@/components/theme-provider";
 const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/programs", label: "Programs" },
+  { href: "/requirements", label: "Requirements" },
   { href: "/timeline", label: "Timeline" },
   { href: "/recommenders", label: "Recommenders" },
 ];

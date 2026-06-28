@@ -11,9 +11,23 @@ from app.schemas.requirement import (
     RequirementCreate,
     RequirementRead,
     RequirementUpdate,
+    RequirementWithProgramRead,
 )
 
 router = APIRouter(tags=["requirements"])
+
+
+@router.get("/requirements", response_model=list[RequirementWithProgramRead])
+def list_all_requirements(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.scalars(
+        select(Requirement)
+        .join(Program, Requirement.program_id == Program.id)
+        .where(Program.user_id == current_user.id)
+        .order_by(Requirement.id)
+    ).all()
 
 
 def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:
