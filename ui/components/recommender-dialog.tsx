@@ -83,7 +83,7 @@ export function RecommenderDialog({ recommender, trigger }: Props) {
         {trigger}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-full max-w-md">
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Edit recommender" : "Add recommender"}

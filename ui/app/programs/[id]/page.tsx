@@ -124,15 +124,16 @@ function RequirementsTab({ programId }: { programId: number }) {
       {data.map((r) => (
         <div
           key={r.id}
-          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
-          <span className="text-xs text-muted-foreground">{formatDate(r.due_date)}</span>
+          <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+          <div className="ml-auto flex items-center gap-1">
+          <span className="hidden text-xs text-muted-foreground sm:block">{formatDate(r.due_date)}</span>
           <Select
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
           >
-            <SelectTrigger className="h-7 w-32 text-xs">
+            <SelectTrigger className="h-7 w-24 text-xs sm:w-32">
               <SelectValue>{REQUIREMENT_STATUS_LABEL[r.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -183,6 +184,7 @@ function RequirementsTab({ programId }: { programId: number }) {
               Delete
             </Button>
           )}
+          </div>
         </div>
       ))}
     </div>
@@ -495,9 +497,9 @@ function DocumentsTab({ programId }: { programId: number }) {
       {data.map((d) => (
         <div
           key={d.id}
-          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
+          <span className={`min-w-0 flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
             {d.url ? (
               <a
                 href={d.url}
@@ -512,13 +514,14 @@ function DocumentsTab({ programId }: { programId: number }) {
               d.title
             )}
           </span>
+          <div className="ml-auto flex items-center gap-1">
           <Select
             value={d.status}
             onValueChange={(v) =>
               v && updateStatus.mutate({ id: d.id, status: v })
             }
           >
-            <SelectTrigger className="h-7 w-32 text-xs">
+            <SelectTrigger className="h-7 w-24 text-xs sm:w-32">
               <SelectValue>{DOCUMENT_STATUS_LABEL[d.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -568,6 +571,7 @@ function DocumentsTab({ programId }: { programId: number }) {
               Delete
             </Button>
           )}
+          </div>
         </div>
       ))}
     </div>
@@ -598,7 +602,7 @@ function ProgramDetail({ id }: { id: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">{program.school}</h1>
@@ -661,13 +665,15 @@ function ProgramDetail({ id }: { id: number }) {
       </div>
 
       <Tabs defaultValue="requirements">
-        <TabsList>
-          <TabsTrigger value="requirements">Requirements</TabsTrigger>
-          <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
-          <TabsTrigger value="recommenders">Recommenders</TabsTrigger>
-          <TabsTrigger value="outreach">Outreach</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="w-max">
+            <TabsTrigger value="requirements">Requirements</TabsTrigger>
+            <TabsTrigger value="deadlines">Deadlines</TabsTrigger>
+            <TabsTrigger value="recommenders">Recommenders</TabsTrigger>
+            <TabsTrigger value="outreach">Outreach</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+        </div>
         <div className="mt-4">
           <TabsContent value="requirements">
             <RequirementsTab programId={id} />

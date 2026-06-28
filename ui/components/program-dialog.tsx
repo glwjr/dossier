@@ -103,7 +103,7 @@ export function ProgramDialog({ program, trigger, onSuccess }: Props) {
         {trigger}
       </span>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-full max-w-lg">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit program" : "New program"}</DialogTitle>
           </DialogHeader>

@@ -1,27 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clearToken, redirectToLogin } from "@/lib/auth";
 
+const LINKS = [
+  { href: "/", label: "Dashboard" },
+  { href: "/programs", label: "Programs" },
+  { href: "/timeline", label: "Timeline" },
+  { href: "/recommenders", label: "Recommenders" },
+];
+
 export function Nav() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   function handleLogout() {
     clearToken();
     redirectToLogin();
   }
 
-  const link = (href: string, label: string) => (
-    <Link
-      href={href}
-      className={`text-sm font-medium transition-colors hover:text-foreground ${
-        pathname === href ? "text-foreground" : "text-muted-foreground"
-      }`}
-    >
-      {label}
-    </Link>
-  );
+  const linkClass = (href: string) =>
+    `text-sm font-medium transition-colors hover:text-foreground ${
+      pathname === href ? "text-foreground" : "text-muted-foreground"
+    }`;
 
   return (
     <header className="border-b">
@@ -29,11 +32,14 @@ export function Nav() {
         <Link href="/" className="font-semibold tracking-tight">
           Dossier
         </Link>
-        <nav className="flex items-center gap-6">
-          {link("/", "Dashboard")}
-          {link("/programs", "Programs")}
-          {link("/timeline", "Timeline")}
-          {link("/recommenders", "Recommenders")}
+
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-6 md:flex">
+          {LINKS.map(({ href, label }) => (
+            <Link key={href} href={href} className={linkClass(href)}>
+              {label}
+            </Link>
+          ))}
           <button
             onClick={handleLogout}
             className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -41,7 +47,51 @@ export function Nav() {
             Sign out
           </button>
         </nav>
+
+        {/* Mobile hamburger */}
+        <button
+          className="cursor-pointer text-muted-foreground hover:text-foreground md:hidden"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle menu"
+        >
+          {open ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="border-t md:hidden">
+          <nav className="flex flex-col gap-4 px-4 py-4">
+            {LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={linkClass(href)}
+                onClick={() => setOpen(false)}
+              >
+                {label}
+              </Link>
+            ))}
+            <button
+              onClick={handleLogout}
+              className="cursor-pointer text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Sign out
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
