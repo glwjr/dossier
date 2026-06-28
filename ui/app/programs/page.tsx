@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 type SortKey = "school" | "tier" | "status";
 
@@ -98,10 +99,12 @@ function ProgramList({
   sort,
   tierFilter,
   statusFilter,
+  search,
 }: {
   sort: SortKey;
   tierFilter: string;
   statusFilter: string;
+  search: string;
 }) {
   const { data, isLoading, error } = useQuery<Program[]>({
     queryKey: ["programs"],
@@ -126,9 +129,16 @@ function ProgramList({
   if (error) return <p className="text-destructive">Failed to load programs.</p>;
   if (!data?.length) return <p className="text-muted-foreground">No programs yet.</p>;
 
+  const q = search.toLowerCase();
   const filtered = data
     .filter((p) => tierFilter === "all" || p.tier === tierFilter)
-    .filter((p) => statusFilter === "all" || p.status === statusFilter);
+    .filter((p) => statusFilter === "all" || p.status === statusFilter)
+    .filter(
+      (p) =>
+        !q ||
+        p.school.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q)
+    );
 
   const sorted = sortPrograms(filtered, sort);
 
@@ -148,11 +158,21 @@ export default function ProgramsPage() {
   const [sort, setSort] = useState<SortKey>("school");
   const [tierFilter, setTierFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
   return (
     <RequireAuth>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
+        <ProgramDialog trigger={<Button>New program</Button>} />
+      </div>
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search school or department…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 w-56 text-sm"
+        />
         <div className="flex flex-wrap items-center gap-2">
           <Select value={tierFilter} onValueChange={(v) => v && setTierFilter(v)}>
             <SelectTrigger className="h-9 w-28 text-sm">
@@ -194,10 +214,9 @@ export default function ProgramsPage() {
               <SelectItem value="status">Sort: Status</SelectItem>
             </SelectContent>
           </Select>
-          <ProgramDialog trigger={<Button>New program</Button>} />
         </div>
       </div>
-      <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} />
+      <ProgramList sort={sort} tierFilter={tierFilter} statusFilter={statusFilter} search={search} />
     </RequireAuth>
   );
 }
