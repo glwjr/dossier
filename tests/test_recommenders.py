@@ -74,6 +74,13 @@ def test_list_recommenders_includes_assignment_program(client, assignment, progr
     assert assignments[0]["program"]["school"] == "Columbia"
 
 
+def test_create_recommender_rejects_invalid_email(client):
+    response = client.post(
+        "/recommenders", json={**REC_PAYLOAD, "email": "not-an-email"}
+    )
+    assert response.status_code == 422
+
+
 def test_get_recommender(client, recommender):
     response = client.get(f"/recommenders/{recommender['id']}")
     assert response.status_code == 200

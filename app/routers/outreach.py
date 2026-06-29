@@ -8,6 +8,7 @@ from app.models.outreach import OutreachContact
 from app.models.program import Program
 from app.models.user import User
 from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.outreach import (
     OutreachContactCreate,
     OutreachContactRead,
@@ -22,6 +23,7 @@ router = APIRouter(tags=["outreach"])
 def list_all_outreach(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
         select(OutreachContact)
@@ -29,6 +31,8 @@ def list_all_outreach(
         .options(contains_eager(OutreachContact.program))
         .where(Program.user_id == current_user.id)
         .order_by(OutreachContact.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 

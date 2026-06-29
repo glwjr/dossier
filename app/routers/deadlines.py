@@ -8,6 +8,7 @@ from app.models.deadline import Deadline
 from app.models.program import Program
 from app.models.user import User
 from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.deadline import (
     DeadlineCreate,
     DeadlineRead,
@@ -36,6 +37,7 @@ def _get_deadline_or_404(deadline_id: int, current_user: User, db: Session) -> D
 def list_all_deadlines(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
         select(Deadline)
@@ -43,6 +45,8 @@ def list_all_deadlines(
         .options(contains_eager(Deadline.program))
         .where(Program.user_id == current_user.id)
         .order_by(Deadline.due_date)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 

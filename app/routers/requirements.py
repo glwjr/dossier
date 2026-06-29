@@ -8,6 +8,7 @@ from app.models.program import Program
 from app.models.requirement import Requirement
 from app.models.user import User
 from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.requirement import (
     RequirementCreate,
     RequirementRead,
@@ -22,6 +23,7 @@ router = APIRouter(tags=["requirements"])
 def list_all_requirements(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
         select(Requirement)
@@ -29,6 +31,8 @@ def list_all_requirements(
         .options(contains_eager(Requirement.program))
         .where(Program.user_id == current_user.id)
         .order_by(Requirement.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 

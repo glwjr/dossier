@@ -7,6 +7,7 @@ from app.db import get_db
 from app.models.program import Program
 from app.models.user import User
 from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.program import ProgramCreate, ProgramRead, ProgramUpdate
 
 router = APIRouter(prefix="/programs", tags=["programs"])
@@ -16,8 +17,14 @@ router = APIRouter(prefix="/programs", tags=["programs"])
 def list_programs(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
-    return db.scalars(select(Program).where(Program.user_id == current_user.id)).all()
+    return db.scalars(
+        select(Program)
+        .where(Program.user_id == current_user.id)
+        .limit(page.limit)
+        .offset(page.offset)
+    ).all()
 
 
 @router.post("", response_model=ProgramRead, status_code=status.HTTP_201_CREATED)

@@ -9,6 +9,7 @@ from app.models.program import Program
 from app.models.recommender import ProgramRecommender, Recommender
 from app.models.user import User
 from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.recommender import (
     ProgramRecommenderCreate,
     ProgramRecommenderRead,
@@ -64,6 +65,7 @@ def _get_pr_or_404(
 def list_recommenders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
         select(Recommender)
@@ -73,6 +75,8 @@ def list_recommenders(
                 ProgramRecommender.program
             )
         )
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 
@@ -145,7 +149,9 @@ def list_program_recommenders(
 ):
     get_program_or_404(program_id, current_user, db)
     return db.scalars(
-        select(ProgramRecommender).where(ProgramRecommender.program_id == program_id)
+        select(ProgramRecommender)
+        .where(ProgramRecommender.program_id == program_id)
+        .options(selectinload(ProgramRecommender.recommender))
     ).all()
 
 
