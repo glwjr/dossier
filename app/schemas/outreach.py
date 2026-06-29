@@ -1,13 +1,13 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models.outreach import OutreachResponse
 
 
 class OutreachContactCreate(BaseModel):
     name: str
-    email: str | None = None
+    email: EmailStr | None = None
     url: str | None = None
     contacted_on: date | None = None
     response: OutreachResponse = OutreachResponse.none
@@ -16,7 +16,7 @@ class OutreachContactCreate(BaseModel):
 
 class OutreachContactUpdate(BaseModel):
     name: str | None = None
-    email: str | None = None
+    email: EmailStr | None = None
     url: str | None = None
     contacted_on: date | None = None
     response: OutreachResponse | None = None

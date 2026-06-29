@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.program import ProgramStatus, Tier
 
@@ -12,7 +12,7 @@ class ProgramCreate(BaseModel):
     url: str | None = None
     tier: Tier
     status: ProgramStatus = ProgramStatus.researching
-    app_fee: int | None = None
+    app_fee: int | None = Field(default=None, ge=0)
     notes: str | None = None
 
 
@@ -23,7 +23,7 @@ class ProgramUpdate(BaseModel):
     url: str | None = None
     tier: Tier | None = None
     status: ProgramStatus | None = None
-    app_fee: int | None = None
+    app_fee: int | None = Field(default=None, ge=0)
     notes: str | None = None
 
 
