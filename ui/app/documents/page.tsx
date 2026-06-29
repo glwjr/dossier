@@ -157,43 +157,45 @@ function DocumentsInner() {
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 space-y-3">
         <h1 className="text-2xl font-semibold">Documents</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input
             placeholder="Search…"
             value={search}
             onChange={(e) => setParam("q", e.target.value)}
-            className="h-9 w-48 text-sm"
+            className="h-9 text-sm sm:flex-1"
           />
-          <Select value={kindFilter} onValueChange={(v) => v && setParam("kind", v)}>
-            <SelectTrigger className="h-9 w-52 text-sm">
-              <SelectValue>
-                {kindFilter === "all" ? "All kinds" : DOCUMENT_KIND_LABEL[kindFilter]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All kinds</SelectItem>
-              <SelectItem value="sop">SOP</SelectItem>
-              <SelectItem value="personal_statement">Personal statement</SelectItem>
-              <SelectItem value="cv">CV</SelectItem>
-              <SelectItem value="writing_sample">Writing sample</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
-            <SelectTrigger className="h-9 w-36 text-sm">
-              <SelectValue>
-                {statusFilter === "all" ? "All statuses" : DOCUMENT_STATUS_LABEL[statusFilter]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="in_progress">In progress</SelectItem>
-              <SelectItem value="final">Final</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={kindFilter} onValueChange={(v) => v && setParam("kind", v)}>
+              <SelectTrigger className="h-9 flex-1 text-sm sm:w-52 sm:flex-none">
+                <SelectValue>
+                  {kindFilter === "all" ? "All kinds" : DOCUMENT_KIND_LABEL[kindFilter]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All kinds</SelectItem>
+                <SelectItem value="sop">SOP</SelectItem>
+                <SelectItem value="personal_statement">Personal statement</SelectItem>
+                <SelectItem value="cv">CV</SelectItem>
+                <SelectItem value="writing_sample">Writing sample</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
+              <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
+                <SelectValue>
+                  {statusFilter === "all" ? "All statuses" : DOCUMENT_STATUS_LABEL[statusFilter]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="in_progress">In progress</SelectItem>
+                <SelectItem value="final">Final</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <DocumentsList statusFilter={statusFilter} kindFilter={kindFilter} search={search} />
@@ -204,11 +206,12 @@ function DocumentsInner() {
 function DocumentsPageSkeleton() {
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 space-y-3">
         <Skeleton className="h-8 w-36" />
+        <Skeleton className="h-9 w-full" />
         <div className="flex gap-2">
-          <Skeleton className="h-9 w-52" />
-          <Skeleton className="h-9 w-36" />
+          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 flex-1" />
         </div>
       </div>
       <div className="space-y-2">
