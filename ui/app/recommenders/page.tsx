@@ -126,9 +126,9 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
           <p className="mb-2 text-sm font-medium">Pending letters ({pending.length})</p>
           <div className="space-y-1">
             {pending.map(({ rec, assignment }) => (
-              <div key={`${rec.id}-${assignment.program_id}`} className="flex items-center justify-between gap-4 text-xs">
-                <span className="font-medium">{rec.name}</span>
-                <span className="text-muted-foreground">
+              <div key={`${rec.id}-${assignment.program_id}`} className="flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <span className="shrink-0 font-medium">{rec.name}</span>
+                <span className="truncate text-muted-foreground">
                   <Link href={`/programs/${assignment.program_id}?tab=recommenders`} className="hover:underline">
                     {assignment.program.school}
                   </Link>
@@ -207,11 +207,11 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
 
             <div className="space-y-1.5">
               {r.program_assignments.map((a) => (
-                  <div key={a.program_id} className="flex items-center justify-between gap-2">
+                  <div key={a.program_id} className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/programs/${a.program_id}`}
-                        className="truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        className="block truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
                       >
                         {a.program.school} — {a.program.department}
                       </Link>
