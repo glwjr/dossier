@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback } from "react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -82,31 +83,45 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
   return (
     <div className="space-y-6">
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-        <div key={programId} className="space-y-2">
-          <div className="flex items-baseline gap-2">
+        <div key={programId} className="space-y-3">
+          <div className="flex min-w-0 items-baseline gap-3">
             <Link
               href={`/programs/${programId}?tab=documents`}
-              className="text-sm font-medium hover:underline"
+              className="min-w-0 shrink truncate text-sm font-medium hover:underline"
             >
               {school}
             </Link>
-            <span className="text-xs text-muted-foreground">{department}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
           </div>
           {items.map((d) => (
             <div
               key={d.id}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-sm"
+              className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm"
             >
-              <span className="min-w-0 flex-1 font-medium">{d.title}</span>
-              <div className="ml-auto flex items-center gap-2">
-                <span className="hidden text-xs text-muted-foreground sm:block">
-                  {DOCUMENT_KIND_LABEL[d.kind]}
-                </span>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{d.title}</span>
+                {d.url && (
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  >
+                    Open
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                  </a>
+                )}
+                {d.notes && (
+                  <p className="mt-1 text-xs text-muted-foreground">{d.notes}</p>
+                )}
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <p className="text-xs text-muted-foreground">{DOCUMENT_KIND_LABEL[d.kind]}</p>
                 <Select
                   value={d.status}
                   onValueChange={(v) => v && updateStatus.mutate({ id: d.id, status: v })}
                 >
-                  <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
+                  <SelectTrigger className="h-7 w-28 text-xs">
                     <SelectValue>{DOCUMENT_STATUS_LABEL[d.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -115,20 +130,7 @@ function DocumentsList({ statusFilter, kindFilter, search }: { statusFilter: str
                     <SelectItem value="final">Final</SelectItem>
                   </SelectContent>
                 </Select>
-                {d.url && (
-                  <a
-                    href={d.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground underline underline-offset-2 hover:opacity-70"
-                  >
-                    Open
-                  </a>
-                )}
               </div>
-              {d.notes && (
-                <p className="w-full text-xs text-muted-foreground">{d.notes}</p>
-              )}
             </div>
           ))}
         </div>
