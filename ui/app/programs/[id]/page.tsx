@@ -123,7 +123,10 @@ function RequirementsTab({ programId }: { programId: number }) {
         />
       </div>
       {sorted.length === 0 && (
-        <p className="text-sm text-muted-foreground">None yet.</p>
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <p className="text-sm font-medium">No requirements yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Add the documents, tests, and other items this program requires.</p>
+        </div>
       )}
       {sorted.map((r) => (
         <div
@@ -240,7 +243,10 @@ function DeadlinesTab({ programId }: { programId: number }) {
         />
       </div>
       {sortedDeadlines.length === 0 && (
-        <p className="text-sm text-muted-foreground">None yet.</p>
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <p className="text-sm font-medium">No deadlines yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Track application, fellowship, and fee waiver deadlines.</p>
+        </div>
       )}
       {sortedDeadlines.map((d) => (
         <div
@@ -334,7 +340,10 @@ function RecommendersTab({ programId }: { programId: number }) {
         />
       </div>
       {data.length === 0 && (
-        <p className="text-sm text-muted-foreground">None assigned yet.</p>
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <p className="text-sm font-medium">No recommenders assigned</p>
+          <p className="mt-1 text-sm text-muted-foreground">Assign letter writers and track their status for this program.</p>
+        </div>
       )}
       {data.map((pr) => (
         <div
@@ -429,7 +438,10 @@ function OutreachTab({ programId }: { programId: number }) {
         />
       </div>
       {data.length === 0 && (
-        <p className="text-sm text-muted-foreground">None yet.</p>
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <p className="text-sm font-medium">No outreach contacts yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Track faculty you&apos;ve contacted and their responses.</p>
+        </div>
       )}
       {data.map((c) => (
         <div
@@ -542,7 +554,10 @@ function DocumentsTab({ programId }: { programId: number }) {
         />
       </div>
       {data.length === 0 && (
-        <p className="text-sm text-muted-foreground">None yet.</p>
+        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+          <p className="text-sm font-medium">No documents yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Link your SOPs, CVs, and writing samples to this program.</p>
+        </div>
       )}
       {data.map((d) => (
         <div
