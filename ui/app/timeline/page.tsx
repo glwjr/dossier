@@ -262,7 +262,7 @@ function TimelineInner() {
               return (
                 <div
                   key={key}
-                  className={`flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-opacity ${
+                  className={`flex items-start gap-4 rounded-md border px-4 py-3 text-sm transition-opacity ${
                     item.isDone ? "opacity-50" : ""
                   } ${
                     !item.isDone && days < 0
@@ -288,47 +288,51 @@ function TimelineInner() {
                     >
                       {item.school}
                     </Link>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
                       {item.itemType === "deadline"
                         ? `${DEADLINE_KIND_LABEL[item.raw.kind]} deadline`
                         : item.raw.label}
                     </p>
                     {item.notes && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
                         {item.notes}
                       </p>
                     )}
                   </div>
-                  {item.itemType === "deadline" ? (
-                    <Badge variant={DEADLINE_BADGE_VARIANT[item.raw.kind]}>
-                      {DEADLINE_KIND_LABEL[item.raw.kind]}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">
-                      {REQUIREMENT_KIND_LABEL[item.raw.kind]}
-                    </Badge>
-                  )}
-                  <div className="text-right shrink-0">
-                    <p className={overdue ? "text-destructive font-medium" : ""}>
-                      {formatDate(item.dueDate)}
+                  <div className="shrink-0 text-right">
+                    <div className="mb-2">
+                      {item.itemType === "deadline" ? (
+                        <Badge variant={DEADLINE_BADGE_VARIANT[item.raw.kind]}>
+                          {DEADLINE_KIND_LABEL[item.raw.kind]}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">
+                          {REQUIREMENT_KIND_LABEL[item.raw.kind]}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs">
+                      <span className={overdue ? "font-medium text-destructive" : ""}>
+                        {formatDate(item.dueDate)}
+                      </span>
+                      {!item.isDone && (
+                        <span
+                          className={
+                            overdue
+                              ? "text-destructive"
+                              : days <= 14
+                              ? "text-yellow-600"
+                              : "text-muted-foreground"
+                          }
+                        >
+                          {overdue
+                            ? ` · ${Math.abs(days)}d overdue`
+                            : days === 0
+                            ? " · Today"
+                            : ` · ${days}d`}
+                        </span>
+                      )}
                     </p>
-                    {!item.isDone && (
-                      <p
-                        className={`text-xs ${
-                          overdue
-                            ? "text-destructive"
-                            : days <= 14
-                            ? "text-yellow-600"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {overdue
-                          ? `${Math.abs(days)}d Overdue`
-                          : days === 0
-                          ? "Today"
-                          : `${days}d`}
-                      </p>
-                    )}
                   </div>
                 </div>
               );
