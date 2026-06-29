@@ -118,6 +118,22 @@ def test_list_all_requirements_isolation(client, db_session, dev_user):
     assert r.json() == []
 
 
+def test_create_requirement_invalid_kind(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/requirements",
+        json={**REQ_PAYLOAD, "kind": "essay"},
+    )
+    assert response.status_code == 422
+
+
+def test_create_requirement_invalid_status(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/requirements",
+        json={**REQ_PAYLOAD, "status": "completed"},
+    )
+    assert response.status_code == 422
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999/requirements")
     assert response.status_code == 404

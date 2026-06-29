@@ -217,6 +217,23 @@ def test_delete_program_cascades_assignments(client, assignment, program, recomm
 # --- Isolation ---
 
 
+def test_assign_other_users_recommender_returns_404(client, db_session, program):
+    """User A cannot assign User B's recommender to their own program."""
+    user_b = User(email="user-b-assign@example.com", name="User B")
+    db_session.add(user_b)
+    db_session.flush()
+
+    rec_b = Recommender(user_id=user_b.id, name="Prof. Other")
+    db_session.add(rec_b)
+    db_session.flush()
+
+    response = client.post(
+        f"/programs/{program['id']}/recommenders",
+        json={"recommender_id": rec_b.id},
+    )
+    assert response.status_code == 404
+
+
 def test_recommender_isolation(client, db_session):
     """User A cannot access or mutate User B's recommenders."""
     user_b = User(email="user-b-rec@example.com", name="User B")

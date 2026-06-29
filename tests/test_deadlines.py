@@ -74,6 +74,22 @@ def test_delete_deadline(client, deadline):
     assert response.status_code == 404
 
 
+def test_create_deadline_invalid_kind(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/deadlines",
+        json={**DEADLINE_PAYLOAD, "kind": "interview"},
+    )
+    assert response.status_code == 422
+
+
+def test_create_deadline_invalid_date_format(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/deadlines",
+        json={**DEADLINE_PAYLOAD, "due_date": "December 15, 2025"},
+    )
+    assert response.status_code == 422
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     assert client.get("/programs/99999/deadlines").status_code == 404
 

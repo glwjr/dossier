@@ -97,6 +97,22 @@ def test_delete_document(client, document):
     assert response.status_code == 404
 
 
+def test_create_document_invalid_kind(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/documents",
+        json={**DOC_PAYLOAD, "kind": "essay"},
+    )
+    assert response.status_code == 422
+
+
+def test_create_document_invalid_status(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/documents",
+        json={**DOC_PAYLOAD, "status": "submitted"},
+    )
+    assert response.status_code == 422
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999/documents")
     assert response.status_code == 404

@@ -120,6 +120,14 @@ def test_list_all_outreach_isolation(client, db_session):
     assert r.json() == []
 
 
+def test_create_contact_invalid_response(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/outreach",
+        json={**CONTACT_PAYLOAD, "response": "pending"},
+    )
+    assert response.status_code == 422
+
+
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
     response = client.get("/programs/99999/outreach")
     assert response.status_code == 404

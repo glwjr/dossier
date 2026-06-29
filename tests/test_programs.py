@@ -158,6 +158,50 @@ def test_get_nonexistent_program_returns_404(client, dev_user):
     assert response.status_code == 404
 
 
+def test_create_program_invalid_tier(client, dev_user):
+    response = client.post("/programs", json={**PROGRAM_PAYLOAD, "tier": "safety"})
+    assert response.status_code == 422
+
+
+def test_create_program_missing_required_fields(client, dev_user):
+    assert client.post("/programs", json={}).status_code == 422
+    assert (
+        client.post(
+            "/programs", json={k: v for k, v in PROGRAM_PAYLOAD.items() if k != "tier"}
+        ).status_code
+        == 422
+    )
+
+
+def test_delete_program_cascades_to_children(client, dev_user):
+    """Deleting a program must cascade-delete all child rows."""
+    prog = client.post("/programs", json=PROGRAM_PAYLOAD).json()
+    pid = prog["id"]
+
+    client.post(
+        f"/programs/{pid}/requirements",
+        json={"label": "SOP", "kind": "sop", "status": "todo"},
+    )
+    client.post(
+        f"/programs/{pid}/deadlines",
+        json={"kind": "application", "due_date": "2025-12-01"},
+    )
+    client.post(f"/programs/{pid}/outreach", json={"name": "Prof. X"})
+    client.post(f"/programs/{pid}/documents", json={"kind": "sop", "title": "My SOP"})
+
+    assert len(client.get("/requirements").json()) == 1
+    assert len(client.get("/deadlines").json()) == 1
+    assert len(client.get("/outreach").json()) == 1
+    assert len(client.get("/documents").json()) == 1
+
+    assert client.delete(f"/programs/{pid}").status_code == 204
+
+    assert client.get("/requirements").json() == []
+    assert client.get("/deadlines").json() == []
+    assert client.get("/outreach").json() == []
+    assert client.get("/documents").json() == []
+
+
 def test_user_isolation(client, dev_user, db_session):
     """User A (dev_user / current user) cannot read or mutate User B's programs."""
     user_b = User(email="user-b@example.com", name="User B")
