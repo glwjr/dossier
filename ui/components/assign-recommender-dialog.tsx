@@ -12,6 +12,7 @@ import {
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import {
   Dialog,
   DialogContent,
@@ -82,7 +83,7 @@ export function AssignRecommenderDialog({
       toast.success("Saved");
       setOpen(false);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function handleOpen() {

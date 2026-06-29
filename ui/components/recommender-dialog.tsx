@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Recommender, RecommenderCreate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +56,7 @@ export function RecommenderDialog({ recommender, trigger }: Props) {
       toast.success("Saved");
       setOpen(false);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function set<K extends keyof RecommenderCreate>(

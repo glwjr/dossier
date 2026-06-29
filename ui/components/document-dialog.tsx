@@ -7,6 +7,7 @@ import { Document, DocumentCreate } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import {
   Dialog,
   DialogContent,
@@ -67,7 +68,7 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
       toast.success("Saved");
       setOpen(false);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function set<K extends keyof DocumentCreate>(

@@ -10,6 +10,7 @@ import {
 } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import {
   Dialog,
   DialogContent,
@@ -88,7 +89,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
       setOpen(false);
       onSuccess?.(result);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function set<K extends keyof ProgramCreate>(key: K, value: ProgramCreate[K]) {

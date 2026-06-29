@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +37,7 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
       queryClient.invalidateQueries({ queryKey: ["documents-all"] });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   if (isLoading)

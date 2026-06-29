@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
 
 
@@ -47,7 +48,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
       queryClient.invalidateQueries({ queryKey: ["recommenders"] });
       toast.success("Status updated");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const deleteRec = useMutation({
@@ -56,7 +57,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
       queryClient.invalidateQueries({ queryKey: ["recommenders"] });
       toast.success("Deleted");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);

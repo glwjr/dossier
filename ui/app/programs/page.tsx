@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
 import { LayoutList, LayoutGrid, Download } from "lucide-react";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -91,7 +92,7 @@ function ProgramCard({ program, reqCount }: { program: Program; reqCount?: { don
     mutationFn: (notes: string) =>
       api.patch(`/programs/${program.id}`, { notes: notes || null }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["programs"] }),
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   return (
@@ -310,7 +311,7 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   if (isLoading)

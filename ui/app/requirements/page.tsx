@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -61,7 +62,7 @@ function RequirementsList({
       queryClient.invalidateQueries({ queryKey: ["requirements"] });
       toast.success("Status updated");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const updateNotes = useMutation({
@@ -71,7 +72,7 @@ function RequirementsList({
       queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
       queryClient.invalidateQueries({ queryKey: ["requirements"] });
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const bulkUpdate = useMutation({
@@ -84,7 +85,7 @@ function RequirementsList({
       setSelectedIds(new Set());
       toast.success("Updated");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function toggleSelect(id: number) {

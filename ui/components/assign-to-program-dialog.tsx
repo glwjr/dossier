@@ -7,6 +7,7 @@ import { Program, ProgramRecommender, ProgramAssignmentSummary } from "@/lib/typ
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import {
   Dialog,
   DialogContent,
@@ -64,7 +65,7 @@ export function AssignToProgramDialog({
       toast.success("Assigned");
       setOpen(false);
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   function handleOpen() {

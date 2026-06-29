@@ -47,6 +47,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -99,7 +100,7 @@ function RequirementsTab({ programId }: { programId: number }) {
       queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
       toast.success("Deleted");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -224,7 +225,7 @@ function DeadlinesTab({ programId }: { programId: number }) {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Deleted");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -326,7 +327,7 @@ function RecommendersTab({ programId }: { programId: number }) {
       queryClient.invalidateQueries({ queryKey: ["recommenders"] });
       toast.success("Removed");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -424,7 +425,7 @@ function OutreachTab({ programId }: { programId: number }) {
       queryClient.invalidateQueries({ queryKey: ["outreach-all"] });
       toast.success("Deleted");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -540,7 +541,7 @@ function DocumentsTab({ programId }: { programId: number }) {
       queryClient.invalidateQueries({ queryKey: ["documents-all"] });
       toast.success("Deleted");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -720,7 +721,7 @@ function ProgramDetail({ id }: { id: number }) {
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   const deleteMutation = useMutation({
@@ -731,7 +732,7 @@ function ProgramDetail({ id }: { id: number }) {
       toast.success("Program deleted");
       router.push("/programs");
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: onMutationError,
   });
 
   if (isLoading)
