@@ -11,6 +11,7 @@ import {
   PROGRAM_STATUS_LABEL,
   PROGRAM_TIER_LABEL,
   PROGRAM_TIER_VARIANT,
+  daysUntil,
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
@@ -82,15 +83,6 @@ function CompareInner() {
   const selected = selectedIds
     .map((id) => programs.find((p) => p.id === id))
     .filter(Boolean) as Program[];
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  function daysUntil(dateStr: string): number {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const due = new Date(y, m - 1, d);
-    return Math.ceil((due.getTime() - today.getTime()) / 86400000);
-  }
 
   if (isLoading)
     return (

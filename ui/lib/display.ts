@@ -10,6 +10,17 @@ export function formatDate(date: string | null | undefined): string {
   });
 }
 
+// Whole calendar days from today until a YYYY-MM-DD date (negative = past, 0 =
+// today). Differencing UTC midnights avoids the DST off-by-one that local-time
+// arithmetic produces when a clock change falls within the span.
+export function daysUntil(date: string): number {
+  const [year, month, day] = date.split("-").map(Number);
+  const due = Date.UTC(year, month - 1, day);
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((due - today) / 86400000);
+}
+
 export const PROGRAM_TIER_LABEL: Record<string, string> = {
   reach: "Reach",
   match: "Match",

@@ -8,6 +8,7 @@ import { DeadlineWithProgram, RequirementWithProgram } from "@/lib/types";
 import {
   DEADLINE_KIND_LABEL,
   REQUIREMENT_KIND_LABEL,
+  daysUntil,
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
@@ -71,9 +72,6 @@ function TimelineInner() {
       queryClient.invalidateQueries({ queryKey: ["requirements"] });
     },
   });
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   const items: TimelineItem[] = useMemo(() => {
     const dl: TimelineItem[] = deadlines.map((d) => ({
@@ -140,12 +138,6 @@ function TimelineInner() {
     });
   }
 
-  function daysRemaining(dueDateStr: string) {
-    const [y, m, d] = dueDateStr.split("-").map(Number);
-    const due = new Date(y, m - 1, d);
-    return Math.ceil((due.getTime() - today.getTime()) / 86400000);
-  }
-
   function toggleItem(item: TimelineItem) {
     if (item.itemType === "deadline") toggleDeadline.mutate(item.raw);
     else toggleRequirement.mutate(item.raw);
@@ -172,7 +164,8 @@ function TimelineInner() {
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
         <p className="text-sm font-medium">Nothing on the timeline yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add deadlines or requirement due dates from a program's detail page.
+          Add deadlines or requirement due dates from a program&apos;s detail
+          page.
         </p>
         <Link
           href="/programs"
@@ -253,7 +246,7 @@ function TimelineInner() {
           </h2>
           <div className="space-y-2">
             {groupItems.map((item) => {
-              const days = daysRemaining(item.dueDate);
+              const days = daysUntil(item.dueDate);
               const overdue = days < 0 && !item.isDone;
               const key =
                 item.itemType === "deadline"
