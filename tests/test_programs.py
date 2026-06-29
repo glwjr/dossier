@@ -38,6 +38,62 @@ def test_create_program_rejects_negative_app_fee(client, dev_user):
     assert response.status_code == 422
 
 
+def test_optional_fields_default_to_null(client, dev_user):
+    data = client.post("/programs", json=PROGRAM_PAYLOAD).json()
+    assert data["location"] is None
+    assert data["stipend"] is None
+    assert data["decision_deadline"] is None
+
+
+def test_create_program_with_optional_fields(client, dev_user):
+    response = client.post(
+        "/programs",
+        json={
+            **PROGRAM_PAYLOAD,
+            "location": "Seattle, WA",
+            "stipend": 37000,
+            "decision_deadline": "2026-04-15",
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["location"] == "Seattle, WA"
+    assert data["stipend"] == 37000
+    assert data["decision_deadline"] == "2026-04-15"
+
+
+def test_create_program_rejects_negative_stipend(client, dev_user):
+    response = client.post("/programs", json={**PROGRAM_PAYLOAD, "stipend": -1})
+    assert response.status_code == 422
+
+
+def test_update_program_optional_fields(client, dev_user, program):
+    response = client.patch(
+        f"/programs/{program['id']}",
+        json={
+            "location": "Baltimore, MD",
+            "stipend": 38000,
+            "decision_deadline": "2026-04-01",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["location"] == "Baltimore, MD"
+    assert data["stipend"] == 38000
+    assert data["decision_deadline"] == "2026-04-01"
+
+    # Clear all three back to null
+    cleared = client.patch(
+        f"/programs/{program['id']}",
+        json={"location": None, "stipend": None, "decision_deadline": None},
+    )
+    assert cleared.status_code == 200
+    data = cleared.json()
+    assert data["location"] is None
+    assert data["stipend"] is None
+    assert data["decision_deadline"] is None
+
+
 def test_list_programs(client, dev_user, program):
     response = client.get("/programs")
     assert response.status_code == 200

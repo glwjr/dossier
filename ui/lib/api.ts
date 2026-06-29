@@ -1,12 +1,18 @@
-import { getToken, redirectToLogin } from "./auth";
+import { clearToken, getToken, redirectToLogin } from "./auth";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL!;
+
+export class AuthError extends Error {
+  constructor() {
+    super("Session expired");
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   if (!token) {
     redirectToLogin();
-    throw new Error("Not authenticated");
+    throw new AuthError();
   }
 
   const res = await fetch(`${BASE}${path}`, {
@@ -19,8 +25,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (res.status === 401) {
-    redirectToLogin();
-    throw new Error("Not authenticated");
+    clearToken();
+    throw new AuthError();
   }
 
   if (res.status === 204) return undefined as T;

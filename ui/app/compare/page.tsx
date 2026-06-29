@@ -14,6 +14,7 @@ import {
   formatDate,
 } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
+import { ErrorState } from "@/components/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -36,7 +37,7 @@ function CompareInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { data: programs = [], isLoading } = useQuery<Program[]>({
+  const { data: programs = [], isLoading, isError } = useQuery<Program[]>({
     queryKey: ["programs"],
     queryFn: () => api.get("/programs"),
   });
@@ -97,6 +98,14 @@ function CompareInner() {
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
+    );
+
+  if (isError)
+    return (
+      <ErrorState
+        title="Failed to load programs"
+        message="Something went wrong. Try refreshing the page."
+      />
     );
 
   const TIER_LABEL = PROGRAM_TIER_LABEL;
