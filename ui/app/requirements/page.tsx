@@ -28,11 +28,11 @@ import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
 
-const STATUS_COLOR: Record<string, string> = {
-  todo: "text-muted-foreground",
-  in_progress: "text-yellow-600",
-  done: "text-green-600 dark:text-green-500",
-  waived: "text-muted-foreground line-through",
+const STATUS_BORDER: Record<string, string> = {
+  todo: "",
+  in_progress: "border-l-yellow-500",
+  done: "border-l-green-500",
+  waived: "",
 };
 
 function RequirementsList({
@@ -182,7 +182,7 @@ function RequirementsList({
     return (
       <div
         key={r.id}
-        className="group flex items-start gap-3 rounded-md border px-3 py-2 text-sm"
+        className={`group flex items-start gap-3 rounded-md border border-l-4 px-3 py-2 text-sm ${STATUS_BORDER[r.status]}`}
       >
         <Checkbox
           checked={selectedIds.has(r.id)}
@@ -200,7 +200,7 @@ function RequirementsList({
               {r.program.school} · {r.program.department}
             </Link>
           )}
-          <span className={`block truncate ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+          <span className={`block truncate${r.status === "waived" ? " line-through text-muted-foreground" : ""}`}>{r.label}</span>
           <div className="mt-1">
             {editingId === r.id ? (
               <textarea

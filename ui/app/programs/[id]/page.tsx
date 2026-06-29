@@ -50,30 +50,30 @@ import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
 
-const STATUS_COLOR: Record<string, string> = {
-  todo: "text-muted-foreground",
-  in_progress: "text-yellow-600",
-  done: "text-green-600",
-  waived: "text-muted-foreground line-through",
+const STATUS_BORDER: Record<string, string> = {
+  todo: "",
+  in_progress: "border-l-yellow-500",
+  done: "border-l-green-500",
+  waived: "",
 };
 
-const REC_STATUS_COLOR: Record<string, string> = {
-  asked: "text-muted-foreground",
-  confirmed: "text-yellow-600",
-  submitted: "text-green-600",
+const REC_STATUS_BORDER: Record<string, string> = {
+  asked: "",
+  confirmed: "border-l-yellow-500",
+  submitted: "border-l-green-500",
 };
 
-const DOC_STATUS_COLOR: Record<string, string> = {
-  draft: "text-muted-foreground",
-  in_progress: "text-yellow-600",
-  final: "text-green-600",
+const DOC_STATUS_BORDER: Record<string, string> = {
+  draft: "",
+  in_progress: "border-l-yellow-500",
+  final: "border-l-green-500",
 };
 
-const RESPONSE_COLOR: Record<string, string> = {
-  none: "text-muted-foreground",
-  positive: "text-green-600",
-  negative: "text-destructive",
-  meeting_scheduled: "text-yellow-600",
+const RESPONSE_BORDER: Record<string, string> = {
+  none: "",
+  positive: "border-l-green-500",
+  negative: "border-l-destructive",
+  meeting_scheduled: "border-l-yellow-500",
 };
 
 
@@ -132,10 +132,10 @@ function RequirementsTab({ programId }: { programId: number }) {
       {sorted.map((r) => (
         <div
           key={r.id}
-          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+          className={`flex items-start gap-2 rounded-md border border-l-4 px-3 py-2 text-sm ${STATUS_BORDER[r.status]}`}
         >
           <div className="min-w-0 flex-1">
-            <span className={`block truncate ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+            <span className={`block truncate${r.status === "waived" ? " line-through text-muted-foreground" : ""}`}>{r.label}</span>
             {r.due_date && <span className="block text-xs text-muted-foreground">{formatDate(r.due_date)}</span>}
             {r.notes && <p className="mt-0.5 text-xs text-muted-foreground">{r.notes}</p>}
           </div>
@@ -349,9 +349,9 @@ function RecommendersTab({ programId }: { programId: number }) {
       {data.map((pr) => (
         <div
           key={pr.id}
-          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+          className={`flex items-start gap-2 rounded-md border border-l-4 px-3 py-2 text-sm ${REC_STATUS_BORDER[pr.status]}`}
         >
-          <div className={`min-w-0 flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
+          <div className="min-w-0 flex-1">
             <span className="block truncate">
               {pr.recommender.name}
               {pr.recommender.institution ? ` — ${pr.recommender.institution}` : ""}
@@ -447,10 +447,10 @@ function OutreachTab({ programId }: { programId: number }) {
       {data.map((c) => (
         <div
           key={c.id}
-          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+          className={`flex items-start gap-2 rounded-md border border-l-4 px-3 py-2 text-sm ${RESPONSE_BORDER[c.response]}`}
         >
           <div className="min-w-0 flex-1">
-            <span className={`block truncate ${RESPONSE_COLOR[c.response]}`}>{c.name}</span>
+            <span className="block truncate">{c.name}</span>
             {c.url && (
               <a
                 href={c.url}
@@ -563,9 +563,9 @@ function DocumentsTab({ programId }: { programId: number }) {
       {data.map((d) => (
         <div
           key={d.id}
-          className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm"
+          className={`flex items-start gap-4 rounded-md border border-l-4 px-3 py-2 text-sm ${DOC_STATUS_BORDER[d.status]}`}
         >
-          <div className={`min-w-0 flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
+          <div className="min-w-0 flex-1">
             {d.url ? (
               <a
                 href={d.url}
