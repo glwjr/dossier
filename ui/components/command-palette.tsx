@@ -91,22 +91,21 @@ export function CommandPalette() {
 
   const results: Result[] = [];
 
-  const matchedPrograms = programs.filter(
-    (p) =>
-      !q ||
-      p.school.toLowerCase().includes(q) ||
-      p.department.toLowerCase().includes(q)
-  );
-  for (const p of matchedPrograms.slice(0, 5)) {
-    results.push({
-      kind: "program",
-      id: p.id,
-      label: p.school,
-      sub: `${p.department} · ${PROGRAM_STATUS_LABEL[p.status]}`,
-    });
-  }
-
   if (q) {
+    const matchedPrograms = programs.filter(
+      (p) =>
+        p.school.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q)
+    );
+    for (const p of matchedPrograms.slice(0, 5)) {
+      results.push({
+        kind: "program",
+        id: p.id,
+        label: p.school,
+        sub: `${p.department} · ${PROGRAM_STATUS_LABEL[p.status]}`,
+      });
+    }
+
     const matchedReqs = requirements.filter(
       (r) =>
         r.label.toLowerCase().includes(q) ||
@@ -225,7 +224,7 @@ export function CommandPalette() {
                 onMouseEnter={() => setFocused(i)}
                 onClick={() => navigate(r)}
               >
-                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                <span className="w-24 shrink-0 rounded bg-muted py-0.5 text-center text-xs text-muted-foreground">
                   {KIND_LABEL[r.kind]}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -236,7 +235,7 @@ export function CommandPalette() {
             ))}
           </div>
         )}
-        <div className="border-t px-4 py-2 text-xs text-muted-foreground flex gap-4">
+        <div className="hidden border-t px-4 py-2 text-xs text-muted-foreground sm:flex gap-4">
           <span>↑↓ navigate</span>
           <span>↵ open</span>
           <span>esc close</span>
