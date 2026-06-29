@@ -117,32 +117,34 @@ function OutreachInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search…"
           value={search}
           onChange={(e) => setParam("q", e.target.value)}
-          className="h-9 w-48 text-sm"
+          className="h-9 text-sm sm:flex-1"
         />
-        <Select value={responseFilter} onValueChange={(v) => v && setParam("response", v)}>
-          <SelectTrigger className="h-9 w-44 text-sm">
-            <SelectValue>
-              {responseFilter === "all"
-                ? "All responses"
-                : OUTREACH_RESPONSE_LABEL[responseFilter]}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All responses</SelectItem>
-            <SelectItem value="none">None</SelectItem>
-            <SelectItem value="positive">Positive</SelectItem>
-            <SelectItem value="negative">Negative</SelectItem>
-            <SelectItem value="meeting_scheduled">Meeting scheduled</SelectItem>
-          </SelectContent>
-        </Select>
-        <span className="ml-auto text-sm text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? "contact" : "contacts"}
-        </span>
+        <div className="flex items-center gap-2">
+          <Select value={responseFilter} onValueChange={(v) => v && setParam("response", v)}>
+            <SelectTrigger className="h-9 flex-1 text-sm sm:w-44 sm:flex-none">
+              <SelectValue>
+                {responseFilter === "all"
+                  ? "All responses"
+                  : OUTREACH_RESPONSE_LABEL[responseFilter]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All responses</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="positive">Positive</SelectItem>
+              <SelectItem value="negative">Negative</SelectItem>
+              <SelectItem value="meeting_scheduled">Meeting scheduled</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="shrink-0 text-sm text-muted-foreground">
+            {filtered.length} {filtered.length === 1 ? "contact" : "contacts"}
+          </span>
+        </div>
       </div>
 
       {filtered.length === 0 && (
