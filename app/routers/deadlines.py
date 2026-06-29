@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
 from app.db import get_db
 from app.models.deadline import Deadline
 from app.models.program import Program
 from app.models.user import User
+from app.ownership import get_program_or_404
 from app.schemas.deadline import (
     DeadlineCreate,
     DeadlineRead,
@@ -15,20 +16,6 @@ from app.schemas.deadline import (
 )
 
 router = APIRouter(tags=["deadlines"])
-
-
-def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:
-    program = db.scalar(
-        select(Program).where(
-            Program.id == program_id,
-            Program.user_id == current_user.id,
-        )
-    )
-    if program is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Program not found"
-        )
-    return program
 
 
 def _get_deadline_or_404(deadline_id: int, current_user: User, db: Session) -> Deadline:
@@ -53,6 +40,7 @@ def list_all_deadlines(
     return db.scalars(
         select(Deadline)
         .join(Program, Deadline.program_id == Program.id)
+        .options(contains_eager(Deadline.program))
         .where(Program.user_id == current_user.id)
         .order_by(Deadline.due_date)
     ).all()
@@ -64,7 +52,7 @@ def list_deadlines(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     return db.scalars(
         select(Deadline)
         .where(Deadline.program_id == program_id)
@@ -83,7 +71,7 @@ def create_deadline(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     deadline = Deadline(**body.model_dump(), program_id=program_id)
     db.add(deadline)
     db.commit()
