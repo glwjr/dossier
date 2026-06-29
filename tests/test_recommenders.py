@@ -149,6 +149,26 @@ def test_assign_duplicate_returns_409(client, assignment, program, recommender):
     assert response.status_code == 409
 
 
+def test_duplicate_assignment_violates_db_constraint(
+    client, assignment, db_session, program, recommender
+):
+    # The DB itself must reject a duplicate (program_id, recommender_id) pair,
+    # independent of the application-level 409 check.
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models.recommender import ProgramRecommender
+
+    # Use a SAVEPOINT so the failed insert rolls back without disturbing the
+    # outer test transaction.
+    with pytest.raises(IntegrityError):
+        with db_session.begin_nested():
+            db_session.add(
+                ProgramRecommender(
+                    program_id=program["id"], recommender_id=recommender["id"]
+                )
+            )
+
+
 def test_assign_to_nonexistent_program_returns_404(client, recommender):
     response = client.post(
         "/programs/99999/recommenders",
