@@ -284,7 +284,7 @@ function TimelineInner() {
                           ? `/programs/${item.programId}?tab=deadlines`
                           : `/programs/${item.programId}?tab=requirements`
                       }
-                      className="font-medium hover:underline"
+                      className="block truncate font-medium hover:underline"
                     >
                       {item.school}
                     </Link>
