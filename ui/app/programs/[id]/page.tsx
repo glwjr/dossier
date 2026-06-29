@@ -774,22 +774,23 @@ function ProgramDetail({ id }: { id: number }) {
               </SelectContent>
             </Select>
           </div>
-          <p className="text-muted-foreground">{program.department}</p>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            {program.app_fee != null && <span>${program.app_fee} application fee</span>}
+          <p className="mt-1 text-muted-foreground">{program.department}</p>
+          <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+            {program.app_fee != null && <p>${program.app_fee} application fee</p>}
             {program.url && (
               <a
                 href={program.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:opacity-70"
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
               >
                 Program website
+                <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             )}
           </div>
           {program.notes && (
-            <p className="text-sm text-muted-foreground">{program.notes}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{program.notes}</p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
