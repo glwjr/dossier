@@ -48,7 +48,9 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
           <div>
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Completion</span>
-              <span className="font-medium">{completion_pct}%</span>
+              <span className={`font-medium ${completion_pct === 100 ? "text-green-600 dark:text-green-500" : ""}`}>
+                {completion_pct}%
+              </span>
             </div>
             <div className="h-2 w-full rounded-full bg-secondary">
               <div
@@ -60,7 +62,12 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Next deadline</span>
-            <span>
+            <span className={
+              days_remaining === null ? "text-muted-foreground" :
+              days_remaining <= 3 ? "font-medium text-destructive" :
+              days_remaining <= 14 ? "text-yellow-600" :
+              "text-muted-foreground"
+            }>
               {next_deadline ? `${formatDate(next_deadline)} (${days_remaining}d)` : "—"}
             </span>
           </div>
@@ -68,7 +75,7 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
           <div className="flex items-start gap-8 text-sm">
             <span className="shrink-0 text-muted-foreground">Blocking</span>
             {blocking_requirements.length === 0 ? (
-              <span className="flex-1 text-right text-green-600 dark:text-green-500">All clear</span>
+              <span className="flex-1 text-right text-muted-foreground">All clear</span>
             ) : (
               <span className="flex-1 text-right text-destructive">
                 {blocking_requirements.slice(0, 2).map((r) => r.label).join(", ")}
