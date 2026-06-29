@@ -35,4 +35,4 @@ class OutreachContact(Base):
     )
     notes: Mapped[str | None] = mapped_column(Text)
 
-    program: Mapped["Program"] = relationship("Program", lazy="joined")
+    program: Mapped["Program"] = relationship("Program")

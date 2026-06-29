@@ -35,9 +35,7 @@ class Recommender(Base):
 class ProgramRecommender(Base):
     __tablename__ = "program_recommenders"
     __table_args__ = (
-        UniqueConstraint(
-            "program_id", "recommender_id", name="uq_program_recommender"
-        ),
+        UniqueConstraint("program_id", "recommender_id", name="uq_program_recommender"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -56,4 +54,4 @@ class ProgramRecommender(Base):
     recommender: Mapped["Recommender"] = relationship(
         "Recommender", overlaps="program_assignments"
     )
-    program: Mapped["Program"] = relationship("Program", lazy="joined")
+    program: Mapped["Program"] = relationship("Program")

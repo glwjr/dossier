@@ -44,4 +44,4 @@ class Requirement(Base):
     due_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
 
-    program: Mapped["Program"] = relationship("Program", lazy="joined")
+    program: Mapped["Program"] = relationship("Program")

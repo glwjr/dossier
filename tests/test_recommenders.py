@@ -64,6 +64,16 @@ def test_list_recommenders(client, recommender):
     assert items[0]["id"] == recommender["id"]
 
 
+def test_list_recommenders_includes_assignment_program(client, assignment, program):
+    response = client.get("/recommenders")
+    assert response.status_code == 200
+    items = response.json()
+    assignments = items[0]["program_assignments"]
+    assert len(assignments) == 1
+    assert assignments[0]["program_id"] == program["id"]
+    assert assignments[0]["program"]["school"] == "Columbia"
+
+
 def test_get_recommender(client, recommender):
     response = client.get(f"/recommenders/{recommender['id']}")
     assert response.status_code == 200

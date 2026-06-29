@@ -67,6 +67,16 @@ def test_list_documents(client, program, document):
     assert items[0]["id"] == document["id"]
 
 
+def test_list_all_documents_includes_program(client, program, document):
+    response = client.get("/documents")
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) == 1
+    assert items[0]["id"] == document["id"]
+    assert items[0]["program"]["id"] == program["id"]
+    assert items[0]["program"]["school"] == "NYU"
+
+
 def test_update_document(client, document):
     response = client.patch(
         f"/documents/{document['id']}",
