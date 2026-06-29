@@ -85,6 +85,8 @@ _PROGRAMS = [
         "tier": Tier.match,
         "status": ProgramStatus.accepted,
         "app_fee": 85,
+        "stipend": 37000,
+        "decision_deadline": date(2026, 4, 15),
         "notes": (
             "Accepted with full funding + TAship. Visit day was excellent."
             " Top choice if CMU doesn't pan out."
@@ -98,6 +100,8 @@ _PROGRAMS = [
         "tier": Tier.match,
         "status": ProgramStatus.accepted,
         "app_fee": 75,
+        "stipend": 38000,
+        "decision_deadline": date(2026, 4, 1),
         "notes": "Accepted with NSF fellowship supplement. CLSP is a great group.",
     },
     {
@@ -108,6 +112,8 @@ _PROGRAMS = [
         "tier": Tier.match,
         "status": ProgramStatus.accepted,
         "app_fee": 65,
+        "stipend": 22000,
+        "decision_deadline": date(2026, 4, 15),
         "notes": "Accepted. Strong computational track. Stipend lower than UW.",
     },
     {
@@ -118,6 +124,8 @@ _PROGRAMS = [
         "tier": Tier.likely,
         "status": ProgramStatus.accepted,
         "app_fee": 70,
+        "stipend": 30000,
+        "decision_deadline": date(2026, 4, 15),
         "notes": "Accepted. NLP group is solid. Backup option.",
     },
     {

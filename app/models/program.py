@@ -1,7 +1,7 @@
 import enum
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -38,6 +38,8 @@ class Program(Base):
         SAEnum(ProgramStatus), default=ProgramStatus.researching
     )
     app_fee: Mapped[int | None] = mapped_column(Integer)
+    stipend: Mapped[int | None] = mapped_column(Integer)
+    decision_deadline: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

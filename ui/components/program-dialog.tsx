@@ -43,6 +43,8 @@ const EMPTY: ProgramCreate = {
   tier: "reach",
   status: "researching",
   app_fee: undefined,
+  stipend: undefined,
+  decision_deadline: "",
   notes: "",
 };
 
@@ -55,6 +57,8 @@ function fromProgram(p: Program): ProgramCreate {
     tier: p.tier,
     status: p.status,
     app_fee: p.app_fee ?? undefined,
+    stipend: p.stipend ?? undefined,
+    decision_deadline: p.decision_deadline ?? "",
     notes: p.notes ?? "",
   };
 }
@@ -101,6 +105,8 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
       url: form.url || null,
       notes: form.notes || null,
       app_fee: form.app_fee ?? null,
+      stipend: form.stipend ?? null,
+      decision_deadline: form.decision_deadline || null,
     });
   }
 
@@ -208,12 +214,33 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                   type="number"
                   value={form.app_fee ?? ""}
                   onChange={(e) =>
-                    set(
-                      "app_fee",
-                      e.target.value ? Number(e.target.value) : undefined
-                    )
+                    set("app_fee", e.target.value ? Number(e.target.value) : undefined)
                   }
                   placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="stipend">Annual stipend ($)</Label>
+                <Input
+                  id="stipend"
+                  type="number"
+                  value={form.stipend ?? ""}
+                  onChange={(e) =>
+                    set("stipend", e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="decision_deadline">Decision deadline</Label>
+                <Input
+                  id="decision_deadline"
+                  type="date"
+                  value={form.decision_deadline ?? ""}
+                  onChange={(e) => set("decision_deadline", e.target.value)}
                 />
               </div>
             </div>

@@ -102,6 +102,8 @@ export interface ProgramCreate {
   tier: Tier;
   status: ProgramStatus;
   app_fee?: number | null;
+  stipend?: number | null;
+  decision_deadline?: string | null;
   notes?: string | null;
 }
 
@@ -117,6 +119,8 @@ export interface Program {
   tier: Tier;
   status: ProgramStatus;
   app_fee: number | null;
+  stipend: number | null;
+  decision_deadline: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;

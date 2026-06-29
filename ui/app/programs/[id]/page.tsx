@@ -791,14 +791,22 @@ function ProgramDetail({ id }: { id: number }) {
             </Select>
           </div>
           <p className="mt-1 text-muted-foreground">{program.department}</p>
-          <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
-            {program.app_fee != null && <p>${program.app_fee} application fee</p>}
+          <div className="mt-2 text-sm text-muted-foreground">
+            {(program.app_fee != null || program.stipend != null || program.decision_deadline) && (
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {program.app_fee != null && <span>${program.app_fee} fee</span>}
+                {program.stipend != null && <span>${program.stipend.toLocaleString()}/yr stipend</span>}
+                {program.decision_deadline && (
+                  <span>Decision by {formatDate(program.decision_deadline)}</span>
+                )}
+              </div>
+            )}
             {program.url && (
               <a
                 href={program.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
+                className="mt-1.5 inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
               >
                 Program website
                 <ExternalLink className="h-3 w-3 shrink-0" />
