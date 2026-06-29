@@ -145,7 +145,18 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
         <Card key={r.id}>
           <CardHeader className="pb-1">
             <div className="flex items-start justify-between gap-2">
-              <CardTitle className="text-base">{r.name}</CardTitle>
+              <div>
+                <CardTitle className="text-base">{r.name}</CardTitle>
+                {r.email && (
+                  <a
+                    href={`mailto:${r.email}`}
+                    className="mt-0.5 block text-xs text-muted-foreground underline hover:text-foreground"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {r.email}
+                  </a>
+                )}
+              </div>
               <div className="flex shrink-0 gap-1">
                 <RecommenderDialog
                   recommender={r}
@@ -190,22 +201,13 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
+          <CardContent className="space-y-6 text-sm">
             <div className="space-y-1 text-muted-foreground">
               {r.institution && <p>{r.institution}</p>}
-              {r.email && (
-                <a
-                  href={`mailto:${r.email}`}
-                  className="hover:text-foreground underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {r.email}
-                </a>
-              )}
               {r.notes && <p className="text-foreground">{r.notes}</p>}
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               {r.program_assignments.map((a) => (
                   <div key={a.program_id} className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
