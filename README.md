@@ -78,7 +78,8 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 | `GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
 | `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Must match Google Cloud Console |
-| `FRONTEND_URL` | *(empty)* | When set, OAuth redirects here with `?token=` instead of returning JSON |
+| `FRONTEND_URL` | *(empty)* | When set, marks a prod environment: OAuth redirects here with `?token=`, CORS trusts only this origin, and startup rejects the default `SECRET_KEY` |
+| `ADMIN_EMAIL` | *(empty)* | When set, this user can access `GET /admin/stats`; blank disables admin access |
 | `DEV_USER_EMAIL` | `dev@example.com` | Email seeded by `seed.py` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` (7 days) | JWT lifetime |
 
@@ -103,9 +104,13 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 
 ## API endpoints
 
+Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/recommenders`, `/outreach`, `/documents`) support **opt-in pagination** via `?limit=` (1–500) and `?offset=` query params. With no params, the full collection is returned, so existing clients are unaffected.
+
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | Health check |
+| `GET` | `/health` | Liveness check (process is up; no DB access) |
+| `GET` | `/health/ready` | Readiness check (runs `SELECT 1`; 503 if the DB is unreachable) |
+| `GET` | `/admin/stats` | User signup stats (requires `ADMIN_EMAIL`; 403 otherwise) |
 | `GET` | `/auth/login` | Redirect to Google OAuth |
 | `GET` | `/auth/callback` | Exchange code for JWT |
 | `GET` | `/me` | Current user |
@@ -131,13 +136,14 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 
 ### Backend — Render
 
-The `render.yaml` in this repo configures a Docker-based web service (Render **Starter** plan — always on, no spin-down on idle) and a managed Postgres database. Set the following env vars in the Render dashboard:
+The `render.yaml` in this repo configures a Docker-based web service (Render **Starter** plan — always on, no spin-down on idle) and a managed Postgres database (**Basic-256mb** plan). The health check path is `/health`. Set the following env vars in the Render dashboard:
 
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI` — `https://your-api-domain.com/auth/callback`
 - `FRONTEND_URL` — `https://your-frontend-domain.com`
+- `ADMIN_EMAIL` *(optional)* — enables `GET /admin/stats` for this user
 
-`DATABASE_URL` and `SECRET_KEY` are handled automatically by Render.
+`DATABASE_URL` and `SECRET_KEY` are handled automatically by Render. Because `FRONTEND_URL` is set in production, the API restricts CORS to that origin and refuses to start with the default `SECRET_KEY`.
 
 ### Frontend — Vercel
 
