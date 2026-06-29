@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Program, RequirementWithProgram, Recommender } from "@/lib/types";
+import { Program, RequirementWithProgram, Recommender, OutreachContactWithProgram, DocumentWithProgram } from "@/lib/types";
 import { PROGRAM_STATUS_LABEL } from "@/lib/display";
 import {
   Dialog,
@@ -14,11 +14,15 @@ import {
 type Result =
   | { kind: "program"; id: number; label: string; sub: string }
   | { kind: "requirement"; id: number; label: string; sub: string; programId: number }
-  | { kind: "recommender"; id: number; label: string; sub: string };
+  | { kind: "recommender"; id: number; label: string; sub: string }
+  | { kind: "outreach"; id: number; label: string; sub: string; programId: number }
+  | { kind: "document"; id: number; label: string; sub: string; programId: number };
 
 function href(r: Result): string {
   if (r.kind === "program") return `/programs/${r.id}`;
   if (r.kind === "requirement") return `/programs/${r.programId}?tab=requirements`;
+  if (r.kind === "outreach") return `/programs/${r.programId}?tab=outreach`;
+  if (r.kind === "document") return `/programs/${r.programId}?tab=documents`;
   return `/recommenders`;
 }
 
@@ -44,6 +48,18 @@ export function CommandPalette() {
   const { data: recommenders = [] } = useQuery<Recommender[]>({
     queryKey: ["recommenders"],
     queryFn: () => api.get("/recommenders"),
+    enabled: open,
+  });
+
+  const { data: outreach = [] } = useQuery<OutreachContactWithProgram[]>({
+    queryKey: ["outreach-all"],
+    queryFn: () => api.get("/outreach"),
+    enabled: open,
+  });
+
+  const { data: documents = [] } = useQuery<DocumentWithProgram[]>({
+    queryKey: ["documents-all"],
+    queryFn: () => api.get("/documents"),
     enabled: open,
   });
 
@@ -96,7 +112,7 @@ export function CommandPalette() {
         r.label.toLowerCase().includes(q) ||
         r.program.school.toLowerCase().includes(q)
     );
-    for (const r of matchedReqs.slice(0, 4)) {
+    for (const r of matchedReqs.slice(0, 3)) {
       results.push({
         kind: "requirement",
         id: r.id,
@@ -117,6 +133,37 @@ export function CommandPalette() {
         id: r.id,
         label: r.name,
         sub: r.institution ?? "Recommender",
+      });
+    }
+
+    const matchedOutreach = outreach.filter(
+      (o) =>
+        o.name.toLowerCase().includes(q) ||
+        (o.email ?? "").toLowerCase().includes(q) ||
+        o.program.school.toLowerCase().includes(q)
+    );
+    for (const o of matchedOutreach.slice(0, 3)) {
+      results.push({
+        kind: "outreach",
+        id: o.id,
+        label: o.name,
+        sub: o.program.school,
+        programId: o.program.id,
+      });
+    }
+
+    const matchedDocs = documents.filter(
+      (d) =>
+        d.title.toLowerCase().includes(q) ||
+        d.program.school.toLowerCase().includes(q)
+    );
+    for (const d of matchedDocs.slice(0, 3)) {
+      results.push({
+        kind: "document",
+        id: d.id,
+        label: d.title,
+        sub: d.program.school,
+        programId: d.program.id,
       });
     }
   }
@@ -146,6 +193,8 @@ export function CommandPalette() {
     program: "Program",
     requirement: "Requirement",
     recommender: "Recommender",
+    outreach: "Outreach",
+    document: "Document",
   };
 
   return (
