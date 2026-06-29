@@ -438,24 +438,25 @@ function OutreachTab({ programId }: { programId: number }) {
         >
           <div className="min-w-0 flex-1">
             <span className={`block truncate ${RESPONSE_COLOR[c.response]}`}>{c.name}</span>
-            <span className="block text-xs text-muted-foreground">
-              {OUTREACH_RESPONSE_LABEL[c.response]}
-              {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
-            </span>
-            {c.notes && <p className="mt-0.5 text-xs text-muted-foreground">{c.notes}</p>}
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
             {c.url && (
               <a
                 href={c.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
                 onClick={(e) => e.stopPropagation()}
               >
                 Profile
+                <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             )}
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {OUTREACH_RESPONSE_LABEL[c.response]}
+              {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
+            </span>
+            {c.notes && <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <OutreachDialog
               programId={programId}
               contact={c}
