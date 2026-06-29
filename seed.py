@@ -18,7 +18,11 @@ from app.models.deadline import Deadline, DeadlineKind
 from app.models.document import Document, DocumentKind, DocumentStatus
 from app.models.outreach import OutreachContact, OutreachResponse
 from app.models.program import Program, ProgramStatus, Tier
-from app.models.recommender import ProgramRecommender, Recommender, RecommenderStatus
+from app.models.recommender import (
+    ProgramRecommender,
+    Recommender,
+    RecommenderStatus,
+)
 from app.models.requirement import Requirement, RequirementKind, RequirementStatus
 from app.models.user import User
 
@@ -55,7 +59,10 @@ _PROGRAMS = [
         "tier": Tier.reach,
         "status": ProgramStatus.interview,
         "app_fee": 75,
-        "notes": "Interview scheduled for Feb 14. Flew out for visit day. Very strong fit with Prof. Xu's group.",
+        "notes": (
+            "Interview scheduled for Feb 14. Flew out for visit day."
+            " Very strong fit with Prof. Xu's group."
+        ),
     },
     {
         "school": "UC Berkeley",
@@ -65,7 +72,10 @@ _PROGRAMS = [
         "tier": Tier.reach,
         "status": ProgramStatus.waitlisted,
         "app_fee": 140,
-        "notes": "Waitlisted Mar 1. Sent a letter of continued interest. Position 3 on waitlist.",
+        "notes": (
+            "Waitlisted Mar 1. Sent a letter of continued interest."
+            " Position 3 on waitlist."
+        ),
     },
     {
         "school": "University of Washington",
@@ -75,7 +85,10 @@ _PROGRAMS = [
         "tier": Tier.match,
         "status": ProgramStatus.accepted,
         "app_fee": 85,
-        "notes": "Accepted with full funding + TAship. Visit day was excellent. Top choice if CMU doesn't pan out.",
+        "notes": (
+            "Accepted with full funding + TAship. Visit day was excellent."
+            " Top choice if CMU doesn't pan out."
+        ),
     },
     {
         "school": "Johns Hopkins University",
@@ -125,7 +138,10 @@ _PROGRAMS = [
         "tier": Tier.likely,
         "status": ProgramStatus.researching,
         "app_fee": None,
-        "notes": "Considering for next cycle if this one doesn't work out. Strong computational semantics program.",
+        "notes": (
+            "Considering for next cycle if this one doesn't work out."
+            " Strong computational semantics program."
+        ),
     },
 ]
 
@@ -138,28 +154,42 @@ _RECOMMENDERS = [
         "name": "Prof. Margaret Chen",
         "institution": "UC San Diego",
         "email": "m.chen@ucsd.edu",
-        "notes": "Primary advisor. Specializes in computational syntax. Know her well — three years in her lab.",
+        "notes": (
+            "Primary advisor. Specializes in computational syntax."
+            " Know her well — three years in her lab."
+        ),
     },
     {
         "name": "Prof. David Osei",
         "institution": "Stanford University",
         "email": "osei@cs.stanford.edu",
-        "notes": "Collaborator on the summer NLP internship project. Strong letter expected.",
+        "notes": (
+            "Collaborator on the summer NLP internship project. Strong letter expected."
+        ),
     },
     {
         "name": "Dr. Sarah Novak",
         "institution": "Google DeepMind",
         "email": "snovak@deepmind.com",
-        "notes": "Industry mentor from 2024 internship. Reached out Dec 1 — she agreed.",
+        "notes": (
+            "Industry mentor from 2024 internship. Reached out Dec 1 — she agreed."
+        ),
     },
 ]
 
 # Per-program recommender assignments: (rec_index, status, due_date, notes)
-_ASSIGNMENTS: dict[int, list[tuple[int, RecommenderStatus, date | None, str | None]]] = {
+_ASSIGNMENTS: dict[
+    int, list[tuple[int, RecommenderStatus, date | None, str | None]]
+] = {
     0: [  # MIT
         (0, RecommenderStatus.submitted, date(2025, 12, 1), None),
         (1, RecommenderStatus.submitted, date(2025, 12, 1), None),
-        (2, RecommenderStatus.submitted, date(2025, 12, 1), "Requested Nov 20, submitted on time."),
+        (
+            2,
+            RecommenderStatus.submitted,
+            date(2025, 12, 1),
+            "Requested Nov 20, submitted on time.",
+        ),
     ],
     1: [  # Stanford
         (0, RecommenderStatus.submitted, date(2025, 12, 1), None),
@@ -184,7 +214,12 @@ _ASSIGNMENTS: dict[int, list[tuple[int, RecommenderStatus, date | None, str | No
     5: [  # JHU
         (0, RecommenderStatus.submitted, date(2025, 12, 15), None),
         (1, RecommenderStatus.submitted, date(2025, 12, 15), None),
-        (2, RecommenderStatus.confirmed, date(2025, 12, 15), "Submitted day-of per portal."),
+        (
+            2,
+            RecommenderStatus.confirmed,
+            date(2025, 12, 15),
+            "Submitted day-of per portal.",
+        ),
     ],
     6: [  # UT Austin
         (0, RecommenderStatus.submitted, date(2026, 1, 1), None),
@@ -194,7 +229,12 @@ _ASSIGNMENTS: dict[int, list[tuple[int, RecommenderStatus, date | None, str | No
     7: [  # UIUC
         (0, RecommenderStatus.submitted, date(2025, 12, 15), None),
         (1, RecommenderStatus.submitted, date(2025, 12, 15), None),
-        (2, RecommenderStatus.asked, date(2025, 12, 15), "Portal link sent; confirmed received."),
+        (
+            2,
+            RecommenderStatus.asked,
+            date(2025, 12, 15),
+            "Portal link sent; confirmed received.",
+        ),
     ],
     8: [  # Ohio State
         (0, RecommenderStatus.submitted, date(2025, 12, 15), None),
@@ -208,13 +248,17 @@ _ASSIGNMENTS: dict[int, list[tuple[int, RecommenderStatus, date | None, str | No
 # Requirements
 # ---------------------------------------------------------------------------
 
+
 def _requirements(program_index: int, program_status: ProgramStatus) -> list[dict]:
     done = RequirementStatus.done
     todo = RequirementStatus.todo
     ip = RequirementStatus.in_progress
     waived = RequirementStatus.waived
 
-    is_submitted = program_status not in (ProgramStatus.researching, ProgramStatus.drafting)
+    is_submitted = program_status not in (
+        ProgramStatus.researching,
+        ProgramStatus.drafting,
+    )
     s = done if is_submitted else ip
 
     base = [
@@ -226,55 +270,185 @@ def _requirements(program_index: int, program_status: ProgramStatus) -> list[dic
 
     extras: dict[int, list[dict]] = {
         0: [  # MIT
-            {"label": "Writing sample (research paper)", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE General (waived)", "kind": RequirementKind.gre, "status": waived, "notes": "Waived for 2026 cycle."},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample (research paper)",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE General (waived)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+                "notes": "Waived for 2026 cycle.",
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         1: [  # Stanford
-            {"label": "Research statement", "kind": RequirementKind.other, "status": done},
-            {"label": "GRE (not required)", "kind": RequirementKind.gre, "status": waived},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Research statement",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
+            {
+                "label": "GRE (not required)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         2: [  # CMU LTI
-            {"label": "Writing sample", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE (optional)", "kind": RequirementKind.gre, "status": waived, "notes": "Chose not to submit."},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
-            {"label": "Video introduction (optional)", "kind": RequirementKind.other, "status": done, "notes": "Recorded 2-min intro for the portal."},
+            {
+                "label": "Writing sample",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE (optional)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+                "notes": "Chose not to submit.",
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
+            {
+                "label": "Video introduction (optional)",
+                "kind": RequirementKind.other,
+                "status": done,
+                "notes": "Recorded 2-min intro for the portal.",
+            },
         ],
         3: [  # Berkeley Linguistics
-            {"label": "Writing sample (15–20 pages)", "kind": RequirementKind.writing_sample, "status": done, "notes": "Submitted senior thesis excerpt."},
-            {"label": "GRE Subject — Linguistics", "kind": RequirementKind.gre, "status": waived, "notes": "Waived."},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample (15–20 pages)",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+                "notes": "Submitted senior thesis excerpt.",
+            },
+            {
+                "label": "GRE Subject — Linguistics",
+                "kind": RequirementKind.gre,
+                "status": waived,
+                "notes": "Waived.",
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         4: [  # UW CSE
-            {"label": "Writing sample (research paper)", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE (not required)", "kind": RequirementKind.gre, "status": waived},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample (research paper)",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE (not required)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         5: [  # JHU
-            {"label": "Writing sample", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE (waived)", "kind": RequirementKind.gre, "status": waived},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE (waived)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         6: [  # UT Austin Linguistics
-            {"label": "Writing sample (20 pages max)", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE General", "kind": RequirementKind.gre, "status": done, "notes": "Submitted 168V / 167Q."},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample (20 pages max)",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE General",
+                "kind": RequirementKind.gre,
+                "status": done,
+                "notes": "Submitted 168V / 167Q.",
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         7: [  # UIUC CS
-            {"label": "Writing sample", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE (optional — not submitted)", "kind": RequirementKind.gre, "status": waived},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": done},
+            {
+                "label": "Writing sample",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE (optional — not submitted)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": done,
+            },
         ],
         8: [  # Ohio State
-            {"label": "Writing sample", "kind": RequirementKind.writing_sample, "status": done},
-            {"label": "GRE (optional)", "kind": RequirementKind.gre, "status": waived},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": s},
+            {
+                "label": "Writing sample",
+                "kind": RequirementKind.writing_sample,
+                "status": done,
+            },
+            {
+                "label": "GRE (optional)",
+                "kind": RequirementKind.gre,
+                "status": waived,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": s,
+            },
         ],
         9: [  # Georgetown — early research
-            {"label": "Writing sample", "kind": RequirementKind.writing_sample, "status": todo},
-            {"label": "GRE requirements TBD", "kind": RequirementKind.gre, "status": todo},
-            {"label": "3 letters of recommendation", "kind": RequirementKind.other, "status": todo},
+            {
+                "label": "Writing sample",
+                "kind": RequirementKind.writing_sample,
+                "status": todo,
+            },
+            {
+                "label": "GRE requirements TBD",
+                "kind": RequirementKind.gre,
+                "status": todo,
+            },
+            {
+                "label": "3 letters of recommendation",
+                "kind": RequirementKind.other,
+                "status": todo,
+            },
         ],
     }
 
@@ -287,41 +461,115 @@ def _requirements(program_index: int, program_status: ProgramStatus) -> list[dic
 
 _DEADLINES: dict[int, list[dict]] = {
     0: [  # MIT
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 1), "done": True},
-        {"kind": DeadlineKind.fee_waiver, "due_date": date(2025, 11, 15), "done": True, "notes": "Requested via email — approved."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fee_waiver,
+            "due_date": date(2025, 11, 15),
+            "done": True,
+            "notes": "Requested via email — approved.",
+        },
     ],
     1: [  # Stanford
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 1), "done": True},
-        {"kind": DeadlineKind.fellowship, "due_date": date(2025, 11, 15), "done": True, "notes": "Knight-Hennessy Scholars — did not advance."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fellowship,
+            "due_date": date(2025, 11, 15),
+            "done": True,
+            "notes": "Knight-Hennessy Scholars — did not advance.",
+        },
     ],
     2: [  # CMU
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 15), "done": True},
-        {"kind": DeadlineKind.fellowship, "due_date": date(2025, 12, 1), "done": True, "notes": "Presidential Fellowship nomination submitted."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 15),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fellowship,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+            "notes": "Presidential Fellowship nomination submitted.",
+        },
     ],
     3: [  # Berkeley
-        {"kind": DeadlineKind.application, "due_date": date(2026, 1, 5), "done": True},
-        {"kind": DeadlineKind.fee_waiver, "due_date": date(2025, 12, 1), "done": True},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2026, 1, 5),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fee_waiver,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+        },
     ],
     4: [  # UW
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 15), "done": True},
-        {"kind": DeadlineKind.fellowship, "due_date": date(2025, 12, 1), "done": True, "notes": "Applied for ARCS fellowship."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 15),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fellowship,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+            "notes": "Applied for ARCS fellowship.",
+        },
     ],
     5: [  # JHU
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 15), "done": True},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 15),
+            "done": True,
+        },
     ],
     6: [  # UT Austin
-        {"kind": DeadlineKind.application, "due_date": date(2026, 1, 1), "done": True},
-        {"kind": DeadlineKind.fee_waiver, "due_date": date(2025, 12, 1), "done": True},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2026, 1, 1),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fee_waiver,
+            "due_date": date(2025, 12, 1),
+            "done": True,
+        },
     ],
     7: [  # UIUC
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 15), "done": True},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 15),
+            "done": True,
+        },
     ],
     8: [  # Ohio State
-        {"kind": DeadlineKind.application, "due_date": date(2025, 12, 15), "done": True},
-        {"kind": DeadlineKind.fee_waiver, "due_date": date(2025, 11, 30), "done": True, "notes": "McNair scholars waiver applied."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2025, 12, 15),
+            "done": True,
+        },
+        {
+            "kind": DeadlineKind.fee_waiver,
+            "due_date": date(2025, 11, 30),
+            "done": True,
+            "notes": "McNair scholars waiver applied.",
+        },
     ],
     9: [  # Georgetown — next cycle
-        {"kind": DeadlineKind.application, "due_date": date(2026, 12, 1), "done": False, "notes": "Tentative — confirm on admissions page in Sept."},
+        {
+            "kind": DeadlineKind.application,
+            "due_date": date(2026, 12, 1),
+            "done": False,
+            "notes": "Tentative — confirm on admissions page in Sept.",
+        },
     ],
 }
 
@@ -337,7 +585,10 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "https://people.csail.mit.edu/regina/",
             "contacted_on": date(2025, 10, 3),
             "response": OutreachResponse.positive,
-            "notes": "Replied within 48h. Encouraged applying. Mentioned her clinical NLP work.",
+            "notes": (
+                "Replied within 48h. Encouraged applying."
+                " Mentioned her clinical NLP work."
+            ),
         },
         {
             "name": "Prof. Yoon Kim",
@@ -355,7 +606,10 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "https://nlp.stanford.edu/~manning/",
             "contacted_on": date(2025, 10, 5),
             "response": OutreachResponse.positive,
-            "notes": "Encouraged applying. Noted the lab is relatively full but will review apps closely.",
+            "notes": (
+                "Encouraged applying. Noted the lab is relatively full"
+                " but will review apps closely."
+            ),
         },
         {
             "name": "Prof. Dan Jurafsky",
@@ -372,14 +626,20 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "http://www.phontron.com/",
             "contacted_on": date(2025, 10, 8),
             "response": OutreachResponse.meeting_scheduled,
-            "notes": "Zoom call Oct 22. Discussed multilingual LLM evaluation project. Very positive — thinks I'm a good fit.",
+            "notes": (
+                "Zoom call Oct 22. Discussed multilingual LLM evaluation project."
+                " Very positive — thinks I'm a good fit."
+            ),
         },
         {
             "name": "Prof. Yulia Tsvetkov",
             "email": "ytsvetko@cs.cmu.edu",
             "contacted_on": date(2025, 10, 20),
             "response": OutreachResponse.positive,
-            "notes": "Brief reply — said she's taking 1-2 students and to mention our conversation in the SOP.",
+            "notes": (
+                "Brief reply — said she's taking 1-2 students"
+                " and to mention our conversation in the SOP."
+            ),
         },
     ],
     3: [  # Berkeley
@@ -389,7 +649,10 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "http://people.ischool.berkeley.edu/~dbamman/",
             "contacted_on": date(2025, 10, 15),
             "response": OutreachResponse.positive,
-            "notes": "Replied; noted the application deadline and said he reviews all materials carefully.",
+            "notes": (
+                "Replied; noted the application deadline"
+                " and said he reviews all materials carefully."
+            ),
         },
     ],
     4: [  # UW
@@ -399,7 +662,10 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "https://nasmith.github.io/",
             "contacted_on": date(2025, 10, 7),
             "response": OutreachResponse.positive,
-            "notes": "Responded quickly. Interested in my work on low-resource parsing. Suggested connecting with his postdoc.",
+            "notes": (
+                "Responded quickly. Interested in my work on low-resource parsing."
+                " Suggested connecting with his postdoc."
+            ),
         },
         {
             "name": "Prof. Luke Zettlemoyer",
@@ -435,7 +701,10 @@ _OUTREACH: dict[int, list[dict]] = {
             "url": "https://people.cs.georgetown.edu/nschneid/",
             "contacted_on": date(2026, 3, 15),
             "response": OutreachResponse.meeting_scheduled,
-            "notes": "Zoom call April 2. Interested in Universal Dependencies work. Considering applying next cycle.",
+            "notes": (
+                "Zoom call April 2. Interested in Universal Dependencies work."
+                " Considering applying next cycle."
+            ),
         },
     ],
 }
@@ -444,8 +713,12 @@ _OUTREACH: dict[int, list[dict]] = {
 # Documents
 # ---------------------------------------------------------------------------
 
+
 def _documents(program_index: int, program_status: ProgramStatus) -> list[dict]:
-    is_submitted = program_status not in (ProgramStatus.researching, ProgramStatus.drafting)
+    is_submitted = program_status not in (
+        ProgramStatus.researching,
+        ProgramStatus.drafting,
+    )
     sop_status = DocumentStatus.final if is_submitted else DocumentStatus.in_progress
 
     docs: list[dict] = [
@@ -453,12 +726,20 @@ def _documents(program_index: int, program_status: ProgramStatus) -> list[dict]:
             "kind": DocumentKind.sop,
             "title": f"Statement of Purpose — {_PROGRAMS[program_index]['school']}",
             "status": sop_status,
-            "url": "https://docs.google.com/document/d/sop-placeholder" if is_submitted else None,
-            "notes": "Tailored from base SOP. Emphasized program-specific faculty and fit." if is_submitted else "Draft in progress.",
+            "url": (
+                "https://docs.google.com/document/d/sop-placeholder"
+                if is_submitted
+                else None
+            ),
+            "notes": (
+                "Tailored from base SOP. Emphasized program-specific faculty and fit."
+                if is_submitted
+                else "Draft in progress."
+            ),
         },
     ]
 
-    # Shared documents attached to the first program to avoid redundancy in the list view
+    # Shared documents attached to the first program to avoid redundancy
     if program_index == 0:
         docs += [
             {
@@ -470,28 +751,38 @@ def _documents(program_index: int, program_status: ProgramStatus) -> list[dict]:
             },
             {
                 "kind": DocumentKind.writing_sample,
-                "title": "Low-Resource Dependency Parsing in Endangered Languages",
+                "title": ("Low-Resource Dependency Parsing in Endangered Languages"),
                 "status": DocumentStatus.final,
                 "url": "https://docs.google.com/document/d/ws-placeholder",
-                "notes": "Adapted from senior thesis. 18 pages. Used across all applications.",
+                "notes": (
+                    "Adapted from senior thesis. 18 pages."
+                    " Used across all applications."
+                ),
             },
         ]
 
     if program_index == 2:  # CMU — video intro
-        docs.append({
-            "kind": DocumentKind.other,
-            "title": "Video Introduction (CMU LTI portal)",
-            "status": DocumentStatus.final,
-            "notes": "2 min recording. Uploaded directly to LTI portal.",
-        })
+        docs.append(
+            {
+                "kind": DocumentKind.other,
+                "title": "Video Introduction (CMU LTI portal)",
+                "status": DocumentStatus.final,
+                "notes": "2 min recording. Uploaded directly to LTI portal.",
+            }
+        )
 
     if program_index == 9:  # Georgetown — separate personal statement required
-        docs.append({
-            "kind": DocumentKind.personal_statement,
-            "title": "Personal Statement draft (Georgetown)",
-            "status": DocumentStatus.draft,
-            "notes": "Georgetown asks for a separate personal statement in addition to the SOP.",
-        })
+        docs.append(
+            {
+                "kind": DocumentKind.personal_statement,
+                "title": "Personal Statement draft (Georgetown)",
+                "status": DocumentStatus.draft,
+                "notes": (
+                    "Georgetown asks for a separate personal statement"
+                    " in addition to the SOP."
+                ),
+            }
+        )
 
     return docs
 
@@ -532,7 +823,10 @@ def seed() -> None:
         existing = db.scalars(select(Program).where(Program.user_id == user.id)).all()
         if existing:
             print(f"User already has {len(existing)} program(s) — skipping seed.")
-            print("To reseed: alembic downgrade base && alembic upgrade head && python seed.py")
+            print(
+                "To reseed: alembic downgrade base"
+                " && alembic upgrade head && python seed.py"
+            )
             return
 
         # Recommenders
@@ -544,7 +838,8 @@ def seed() -> None:
         db.flush()
         print(f"Created {len(recommenders)} recommender(s).")
 
-        total_reqs = total_deadlines = total_outreach = total_docs = total_assignments = 0
+        total_reqs = total_deadlines = total_outreach = 0
+        total_docs = total_assignments = 0
 
         for i, prog_data in enumerate(_PROGRAMS):
             prog = Program(**prog_data, user_id=user.id)
@@ -553,9 +848,17 @@ def seed() -> None:
 
             for req_data in _requirements(i, prog.status):
                 notes = req_data.pop("notes", None)
-                # CV has no deadline; fee and transcript share the app deadline
-                due = None if req_data["kind"] == RequirementKind.cv else _APP_DEADLINE.get(i)
-                db.add(Requirement(**req_data, program_id=prog.id, due_date=due, notes=notes))
+                # CV has no deadline; all others share the application deadline
+                due = (
+                    None
+                    if req_data["kind"] == RequirementKind.cv
+                    else _APP_DEADLINE.get(i)
+                )
+                db.add(
+                    Requirement(
+                        **req_data, program_id=prog.id, due_date=due, notes=notes
+                    )
+                )
                 total_reqs += 1
 
             for dl_data in _DEADLINES.get(i, []):
@@ -563,13 +866,15 @@ def seed() -> None:
                 total_deadlines += 1
 
             for rec_idx, status, due_date, notes in _ASSIGNMENTS.get(i, []):
-                db.add(ProgramRecommender(
-                    program_id=prog.id,
-                    recommender_id=recommenders[rec_idx].id,
-                    status=status,
-                    due_date=due_date,
-                    notes=notes,
-                ))
+                db.add(
+                    ProgramRecommender(
+                        program_id=prog.id,
+                        recommender_id=recommenders[rec_idx].id,
+                        status=status,
+                        due_date=due_date,
+                        notes=notes,
+                    )
+                )
                 total_assignments += 1
 
             for contact_data in _OUTREACH.get(i, []):
