@@ -271,15 +271,15 @@ export default function RecommendersPage() {
           <h1 className="text-2xl font-semibold">Recommenders</h1>
           <RecommenderDialog trigger={<Button>Add recommender</Button>} />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input
             placeholder="Search…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-48 text-sm"
+            className="h-9 text-sm sm:flex-1"
           />
           <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-            <SelectTrigger className="h-9 w-36 text-sm">
+            <SelectTrigger className="h-9 w-full text-sm sm:w-36">
               <SelectValue>
                 {statusFilter === "all" ? "All statuses" : REC_STATUS_LABEL[statusFilter as keyof typeof REC_STATUS_LABEL]}
               </SelectValue>

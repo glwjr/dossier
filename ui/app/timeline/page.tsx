@@ -185,15 +185,16 @@ function TimelineInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Search…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 w-48 text-sm"
+          className="h-9 text-sm sm:flex-1"
         />
+        <div className="flex gap-2">
         <Select value={programFilter} onValueChange={(v) => v && setProgramFilter(v)}>
-          <SelectTrigger className="h-9 w-44 text-sm">
+          <SelectTrigger className="h-9 flex-1 text-sm sm:w-44 sm:flex-none">
             <SelectValue>
               {programFilter === "all"
                 ? "All programs"
@@ -211,7 +212,7 @@ function TimelineInner() {
         </Select>
 
         <Select value={kindFilter} onValueChange={(v) => v && setKindFilter(v)}>
-          <SelectTrigger className="h-9 w-36 text-sm">
+          <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
             <SelectValue>
               {kindFilter === "all"
                 ? "All types"
@@ -226,6 +227,7 @@ function TimelineInner() {
             <SelectItem value="requirement">Requirements</SelectItem>
           </SelectContent>
         </Select>
+        </div>
 
         <div className="ml-auto flex items-center gap-3">
           <p className="text-sm text-muted-foreground">
