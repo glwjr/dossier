@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -48,27 +48,13 @@ function CompareInner() {
     ? rawIds.split(",").map(Number).filter((n) => !isNaN(n) && n > 0)
     : [];
 
-  // Only auto-select when the key is truly absent (first visit); rawIds === ""
-  // means the user explicitly cleared all selections.
-  useEffect(() => {
-    if (rawIds === null && programs.length > 0) {
-      const accepted = programs
-        .filter((p) => p.status === "accepted")
-        .slice(0, 4)
-        .map((p) => p.id);
-      if (accepted.length > 0) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("programs", accepted.join(","));
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      }
-    }
-  }, [programs, rawIds, router, pathname, searchParams]);
-
   function setIds(ids: number[]) {
     const params = new URLSearchParams(searchParams.toString());
-    // Use empty string (not delete) so rawIds stays non-null and auto-select
-    // doesn't re-trigger when the user intentionally clears all selections.
-    params.set("programs", ids.join(","));
+    if (ids.length > 0) {
+      params.set("programs", ids.join(","));
+    } else {
+      params.delete("programs");
+    }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
