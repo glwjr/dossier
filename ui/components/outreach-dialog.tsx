@@ -135,7 +135,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
                   type="date"
                   value={form.contacted_on ?? ""}
                   onChange={(e) => set("contacted_on", e.target.value)}
-                  className="max-w-full"
+                  className="appearance-none sm:appearance-auto"
                 />
               </div>
             </div>
