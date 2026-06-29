@@ -131,7 +131,7 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 
 ### Backend — Render
 
-The `render.yaml` in this repo configures a Docker-based web service and a managed Postgres database. Set the following env vars in the Render dashboard:
+The `render.yaml` in this repo configures a Docker-based web service (Render **Starter** plan — always on, no spin-down on idle) and a managed Postgres database. Set the following env vars in the Render dashboard:
 
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI` — `https://your-api-domain.com/auth/callback`

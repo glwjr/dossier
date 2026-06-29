@@ -124,7 +124,7 @@ pyproject.toml
 
 ## Deployment
 
-- Backend: `https://api.dossiertool.com` (Render, Docker)
+- Backend: `https://api.dossiertool.com` (Render, Docker, Starter plan — always on, no idle spin-down)
 - Frontend: `https://my.dossiertool.com` (Vercel, root dir = `ui/`)
 
 **Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`

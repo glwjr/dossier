@@ -2,7 +2,7 @@ services:
   - type: web
     name: dossier
     runtime: docker
-    plan: free
+    plan: starter
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
