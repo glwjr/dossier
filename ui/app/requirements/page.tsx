@@ -328,42 +328,44 @@ function RequirementsInner() {
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 space-y-3">
         <h1 className="text-2xl font-semibold">Requirements</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input
             placeholder="Search…"
             value={search}
             onChange={(e) => setParam("q", e.target.value)}
-            className="h-9 w-48 text-sm"
+            className="h-9 text-sm sm:flex-1"
           />
-          <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
-            <SelectTrigger className="h-9 w-36 text-sm">
-              <SelectValue>
-                {sort === "due_date" ? "By due date" : "By program"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="program">By program</SelectItem>
-              <SelectItem value="due_date">By due date</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
-            <SelectTrigger className="h-9 w-36 text-sm">
-              <SelectValue>
-                {statusFilter === "all"
-                  ? "All statuses"
-                  : REQUIREMENT_STATUS_LABEL[statusFilter]}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="todo">Todo</SelectItem>
-              <SelectItem value="in_progress">In progress</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-              <SelectItem value="waived">Waived</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
+              <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
+                <SelectValue>
+                  {sort === "due_date" ? "By due date" : "By program"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="program">By program</SelectItem>
+                <SelectItem value="due_date">By due date</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => v && setParam("status", v)}>
+              <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
+                <SelectValue>
+                  {statusFilter === "all"
+                    ? "All statuses"
+                    : REQUIREMENT_STATUS_LABEL[statusFilter]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="todo">Todo</SelectItem>
+                <SelectItem value="in_progress">In progress</SelectItem>
+                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="waived">Waived</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <RequirementsList statusFilter={statusFilter} search={search} sort={sort} />
