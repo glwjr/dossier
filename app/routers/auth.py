@@ -64,28 +64,41 @@ def callback(
             detail="Invalid OAuth state — possible CSRF",
         )
 
-    with httpx.Client() as client:
-        token_resp = client.post(
-            _GOOGLE_TOKEN_URL,
-            data={
-                "code": code,
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "redirect_uri": settings.google_redirect_uri,
-                "grant_type": "authorization_code",
-            },
-        )
-        token_resp.raise_for_status()
-        google_tokens = token_resp.json()
+    try:
+        with httpx.Client() as client:
+            token_resp = client.post(
+                _GOOGLE_TOKEN_URL,
+                data={
+                    "code": code,
+                    "client_id": settings.google_client_id,
+                    "client_secret": settings.google_client_secret,
+                    "redirect_uri": settings.google_redirect_uri,
+                    "grant_type": "authorization_code",
+                },
+            )
+            token_resp.raise_for_status()
+            google_access_token = token_resp.json()["access_token"]
 
-        userinfo_resp = client.get(
-            _GOOGLE_USERINFO_URL,
-            headers={"Authorization": f"Bearer {google_tokens['access_token']}"},
-        )
-        userinfo_resp.raise_for_status()
-        userinfo = userinfo_resp.json()
+            userinfo_resp = client.get(
+                _GOOGLE_USERINFO_URL,
+                headers={"Authorization": f"Bearer {google_access_token}"},
+            )
+            userinfo_resp.raise_for_status()
+            userinfo = userinfo_resp.json()
+    except (httpx.HTTPError, KeyError, ValueError) as exc:
+        # Upstream rejected the code, timed out, or returned an unexpected
+        # body — surface a 502 rather than a bare 500.
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to complete Google sign-in",
+        ) from exc
 
-    email: str = userinfo["email"]
+    email: str | None = userinfo.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google account did not provide an email address",
+        )
     name: str = userinfo.get("name", email)
 
     user = db.scalar(select(User).where(User.email == email))
