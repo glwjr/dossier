@@ -26,7 +26,7 @@ uv sync
 
 # Configure environment
 cp .env.example .env
-# Edit .env — at minimum set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+# Edit .env — set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and SECRET_KEY at minimum
 
 # Run migrations
 uv run alembic upgrade head
@@ -74,7 +74,7 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./dossier.db` | SQLAlchemy connection URL |
-| `SECRET_KEY` | *(dev default)* | JWT signing key — **change in production** |
+| `SECRET_KEY` | *(dev default)* | JWT signing key — required for local dev; startup rejects the default value when `FRONTEND_URL` is set |
 | `GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
 | `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Must match Google Cloud Console |
@@ -94,11 +94,11 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 ## Google OAuth setup
 
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
-2. Enable the **Google+ API** (or People API)
-3. Create OAuth 2.0 credentials (Web application)
-4. Add your backend callback as an authorized redirect URI:
+2. Go to **APIs & Services → Credentials** and create OAuth 2.0 credentials (Web application)
+3. Add your backend callback as an authorized redirect URI:
    - Local: `http://localhost:8000/auth/callback`
    - Production: `https://your-api-domain.com/auth/callback`
+4. Copy the client ID and secret into your `.env`
 
 ---
 
@@ -114,7 +114,12 @@ Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/re
 | `GET` | `/auth/login` | Redirect to Google OAuth |
 | `GET` | `/auth/callback` | Exchange code for JWT |
 | `GET` | `/me` | Current user |
+| `GET` | `/me/export` | Full data export as JSON |
 | `GET` | `/dashboard` | Per-program summary (completion %, next deadline, blocking requirements) |
+| `GET` | `/requirements` | List all requirements across programs |
+| `GET` | `/deadlines` | List all deadlines across programs |
+| `GET` | `/outreach` | List all outreach contacts across programs |
+| `GET` | `/documents` | List all documents across programs |
 | `GET` `POST` | `/programs` | List / create programs |
 | `GET` `PATCH` `DELETE` | `/programs/{id}` | Get / update / delete a program |
 | `GET` `POST` | `/programs/{id}/requirements` | List / create requirements |
