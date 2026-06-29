@@ -43,11 +43,12 @@ function OutreachInner() {
   const searchParams = useSearchParams();
 
   const responseFilter = searchParams.get("response") ?? "all";
+  const sort = searchParams.get("sort") ?? "program";
   const search = searchParams.get("q") ?? "";
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "all") {
+    if (value === "all" || (key === "sort" && value === "program")) {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -116,6 +117,63 @@ function OutreachInner() {
     return acc;
   }, {});
 
+  const RESPONSE_ORDER = ["positive", "meeting_scheduled", "none", "negative"] as const;
+  const byResponse = RESPONSE_ORDER
+    .map((r) => ({ response: r, items: filtered.filter((c) => c.response === r) }))
+    .filter(({ items }) => items.length > 0);
+
+  function renderContact(c: OutreachContactWithProgram, showProgram = false) {
+    return (
+      <div key={c.id} className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm">
+        <div className="min-w-0 flex-1">
+          {showProgram && (
+            <Link
+              href={`/programs/${c.program.id}?tab=outreach`}
+              className="mb-1 block truncate text-xs text-muted-foreground hover:underline"
+            >
+              {c.program.school} · {c.program.department}
+            </Link>
+          )}
+          <span className="block truncate font-medium">{c.name}</span>
+          {c.email && (
+            <a
+              href={`mailto:${c.email}`}
+              className="mt-1 block truncate text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {c.email}
+            </a>
+          )}
+          {c.url && (
+            <a
+              href={c.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Profile
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </a>
+          )}
+          {c.notes && (
+            <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>
+          )}
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="mb-2">
+            <Badge variant={RESPONSE_VARIANT[c.response]}>
+              {OUTREACH_RESPONSE_LABEL[c.response]}
+            </Badge>
+          </div>
+          {c.contacted_on && (
+            <p className="text-xs text-muted-foreground">{formatDate(c.contacted_on)}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -125,9 +183,20 @@ function OutreachInner() {
           onChange={(e) => setParam("q", e.target.value)}
           className="h-9 text-sm sm:flex-1"
         />
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
+          <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
+            <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
+              <SelectValue>
+                {sort === "response" ? "By response" : "By program"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="program">By program</SelectItem>
+              <SelectItem value="response">By response</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={responseFilter} onValueChange={(v) => v && setParam("response", v)}>
-            <SelectTrigger className="h-9 flex-1 text-sm sm:w-44 sm:flex-none">
+            <SelectTrigger className="h-9 flex-1 text-sm sm:w-40 sm:flex-none">
               <SelectValue>
                 {responseFilter === "all"
                   ? "All responses"
@@ -142,9 +211,6 @@ function OutreachInner() {
               <SelectItem value="meeting_scheduled">Meeting scheduled</SelectItem>
             </SelectContent>
           </Select>
-          <span className="shrink-0 text-sm text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? "contact" : "contacts"}
-          </span>
         </div>
       </div>
 
@@ -152,65 +218,29 @@ function OutreachInner() {
         <p className="text-sm text-muted-foreground">Nothing matches the current filter.</p>
       )}
 
-      {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-        <div key={programId} className="space-y-3">
-          <div className="flex min-w-0 items-baseline gap-3">
-            <Link
-              href={`/programs/${programId}?tab=outreach`}
-              className="min-w-0 shrink truncate text-sm font-medium hover:underline"
-            >
-              {school}
-            </Link>
-            <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
+      {sort === "response" ? (
+        byResponse.map(({ response, items }) => (
+          <div key={response} className="space-y-3">
+            <p className="text-sm font-medium">{OUTREACH_RESPONSE_LABEL[response]}</p>
+            {items.map((c) => renderContact(c, true))}
           </div>
-          {items.map((c) => (
-            <div
-              key={c.id}
-              className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm"
-            >
-              <div className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{c.name}</span>
-                {c.email && (
-                  <a
-                    href={`mailto:${c.email}`}
-                    className="mt-1 block truncate text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {c.email}
-                  </a>
-                )}
-                {c.url && (
-                  <a
-                    href={c.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Profile
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                )}
-                {c.notes && (
-                  <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>
-                )}
-              </div>
-              <div className="shrink-0 text-right">
-                <div className="mb-2">
-                  <Badge variant={RESPONSE_VARIANT[c.response]}>
-                    {OUTREACH_RESPONSE_LABEL[c.response]}
-                  </Badge>
-                </div>
-                {c.contacted_on && (
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(c.contacted_on)}
-                  </p>
-                )}
-              </div>
+        ))
+      ) : (
+        Object.entries(byProgram).map(([programId, { school, department, items }]) => (
+          <div key={programId} className="space-y-3">
+            <div className="flex min-w-0 items-baseline gap-3">
+              <Link
+                href={`/programs/${programId}?tab=outreach`}
+                className="min-w-0 shrink truncate text-sm font-medium hover:underline"
+              >
+                {school}
+              </Link>
+              <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
             </div>
-          ))}
-        </div>
-      ))}
+            {items.map((c) => renderContact(c))}
+          </div>
+        ))
+      )}
     </div>
   );
 }
