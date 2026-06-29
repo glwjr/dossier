@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -152,32 +153,27 @@ function OutreachInner() {
       )}
 
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-        <div key={programId} className="space-y-2">
-          <div className="flex items-baseline gap-2">
+        <div key={programId} className="space-y-3">
+          <div className="flex min-w-0 items-baseline gap-3">
             <Link
               href={`/programs/${programId}?tab=outreach`}
-              className="text-sm font-medium hover:underline"
+              className="min-w-0 shrink truncate text-sm font-medium hover:underline"
             >
               {school}
             </Link>
-            <span className="text-xs text-muted-foreground">{department}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
           </div>
           {items.map((c) => (
             <div
               key={c.id}
-              className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+              className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm"
             >
-              <span className="min-w-0 flex-1 font-medium">{c.name}</span>
-              <div className="ml-auto flex items-center gap-2">
-                {c.contacted_on && (
-                  <span className="hidden text-xs text-muted-foreground sm:block">
-                    {formatDate(c.contacted_on)}
-                  </span>
-                )}
+              <div className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{c.name}</span>
                 {c.email && (
                   <a
                     href={`mailto:${c.email}`}
-                    className="hidden text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground sm:block"
+                    className="mt-1 block truncate text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {c.email}
@@ -188,19 +184,29 @@ function OutreachInner() {
                     href={c.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hidden text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground sm:block"
+                    className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Profile
+                    <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
                 )}
-                <Badge variant={RESPONSE_VARIANT[c.response]}>
-                  {OUTREACH_RESPONSE_LABEL[c.response]}
-                </Badge>
+                {c.notes && (
+                  <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>
+                )}
               </div>
-              {c.notes && (
-                <p className="w-full text-xs text-muted-foreground">{c.notes}</p>
-              )}
+              <div className="shrink-0 text-right">
+                <div className="mb-2">
+                  <Badge variant={RESPONSE_VARIANT[c.response]}>
+                    {OUTREACH_RESPONSE_LABEL[c.response]}
+                  </Badge>
+                </div>
+                {c.contacted_on && (
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(c.contacted_on)}
+                  </p>
+                )}
+              </div>
             </div>
           ))}
         </div>
