@@ -207,7 +207,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
               {r.notes && <p className="text-foreground">{r.notes}</p>}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {r.program_assignments.map((a) => (
                   <div key={a.program_id} className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
