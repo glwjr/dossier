@@ -181,38 +181,68 @@ function RequirementsList({
     return (
       <div
         key={r.id}
-        className="group flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+        className="group flex items-start gap-3 rounded-md border px-3 py-2 text-sm"
       >
-        {showProgram && (
-          <Link
-            href={`/programs/${r.program.id}?tab=requirements`}
-            className="w-full text-xs text-muted-foreground hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {r.program.school} · {r.program.department}
-          </Link>
-        )}
         <Checkbox
           checked={selectedIds.has(r.id)}
           onCheckedChange={() => toggleSelect(r.id)}
           onClick={(e) => e.stopPropagation()}
-          className="shrink-0"
+          className="mt-0.5 shrink-0"
         />
-        <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
-        <div className="ml-auto flex items-center gap-2">
-          {r.due_date && (
-            <span className="hidden text-xs text-muted-foreground sm:block">
-              {formatDate(r.due_date)}
-            </span>
+        <div className="min-w-0 flex-1">
+          {showProgram && (
+            <Link
+              href={`/programs/${r.program.id}?tab=requirements`}
+              className="mb-1 block truncate text-xs text-muted-foreground hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {r.program.school} · {r.program.department}
+            </Link>
           )}
-          <span className="hidden text-xs text-muted-foreground sm:block">
+          <span className={`block truncate ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+          <div className="mt-1">
+            {editingId === r.id ? (
+              <textarea
+                autoFocus
+                value={editingValue}
+                onChange={(e) => setEditingValue(e.target.value)}
+                onBlur={() => saveEdit(r.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setEditingId(null);
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit(r.id);
+                  }
+                }}
+                className="w-full resize-none rounded border border-border bg-background px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                rows={2}
+              />
+            ) : (
+              <p
+                className={`cursor-pointer text-xs ${
+                  r.notes
+                    ? "text-muted-foreground hover:opacity-70"
+                    : "text-muted-foreground/0 group-hover:text-muted-foreground/40"
+                }`}
+                onClick={() => startEdit(r)}
+              >
+                {r.notes || "Add note…"}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className="text-xs text-muted-foreground">
             {REQUIREMENT_KIND_LABEL[r.kind]}
+            {r.due_date && (
+              <span className="hidden sm:inline"> · {formatDate(r.due_date)}</span>
+            )}
           </span>
           <Select
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
           >
-            <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
+            <SelectTrigger className="h-7 w-28 text-xs">
               <SelectValue>{REQUIREMENT_STATUS_LABEL[r.status]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -222,36 +252,6 @@ function RequirementsList({
               <SelectItem value="waived">Waived</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        <div className="w-full">
-          {editingId === r.id ? (
-            <textarea
-              autoFocus
-              value={editingValue}
-              onChange={(e) => setEditingValue(e.target.value)}
-              onBlur={() => saveEdit(r.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setEditingId(null);
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  saveEdit(r.id);
-                }
-              }}
-              className="w-full resize-none rounded border border-border bg-background px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              rows={2}
-            />
-          ) : (
-            <p
-              className={`cursor-pointer text-xs ${
-                r.notes
-                  ? "text-muted-foreground hover:opacity-70"
-                  : "text-muted-foreground/0 group-hover:text-muted-foreground/40"
-              }`}
-              onClick={() => startEdit(r)}
-            >
-              {r.notes || "Add note…"}
-            </p>
-          )}
         </div>
       </div>
     );
@@ -287,12 +287,15 @@ function RequirementsList({
     <div className="space-y-6">
       {selectionBar}
       {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-        <div key={programId} className="space-y-2">
-          <div className="flex items-baseline gap-2">
-            <Link href={`/programs/${programId}?tab=requirements`} className="text-sm font-medium hover:underline">
+        <div key={programId} className="space-y-3">
+          <div className="flex min-w-0 items-baseline gap-3">
+            <Link
+              href={`/programs/${programId}?tab=requirements`}
+              className="min-w-0 shrink truncate text-sm font-medium hover:underline"
+            >
               {school}
             </Link>
-            <span className="text-xs text-muted-foreground">{department}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
           </div>
           {items.map((r) => renderRow(r, false))}
         </div>
