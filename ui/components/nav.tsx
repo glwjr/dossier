@@ -38,13 +38,6 @@ export function Nav() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/outreach"
-            title="Outreach"
-            className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
-          >
-            <Globe className="h-4 w-4" />
-          </Link>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
             title="Search (⌘K)"
@@ -53,6 +46,13 @@ export function Nav() {
           >
             <Search className="h-4 w-4" />
           </button>
+          <Link
+            href="/outreach"
+            title="Outreach"
+            className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <Globe className="h-4 w-4" />
+          </Link>
           <Link
             href="/documents"
             title="Documents"
@@ -120,6 +120,13 @@ export function Nav() {
               </Link>
             ))}
             <div className="flex items-center justify-center gap-5 border-t pt-3">
+              <button
+                onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}
+                aria-label="Search"
+                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Search className="h-5 w-5" />
+              </button>
               <Link
                 href="/outreach"
                 aria-label="Outreach"
@@ -128,13 +135,6 @@ export function Nav() {
               >
                 <Globe className="h-5 w-5" />
               </Link>
-              <button
-                onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("open-command-palette")); }}
-                aria-label="Search"
-                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Search className="h-5 w-5" />
-              </button>
               <Link
                 href="/documents"
                 aria-label="Documents"
