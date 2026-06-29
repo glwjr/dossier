@@ -128,12 +128,14 @@ function RequirementsTab({ programId }: { programId: number }) {
       {sorted.map((r) => (
         <div
           key={r.id}
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`min-w-0 flex-1 ${STATUS_COLOR[r.status]}`}>{r.label}</span>
-          <div className="ml-auto flex items-center gap-1">
-
-          <span className="hidden text-xs text-muted-foreground sm:block">{formatDate(r.due_date)}</span>
+          <div className="min-w-0 flex-1">
+            <span className={`block truncate ${STATUS_COLOR[r.status]}`}>{r.label}</span>
+            {r.due_date && <span className="block text-xs text-muted-foreground">{formatDate(r.due_date)}</span>}
+            {r.notes && <p className="mt-0.5 text-xs text-muted-foreground">{r.notes}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
           <Select
             value={r.status}
             onValueChange={(v) => v && updateStatus.mutate({ id: r.id, status: v })}
@@ -190,9 +192,6 @@ function RequirementsTab({ programId }: { programId: number }) {
             </Button>
           )}
           </div>
-          {r.notes && (
-            <p className="w-full text-xs text-muted-foreground">{r.notes}</p>
-          )}
         </div>
       ))}
     </div>
@@ -249,7 +248,7 @@ function DeadlinesTab({ programId }: { programId: number }) {
           className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
         >
           <button
-            className={`min-w-0 flex-1 text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
+            className={`min-w-0 flex-1 truncate text-left ${d.done ? "line-through text-muted-foreground" : ""}`}
             onClick={() => toggleDone.mutate(d)}
           >
             {DEADLINE_KIND_LABEL[d.kind]} — {formatDate(d.due_date)}
@@ -340,19 +339,20 @@ function RecommendersTab({ programId }: { programId: number }) {
       {data.map((pr) => (
         <div
           key={pr.id}
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`min-w-0 flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
-            {pr.recommender.name}
-            {pr.recommender.institution
-              ? ` — ${pr.recommender.institution}`
-              : ""}
-          </span>
-          <div className="ml-auto flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">
+          <div className={`min-w-0 flex-1 ${REC_STATUS_COLOR[pr.status]}`}>
+            <span className="block truncate">
+              {pr.recommender.name}
+              {pr.recommender.institution ? ` — ${pr.recommender.institution}` : ""}
+            </span>
+            <span className="block text-xs text-muted-foreground">
               {REC_STATUS_LABEL[pr.status]}
               {pr.due_date ? ` · ${formatDate(pr.due_date)}` : ""}
             </span>
+            {pr.notes && <p className="mt-0.5 text-xs text-muted-foreground">{pr.notes}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <AssignRecommenderDialog
               programId={programId}
               assignment={pr}
@@ -395,9 +395,6 @@ function RecommendersTab({ programId }: { programId: number }) {
               </Button>
             )}
           </div>
-          {pr.notes && (
-            <p className="w-full text-xs text-muted-foreground">{pr.notes}</p>
-          )}
         </div>
       ))}
     </div>
@@ -437,16 +434,17 @@ function OutreachTab({ programId }: { programId: number }) {
       {data.map((c) => (
         <div
           key={c.id}
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`min-w-0 flex-1 ${RESPONSE_COLOR[c.response]}`}>
-            {c.name}
-          </span>
-          <div className="ml-auto flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">
+          <div className="min-w-0 flex-1">
+            <span className={`block truncate ${RESPONSE_COLOR[c.response]}`}>{c.name}</span>
+            <span className="block text-xs text-muted-foreground">
               {OUTREACH_RESPONSE_LABEL[c.response]}
               {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
             </span>
+            {c.notes && <p className="mt-0.5 text-xs text-muted-foreground">{c.notes}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             {c.url && (
               <a
                 href={c.url}
@@ -500,9 +498,6 @@ function OutreachTab({ programId }: { programId: number }) {
               </Button>
             )}
           </div>
-          {c.notes && (
-            <p className="w-full text-xs text-muted-foreground">{c.notes}</p>
-          )}
         </div>
       ))}
     </div>
@@ -551,25 +546,29 @@ function DocumentsTab({ programId }: { programId: number }) {
       {data.map((d) => (
         <div
           key={d.id}
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm"
+          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
         >
-          <span className={`min-w-0 flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
-            {d.url ? (
-              <a
-                href={d.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {d.title}
-                <ExternalLink className="h-3 w-3 shrink-0" />
-              </a>
-            ) : (
-              d.title
-            )}
-          </span>
-          <div className="ml-auto flex items-center gap-1">
+          <div className={`min-w-0 flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
+            <span className="block truncate">
+              {d.url ? (
+                <a
+                  href={d.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {d.title}
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              ) : (
+                d.title
+              )}
+            </span>
+            <span className="block text-xs text-muted-foreground">{DOCUMENT_KIND_LABEL[d.kind]}</span>
+            {d.notes && <p className="mt-0.5 text-xs text-muted-foreground">{d.notes}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
           <Select
             value={d.status}
             onValueChange={(v) =>
@@ -627,9 +626,6 @@ function DocumentsTab({ programId }: { programId: number }) {
             </Button>
           )}
           </div>
-          {d.notes && (
-            <p className="w-full text-xs text-muted-foreground">{d.notes}</p>
-          )}
         </div>
       ))}
     </div>
