@@ -256,7 +256,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                 type="date"
                 value={form.decision_deadline ?? ""}
                 onChange={(e) => set("decision_deadline", e.target.value)}
-                className="w-full"
+                className="w-full appearance-none sm:appearance-auto"
               />
             </div>
 
