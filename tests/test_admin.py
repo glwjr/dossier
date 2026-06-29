@@ -1,7 +1,8 @@
 from app.config import settings
 
 
-def test_admin_stats_forbidden_when_no_admin_email_set(client):
+def test_admin_stats_forbidden_when_no_admin_email_set(client, monkeypatch):
+    monkeypatch.setattr(settings, "admin_email", "")
     r = client.get("/admin/stats")
     assert r.status_code == 403
 
