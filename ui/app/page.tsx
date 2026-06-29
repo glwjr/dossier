@@ -65,12 +65,12 @@ function ProgramCard({ entry }: { entry: DashboardEntry }) {
             </span>
           </div>
 
-          <div className="flex items-start justify-between gap-2 text-sm">
+          <div className="flex items-start gap-8 text-sm">
             <span className="shrink-0 text-muted-foreground">Blocking</span>
             {blocking_requirements.length === 0 ? (
-              <span className="text-green-600 dark:text-green-500">All clear</span>
+              <span className="flex-1 text-right text-green-600 dark:text-green-500">All clear</span>
             ) : (
-              <span className="text-right text-destructive">
+              <span className="flex-1 text-right text-destructive">
                 {blocking_requirements.slice(0, 2).map((r) => r.label).join(", ")}
                 {blocking_requirements.length > 2 && ` +${blocking_requirements.length - 2} more`}
               </span>
