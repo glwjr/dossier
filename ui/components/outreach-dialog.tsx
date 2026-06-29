@@ -135,6 +135,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
                   type="date"
                   value={form.contacted_on ?? ""}
                   onChange={(e) => set("contacted_on", e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>

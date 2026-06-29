@@ -144,6 +144,7 @@ export function AssignToProgramDialog({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>
