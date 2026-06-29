@@ -547,29 +547,70 @@ function DocumentsTab({ programId }: { programId: number }) {
       {data.map((d) => (
         <div
           key={d.id}
-          className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+          className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm"
         >
           <div className={`min-w-0 flex-1 ${DOC_STATUS_COLOR[d.status]}`}>
-            <span className="block truncate">
-              {d.url ? (
-                <a
-                  href={d.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {d.title}
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              ) : (
-                d.title
-              )}
-            </span>
+            {d.url ? (
+              <a
+                href={d.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex max-w-full items-center gap-1 underline underline-offset-2 hover:opacity-70"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="min-w-0 truncate">{d.title}</span>
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            ) : (
+              <span className="block truncate">{d.title}</span>
+            )}
             <span className="block text-xs text-muted-foreground">{DOCUMENT_KIND_LABEL[d.kind]}</span>
             {d.notes && <p className="mt-0.5 text-xs text-muted-foreground">{d.notes}</p>}
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-3 sm:flex-row sm:items-center sm:gap-1">
+          <div className="flex items-center gap-1">
+            <DocumentDialog
+              programId={programId}
+              document={d}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                  Edit
+                </Button>
+              }
+            />
+            {confirmDelete === d.id ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    deleteDoc.mutate(d.id);
+                    setConfirmDelete(null);
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={() => setConfirmDelete(d.id)}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
           <Select
             value={d.status}
             onValueChange={(v) =>
@@ -585,47 +626,6 @@ function DocumentsTab({ programId }: { programId: number }) {
               <SelectItem value="final">Final</SelectItem>
             </SelectContent>
           </Select>
-          <DocumentDialog
-            programId={programId}
-            document={d}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                Edit
-              </Button>
-            }
-          />
-          {confirmDelete === d.id ? (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => {
-                  deleteDoc.mutate(d.id);
-                  setConfirmDelete(null);
-                }}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={() => setConfirmDelete(d.id)}
-            >
-              Delete
-            </Button>
-          )}
           </div>
         </div>
       ))}
