@@ -1,8 +1,12 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.db import get_db
 from app.routers import (
     admin,
     auth,
@@ -18,7 +22,11 @@ from app.routers import (
 
 app = FastAPI(title="Dossier")
 
-_origins = [o for o in [settings.frontend_url, "http://localhost:3000"] if o]
+# In production, only the deployed frontend may call the API; locally, allow the
+# Next.js dev server. Don't leave localhost in the allowlist in prod.
+_origins = (
+    [settings.frontend_url] if settings.frontend_url else ["http://localhost:3000"]
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
@@ -41,7 +49,21 @@ app.include_router(dashboard.router)
 
 @app.get("/health")
 def health():
+    """Liveness: the process is up. Does not touch the database."""
     return {"status": "ok"}
+
+
+@app.get("/health/ready")
+def ready(db: Session = Depends(get_db)):
+    """Readiness: the database is reachable."""
+    try:
+        db.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        )
+    return {"status": "ready"}
 
 
 @app.get("/", include_in_schema=False)

@@ -41,6 +41,6 @@ class Document(Base):
     url: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    program: Mapped["Program"] = relationship("Program", lazy="joined")
+    program: Mapped["Program"] = relationship("Program")

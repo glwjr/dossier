@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.auth import get_current_user
 from app.db import get_db
 from app.models.program import Program
 from app.models.recommender import ProgramRecommender, Recommender
 from app.models.user import User
+from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.recommender import (
     ProgramRecommenderCreate,
     ProgramRecommenderRead,
@@ -37,20 +39,6 @@ def _get_recommender_or_404(
     return rec
 
 
-def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:
-    program = db.scalar(
-        select(Program).where(
-            Program.id == program_id,
-            Program.user_id == current_user.id,
-        )
-    )
-    if program is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Program not found"
-        )
-    return program
-
-
 def _get_pr_or_404(
     program_id: int, recommender_id: int, current_user: User, db: Session
 ) -> ProgramRecommender:
@@ -77,9 +65,18 @@ def _get_pr_or_404(
 def list_recommenders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
-        select(Recommender).where(Recommender.user_id == current_user.id)
+        select(Recommender)
+        .where(Recommender.user_id == current_user.id)
+        .options(
+            selectinload(Recommender.program_assignments).joinedload(
+                ProgramRecommender.program
+            )
+        )
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 
@@ -150,9 +147,11 @@ def list_program_recommenders(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     return db.scalars(
-        select(ProgramRecommender).where(ProgramRecommender.program_id == program_id)
+        select(ProgramRecommender)
+        .where(ProgramRecommender.program_id == program_id)
+        .options(selectinload(ProgramRecommender.recommender))
     ).all()
 
 
@@ -167,7 +166,7 @@ def assign_recommender(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     _get_recommender_or_404(body.recommender_id, current_user, db)
 
     existing = db.scalar(

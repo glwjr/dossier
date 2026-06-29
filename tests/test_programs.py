@@ -33,12 +33,32 @@ def test_create_program(client, dev_user):
     assert "updated_at" in data
 
 
+def test_create_program_rejects_negative_app_fee(client, dev_user):
+    response = client.post("/programs", json={**PROGRAM_PAYLOAD, "app_fee": -5})
+    assert response.status_code == 422
+
+
 def test_list_programs(client, dev_user, program):
     response = client.get("/programs")
     assert response.status_code == 200
     items = response.json()
     assert len(items) == 1
     assert items[0]["id"] == program["id"]
+
+
+def test_list_programs_pagination(client, dev_user):
+    for i in range(3):
+        client.post("/programs", json={**PROGRAM_PAYLOAD, "school": f"School {i}"})
+
+    page = client.get("/programs", params={"limit": 2, "offset": 0})
+    assert page.status_code == 200
+    assert len(page.json()) == 2
+
+    rest = client.get("/programs", params={"limit": 2, "offset": 2})
+    assert len(rest.json()) == 1
+
+    # No params → full collection (backward compatible)
+    assert len(client.get("/programs").json()) == 3
 
 
 def test_get_program(client, dev_user, program):

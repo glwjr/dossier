@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
 from app.db import get_db
 from app.models.program import Program
 from app.models.requirement import Requirement
 from app.models.user import User
+from app.ownership import get_program_or_404
+from app.pagination import Pagination, pagination
 from app.schemas.requirement import (
     RequirementCreate,
     RequirementRead,
@@ -21,27 +23,17 @@ router = APIRouter(tags=["requirements"])
 def list_all_requirements(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     return db.scalars(
         select(Requirement)
         .join(Program, Requirement.program_id == Program.id)
+        .options(contains_eager(Requirement.program))
         .where(Program.user_id == current_user.id)
         .order_by(Requirement.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
-
-
-def _get_program_or_404(program_id: int, current_user: User, db: Session) -> Program:
-    program = db.scalar(
-        select(Program).where(
-            Program.id == program_id,
-            Program.user_id == current_user.id,
-        )
-    )
-    if program is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Program not found"
-        )
-    return program
 
 
 def _get_requirement_or_404(
@@ -66,7 +58,7 @@ def list_requirements(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     return db.scalars(
         select(Requirement).where(Requirement.program_id == program_id)
     ).all()
@@ -83,7 +75,7 @@ def create_requirement(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_program_or_404(program_id, current_user, db)
+    get_program_or_404(program_id, current_user, db)
     req = Requirement(**body.model_dump(), program_id=program_id)
     db.add(req)
     db.commit()

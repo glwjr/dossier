@@ -64,6 +64,23 @@ def test_list_recommenders(client, recommender):
     assert items[0]["id"] == recommender["id"]
 
 
+def test_list_recommenders_includes_assignment_program(client, assignment, program):
+    response = client.get("/recommenders")
+    assert response.status_code == 200
+    items = response.json()
+    assignments = items[0]["program_assignments"]
+    assert len(assignments) == 1
+    assert assignments[0]["program_id"] == program["id"]
+    assert assignments[0]["program"]["school"] == "Columbia"
+
+
+def test_create_recommender_rejects_invalid_email(client):
+    response = client.post(
+        "/recommenders", json={**REC_PAYLOAD, "email": "not-an-email"}
+    )
+    assert response.status_code == 422
+
+
 def test_get_recommender(client, recommender):
     response = client.get(f"/recommenders/{recommender['id']}")
     assert response.status_code == 200
@@ -147,6 +164,26 @@ def test_assign_duplicate_returns_409(client, assignment, program, recommender):
         json={"recommender_id": recommender["id"]},
     )
     assert response.status_code == 409
+
+
+def test_duplicate_assignment_violates_db_constraint(
+    client, assignment, db_session, program, recommender
+):
+    # The DB itself must reject a duplicate (program_id, recommender_id) pair,
+    # independent of the application-level 409 check.
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models.recommender import ProgramRecommender
+
+    # Use a SAVEPOINT so the failed insert rolls back without disturbing the
+    # outer test transaction.
+    with pytest.raises(IntegrityError):
+        with db_session.begin_nested():
+            db_session.add(
+                ProgramRecommender(
+                    program_id=program["id"], recommender_id=recommender["id"]
+                )
+            )
 
 
 def test_assign_to_nonexistent_program_returns_404(client, recommender):

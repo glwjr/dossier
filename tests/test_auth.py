@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
+import httpx
+
 from app.auth import create_access_token
 from app.config import settings
 from app.models.user import User
@@ -16,6 +18,24 @@ def test_login_redirects_to_google(raw_client, monkeypatch):
     assert "accounts.google.com" in location
     assert "test-client-id" in location
     assert "state=" in location
+
+
+def test_login_state_cookie_is_secure_in_prod(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "Secure" in set_cookie
+
+
+def test_login_state_cookie_not_secure_in_dev(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "frontend_url", "")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "Secure" not in set_cookie
 
 
 def test_login_returns_501_without_credentials(raw_client, monkeypatch):
@@ -101,6 +121,44 @@ def test_callback_rejects_invalid_state(raw_client):
 
 def test_callback_rejects_missing_state_cookie(raw_client):
     response = raw_client.get("/auth/callback?code=test_code&state=any")
+    assert response.status_code == 400
+
+
+def _valid_state(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "google_client_secret", "test-secret")
+    monkeypatch.setattr(settings, "frontend_url", "")
+    login_resp = raw_client.get("/auth/login", follow_redirects=False)
+    state_cookie = login_resp.cookies.get("oauth_state")
+    state = parse_qs(urlparse(login_resp.headers["location"]).query)["state"][0]
+    return state, state_cookie
+
+
+def test_callback_returns_502_when_google_errors(raw_client, monkeypatch):
+    state, state_cookie = _valid_state(raw_client, monkeypatch)
+
+    mock_client = _mock_google()
+    mock_client.post.return_value.raise_for_status.side_effect = httpx.RequestError(
+        "google down"
+    )
+    with patch("app.routers.auth.httpx.Client", return_value=mock_client):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+        )
+    assert response.status_code == 502
+
+
+def test_callback_returns_400_when_no_email(raw_client, monkeypatch):
+    state, state_cookie = _valid_state(raw_client, monkeypatch)
+
+    mock_client = _mock_google()
+    mock_client.get.return_value.json.return_value = {"name": "No Email"}
+    with patch("app.routers.auth.httpx.Client", return_value=mock_client):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+        )
     assert response.status_code == 400
 
 

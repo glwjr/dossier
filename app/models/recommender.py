@@ -2,7 +2,7 @@ import enum
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +34,9 @@ class Recommender(Base):
 
 class ProgramRecommender(Base):
     __tablename__ = "program_recommenders"
+    __table_args__ = (
+        UniqueConstraint("program_id", "recommender_id", name="uq_program_recommender"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     recommender_id: Mapped[int] = mapped_column(
@@ -51,4 +54,4 @@ class ProgramRecommender(Base):
     recommender: Mapped["Recommender"] = relationship(
         "Recommender", overlaps="program_assignments"
     )
-    program: Mapped["Program"] = relationship("Program", lazy="joined")
+    program: Mapped["Program"] = relationship("Program")
