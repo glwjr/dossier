@@ -37,6 +37,7 @@ class Program(Base):
     status: Mapped[ProgramStatus] = mapped_column(
         SAEnum(ProgramStatus), default=ProgramStatus.researching
     )
+    location: Mapped[str | None] = mapped_column(String)
     app_fee: Mapped[int | None] = mapped_column(Integer)
     stipend: Mapped[int | None] = mapped_column(Integer)
     decision_deadline: Mapped[date | None] = mapped_column(Date)

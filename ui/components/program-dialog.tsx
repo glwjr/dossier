@@ -40,6 +40,7 @@ const EMPTY: ProgramCreate = {
   department: "",
   degree: "PhD",
   url: "",
+  location: "",
   tier: "reach",
   status: "researching",
   app_fee: undefined,
@@ -59,6 +60,7 @@ function fromProgram(p: Program): ProgramCreate {
     app_fee: p.app_fee ?? undefined,
     stipend: p.stipend ?? undefined,
     decision_deadline: p.decision_deadline ?? "",
+    location: p.location ?? "",
     notes: p.notes ?? "",
   };
 }
@@ -103,6 +105,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
     mutation.mutate({
       ...form,
       url: form.url || null,
+      location: form.location || null,
       notes: form.notes || null,
       app_fee: form.app_fee ?? null,
       stipend: form.stipend ?? null,
@@ -208,6 +211,18 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={form.location ?? ""}
+                  onChange={(e) => set("location", e.target.value)}
+                  placeholder="Seattle, WA"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="app_fee">App fee ($)</Label>
                 <Input
                   id="app_fee"
@@ -219,9 +234,6 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                   placeholder="0"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="stipend">Annual stipend ($)</Label>
                 <Input
@@ -234,15 +246,17 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                   placeholder="0"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="decision_deadline">Decision deadline</Label>
-                <Input
-                  id="decision_deadline"
-                  type="date"
-                  value={form.decision_deadline ?? ""}
-                  onChange={(e) => set("decision_deadline", e.target.value)}
-                />
-              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="decision_deadline">Decision deadline</Label>
+              <Input
+                id="decision_deadline"
+                type="date"
+                value={form.decision_deadline ?? ""}
+                onChange={(e) => set("decision_deadline", e.target.value)}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-1.5">

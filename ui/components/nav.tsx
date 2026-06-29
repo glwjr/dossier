@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser, FileText, Globe, Search } from "lucide-react";
+import { CircleUser, Columns2, FileText, Globe, Search } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -59,6 +59,13 @@ export function Nav() {
             className={`transition-colors hover:text-foreground ${pathname === "/documents" ? "text-foreground" : "text-muted-foreground"}`}
           >
             <FileText className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/compare"
+            title="Compare"
+            className={`transition-colors hover:text-foreground ${pathname === "/compare" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <Columns2 className="h-4 w-4" />
           </Link>
           <Link
             href="/account"
@@ -142,6 +149,14 @@ export function Nav() {
                 onClick={() => setOpen(false)}
               >
                 <FileText className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/compare"
+                aria-label="Compare"
+                className={`transition-colors hover:text-foreground ${pathname === "/compare" ? "text-foreground" : "text-muted-foreground"}`}
+                onClick={() => setOpen(false)}
+              >
+                <Columns2 className="h-5 w-5" />
               </Link>
               <Link
                 href="/account"

@@ -10,6 +10,7 @@ class ProgramCreate(BaseModel):
     department: str
     degree: str
     url: str | None = None
+    location: str | None = None
     tier: Tier
     status: ProgramStatus = ProgramStatus.researching
     app_fee: int | None = Field(default=None, ge=0)
@@ -23,6 +24,7 @@ class ProgramUpdate(BaseModel):
     department: str | None = None
     degree: str | None = None
     url: str | None = None
+    location: str | None = None
     tier: Tier | None = None
     status: ProgramStatus | None = None
     app_fee: int | None = Field(default=None, ge=0)
@@ -40,6 +42,7 @@ class ProgramRead(BaseModel):
     department: str
     degree: str
     url: str | None
+    location: str | None
     tier: Tier
     status: ProgramStatus
     app_fee: int | None

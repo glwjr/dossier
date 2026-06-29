@@ -791,6 +791,9 @@ function ProgramDetail({ id }: { id: number }) {
             </Select>
           </div>
           <p className="mt-1 text-muted-foreground">{program.department}</p>
+          {program.location && (
+            <p className="mt-0.5 text-sm text-muted-foreground">{program.location}</p>
+          )}
           <div className="mt-2 text-sm text-muted-foreground">
             {(program.app_fee != null || program.stipend != null || program.decision_deadline) && (
               <div className="flex flex-wrap gap-x-3 gap-y-0.5">

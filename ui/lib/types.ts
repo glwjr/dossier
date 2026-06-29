@@ -99,6 +99,7 @@ export interface ProgramCreate {
   department: string;
   degree: string;
   url?: string | null;
+  location?: string | null;
   tier: Tier;
   status: ProgramStatus;
   app_fee?: number | null;
@@ -116,6 +117,7 @@ export interface Program {
   department: string;
   degree: string;
   url: string | null;
+  location: string | null;
   tier: Tier;
   status: ProgramStatus;
   app_fee: number | null;
