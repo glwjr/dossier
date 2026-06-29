@@ -150,7 +150,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
                     v && set("response", v as OutreachCreate["response"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>
                       {OUTREACH_RESPONSE_LABEL[form.response ?? "none"]}
                     </SelectValue>

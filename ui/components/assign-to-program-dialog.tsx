@@ -99,7 +99,7 @@ export function AssignToProgramDialog({
                 value={String(programId)}
                 onValueChange={(v) => v && setProgramId(Number(v))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-base md:text-sm">
                   <SelectValue>
                     {programId
                       ? (programs.find((p) => p.id === programId)?.school ?? "Select…")
@@ -128,7 +128,7 @@ export function AssignToProgramDialog({
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{REC_STATUS_LABEL[status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>

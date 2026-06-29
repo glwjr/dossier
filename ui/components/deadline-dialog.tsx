@@ -108,7 +108,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
                     v && set("kind", v as DeadlineCreate["kind"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{DEADLINE_KIND_LABEL[form.kind]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>

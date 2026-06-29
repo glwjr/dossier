@@ -120,7 +120,7 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
                     v && set("kind", v as DocumentCreate["kind"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{DOCUMENT_KIND_LABEL[form.kind]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -144,7 +144,7 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
                     v && set("status", v as DocumentCreate["status"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>
                       {DOCUMENT_STATUS_LABEL[form.status]}
                     </SelectValue>

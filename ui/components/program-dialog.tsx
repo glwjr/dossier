@@ -166,7 +166,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                     set("tier", v as ProgramCreate["tier"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{PROGRAM_TIER_LABEL[form.tier]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -184,7 +184,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                     set("status", v as ProgramCreate["status"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{PROGRAM_STATUS_LABEL[form.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>

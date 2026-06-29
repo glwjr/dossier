@@ -124,7 +124,7 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
                     set("kind", v as RequirementCreate["kind"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{REQUIREMENT_KIND_LABEL[form.kind]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -146,7 +146,7 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
                     set("status", v as RequirementCreate["status"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{REQUIREMENT_STATUS_LABEL[form.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>

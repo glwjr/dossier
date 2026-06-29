@@ -125,7 +125,7 @@ export function AssignRecommenderDialog({
                   value={String(recommenderId)}
                   onValueChange={(v) => v && setRecommenderId(Number(v))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>
                       {recommenderId
                         ? (recommenders.find((r) => r.id === recommenderId)?.name ?? "Select…")
@@ -153,7 +153,7 @@ export function AssignRecommenderDialog({
                     v && setStatus(v as ProgramRecommenderCreate["status"])
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>{REC_STATUS_LABEL[status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
