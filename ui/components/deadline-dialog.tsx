@@ -125,7 +125,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
                   value={form.due_date}
                   onChange={(e) => set("due_date", e.target.value)}
                   required
-                  className="w-full"
+                  className="max-w-full"
                 />
               </div>
             </div>
