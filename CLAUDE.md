@@ -23,9 +23,11 @@ PhD application tracker. Architectural decisions below are settled — don't re-
 
 Two separable concerns kept deliberately separate:
 
-1. **Authorization model** — `User` entity, `user_id` owner on every row, every query scoped to `current_user`, every endpoint gated by `Depends(get_current_user)`. Ownership of nested resources (requirements, deadlines, etc.) is verified through the parent program — load `Program` scoped to `current_user.id` first; 404 if not theirs.
+1. **Authorization model** — `User` entity, `user_id` owner on every row, every query scoped to `current_user`, every endpoint gated by `Depends(get_current_user)`. Ownership of nested resources (requirements, deadlines, etc.) is verified through the parent program via the shared `get_program_or_404` helper in `app/ownership.py` — load `Program` scoped to `current_user.id` first; 404 if not theirs.
 
-2. **Authentication mechanism** — Google OAuth + JWT, entirely behind `get_current_user` in `app/auth.py`. Validates a Bearer JWT issued by `/auth/callback` after the OAuth code exchange. Replacing the auth mechanism in the future touches only that one function.
+2. **Authentication mechanism** — Google OAuth + JWT (signed/verified with **PyJWT**), entirely behind `get_current_user` in `app/auth.py`. Validates a Bearer JWT issued by `/auth/callback` after the OAuth code exchange. Replacing the auth mechanism in the future touches only that one function.
+
+**Admin**: a single `ADMIN_EMAIL` env var gates `GET /admin/stats` (`app/routers/admin.py`, `_require_admin` → 403 for everyone else). Leave it blank to disable admin access entirely.
 
 Test fixtures: `client` overrides both `get_db` and `get_current_user` (no JWT needed for business-logic tests). `raw_client` overrides only `get_db` and is used for auth-specific tests.
 
@@ -70,13 +72,15 @@ There is a test proving one user cannot read or mutate another user's data.
 
 ```
 app/
-  main.py       # app factory, router registration, CORS
-  config.py     # pydantic-settings Settings
+  main.py       # app factory, router registration, CORS, /health + /health/ready probes
+  config.py     # pydantic-settings Settings (fails fast if SECRET_KEY is dev default in prod)
   db.py         # engine, SessionLocal, get_db
-  auth.py       # get_current_user (JWT Bearer validation)
+  auth.py       # get_current_user (JWT Bearer validation, PyJWT)
+  ownership.py  # get_program_or_404 — shared owner-scoped parent lookup
+  pagination.py # opt-in limit/offset Pagination dependency for list endpoints
   models/       # Base + one file per entity
   schemas/      # Pydantic v2 Create/Update/Read per entity
-  routers/      # programs, requirements, deadlines, recommenders, outreach, documents, dashboard, auth, me
+  routers/      # programs, requirements, deadlines, recommenders, outreach, documents, dashboard, auth, me, admin
 seed.py         # dev user + placeholder programs (replace with your own)
 tests/
 alembic/
@@ -92,6 +96,7 @@ ui/             # Next.js 16 App Router (Vercel, root dir = ui/)
     outreach/page.tsx           # Outreach contacts (per-program, listed cross-program)
     documents/page.tsx          # Cross-program documents view
     account/page.tsx            # Account info + sign out
+    admin/page.tsx              # Admin stats dashboard (signups; ADMIN_EMAIL-gated)
     auth/callback/page.tsx      # Extracts ?token= and stores in localStorage
   components/
     nav.tsx, providers.tsx, require-auth.tsx
@@ -124,10 +129,12 @@ pyproject.toml
 
 ## Deployment
 
-- Backend: `https://api.dossiertool.com` (Render, Docker)
+- Backend: `https://api.dossiertool.com` (Render, Docker, Starter plan — always on, no idle spin-down)
 - Frontend: `https://my.dossiertool.com` (Vercel, root dir = `ui/`)
 
-**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`
+**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`, `ADMIN_EMAIL` (optional — enables `/admin/stats`)
+
+**Render plans:** web service on **Starter** (always on); Postgres on **Basic-256mb**. Setting `FRONTEND_URL` flips prod behavior: CORS drops `localhost:3000` and trusts only the deployed UI, and startup refuses the dev `SECRET_KEY`. `healthCheckPath` is `/health`.
 
 **Vercel env vars:** `NEXT_PUBLIC_API_URL=https://api.dossiertool.com`
 
