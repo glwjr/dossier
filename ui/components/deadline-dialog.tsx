@@ -125,8 +125,8 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
                   type="date"
                   value={form.due_date}
                   onChange={(e) => set("due_date", e.target.value)}
-                  required
                   className="appearance-none sm:appearance-auto"
+                  required
                 />
               </div>
             </div>
