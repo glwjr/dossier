@@ -18,6 +18,24 @@ def test_login_redirects_to_google(raw_client, monkeypatch):
     assert "state=" in location
 
 
+def test_login_state_cookie_is_secure_in_prod(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "Secure" in set_cookie
+
+
+def test_login_state_cookie_not_secure_in_dev(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "frontend_url", "")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "Secure" not in set_cookie
+
+
 def test_login_returns_501_without_credentials(raw_client, monkeypatch):
     monkeypatch.setattr(settings, "google_client_id", "")
     response = raw_client.get("/auth/login")

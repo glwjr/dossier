@@ -38,7 +38,13 @@ def login() -> RedirectResponse:
     }
     redirect = RedirectResponse(f"{_GOOGLE_AUTH_URL}?{urlencode(params)}")
     redirect.set_cookie(
-        "oauth_state", state, httponly=True, samesite="lax", max_age=600
+        "oauth_state",
+        state,
+        httponly=True,
+        samesite="lax",
+        # Secure in deployed environments (HTTPS); relaxed for local http dev.
+        secure=bool(settings.frontend_url),
+        max_age=600,
     )
     return redirect
 
