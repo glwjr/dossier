@@ -12,15 +12,15 @@ if TYPE_CHECKING:
     from app.models.program import Program
 
 
-class OutreachResponse(str, enum.Enum):
+class AdvisorResponse(str, enum.Enum):
     none = "none"
     positive = "positive"
     negative = "negative"
     meeting_scheduled = "meeting_scheduled"
 
 
-class OutreachContact(Base):
-    __tablename__ = "outreach_contacts"
+class Advisor(Base):
+    __tablename__ = "advisors"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     program_id: Mapped[int] = mapped_column(
@@ -31,8 +31,8 @@ class OutreachContact(Base):
     url: Mapped[str | None] = mapped_column(String)
     research_area: Mapped[str | None] = mapped_column(String)
     contacted_on: Mapped[date | None] = mapped_column(Date)
-    response: Mapped[OutreachResponse] = mapped_column(
-        SAEnum(OutreachResponse), default=OutreachResponse.none
+    response: Mapped[AdvisorResponse] = mapped_column(
+        SAEnum(AdvisorResponse), default=AdvisorResponse.none
     )
     notes: Mapped[str | None] = mapped_column(Text)
 

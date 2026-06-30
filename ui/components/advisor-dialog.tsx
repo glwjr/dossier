@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { OutreachContact, OutreachCreate } from "@/lib/types";
-import { OUTREACH_RESPONSE_LABEL } from "@/lib/display";
+import { Advisor, AdvisorCreate } from "@/lib/types";
+import { ADVISOR_RESPONSE_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
@@ -27,11 +27,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   programId: number;
-  contact?: OutreachContact;
+  contact?: Advisor;
   trigger: React.ReactElement;
 }
 
-const EMPTY: OutreachCreate = {
+const EMPTY: AdvisorCreate = {
   name: "",
   email: "",
   url: "",
@@ -41,43 +41,43 @@ const EMPTY: OutreachCreate = {
   notes: "",
 };
 
-function fromContact(c: OutreachContact): OutreachCreate {
+function fromContact(c: Advisor): AdvisorCreate {
   return {
     name: c.name,
     email: c.email ?? "",
     url: c.url ?? "",
     research_area: c.research_area ?? "",
     contacted_on: c.contacted_on ?? "",
-    response: c.response as OutreachCreate["response"],
+    response: c.response as AdvisorCreate["response"],
     notes: c.notes ?? "",
   };
 }
 
-export function OutreachDialog({ programId, contact, trigger }: Props) {
+export function AdvisorDialog({ programId, contact, trigger }: Props) {
   const isEdit = !!contact;
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<OutreachCreate>(
+  const [form, setForm] = useState<AdvisorCreate>(
     contact ? fromContact(contact) : EMPTY
   );
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<OutreachContact, Error, OutreachCreate>({
+  const mutation = useMutation<Advisor, Error, AdvisorCreate>({
     mutationFn: (data) =>
       isEdit
-        ? api.patch<OutreachContact>(`/outreach/${contact.id}`, data)
-        : api.post<OutreachContact>(`/programs/${programId}/outreach`, data),
+        ? api.patch<Advisor>(`/advisors/${contact.id}`, data)
+        : api.post<Advisor>(`/programs/${programId}/advisors`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
-      queryClient.invalidateQueries({ queryKey: ["outreach-all"] });
+      queryClient.invalidateQueries({ queryKey: ["advisors", programId] });
+      queryClient.invalidateQueries({ queryKey: ["advisors-all"] });
       toast.success("Saved");
       setOpen(false);
     },
     onError: onMutationError,
   });
 
-  function set<K extends keyof OutreachCreate>(
+  function set<K extends keyof AdvisorCreate>(
     key: K,
-    value: OutreachCreate[K]
+    value: AdvisorCreate[K]
   ) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -160,12 +160,12 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
                 <Select
                   value={form.response}
                   onValueChange={(v) =>
-                    v && set("response", v as OutreachCreate["response"])
+                    v && set("response", v as AdvisorCreate["response"])
                   }
                 >
                   <SelectTrigger className="w-full text-base md:text-sm">
                     <SelectValue>
-                      {OUTREACH_RESPONSE_LABEL[form.response ?? "none"]}
+                      {ADVISOR_RESPONSE_LABEL[form.response ?? "none"]}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>

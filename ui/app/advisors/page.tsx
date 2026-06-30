@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
-import { OutreachContactWithProgram } from "@/lib/types";
-import { OUTREACH_RESPONSE_LABEL, formatDate } from "@/lib/display";
+import { AdvisorWithProgram } from "@/lib/types";
+import { ADVISOR_RESPONSE_LABEL, formatDate } from "@/lib/display";
 import { Input } from "@/components/ui/input";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
@@ -34,10 +34,10 @@ const RESPONSE_VARIANT: Record<
 
 type ByProgram = Record<
   string,
-  { school: string; department: string; programId: number; items: OutreachContactWithProgram[] }
+  { school: string; department: string; programId: number; items: AdvisorWithProgram[] }
 >;
 
-function OutreachInner() {
+function AdvisorsInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -56,9 +56,9 @@ function OutreachInner() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
-  const { data = [], isLoading, error } = useQuery<OutreachContactWithProgram[]>({
-    queryKey: ["outreach-all"],
-    queryFn: () => api.get("/outreach"),
+  const { data = [], isLoading, error } = useQuery<AdvisorWithProgram[]>({
+    queryKey: ["advisors-all"],
+    queryFn: () => api.get("/advisors"),
   });
 
   if (isLoading)
@@ -123,13 +123,13 @@ function OutreachInner() {
     .map((r) => ({ response: r, items: filtered.filter((c) => c.response === r) }))
     .filter(({ items }) => items.length > 0);
 
-  function renderContact(c: OutreachContactWithProgram, showProgram = false) {
+  function renderContact(c: AdvisorWithProgram, showProgram = false) {
     return (
       <div key={c.id} className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm">
         <div className="min-w-0 flex-1">
           {showProgram && (
             <Link
-              href={`/programs/${c.program.id}?tab=outreach`}
+              href={`/programs/${c.program.id}?tab=advisors`}
               className="mb-1 block truncate text-xs text-muted-foreground hover:underline"
             >
               {c.program.school} · {c.program.department}
@@ -169,7 +169,7 @@ function OutreachInner() {
         <div className="shrink-0 text-right">
           <div className="mb-2">
             <Badge variant={RESPONSE_VARIANT[c.response]}>
-              {OUTREACH_RESPONSE_LABEL[c.response]}
+              {ADVISOR_RESPONSE_LABEL[c.response]}
             </Badge>
           </div>
           {c.contacted_on && (
@@ -206,7 +206,7 @@ function OutreachInner() {
               <SelectValue>
                 {responseFilter === "all"
                   ? "All responses"
-                  : OUTREACH_RESPONSE_LABEL[responseFilter]}
+                  : ADVISOR_RESPONSE_LABEL[responseFilter]}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -227,7 +227,7 @@ function OutreachInner() {
       {sort === "response" ? (
         byResponse.map(({ response, items }) => (
           <div key={response} className="space-y-3">
-            <p className="text-sm font-medium">{OUTREACH_RESPONSE_LABEL[response]}</p>
+            <p className="text-sm font-medium">{ADVISOR_RESPONSE_LABEL[response]}</p>
             {items.map((c) => renderContact(c, true))}
           </div>
         ))
@@ -236,7 +236,7 @@ function OutreachInner() {
           <div key={programId} className="space-y-3">
             <div className="flex min-w-0 items-baseline gap-3">
               <Link
-                href={`/programs/${programId}?tab=outreach`}
+                href={`/programs/${programId}?tab=advisors`}
                 className="min-w-0 shrink truncate text-sm font-medium hover:underline"
               >
                 {school}
@@ -269,7 +269,7 @@ export default function AdvisorsPage() {
           </div>
         }
       >
-        <OutreachInner />
+        <AdvisorsInner />
       </Suspense>
     </RequireAuth>
   );

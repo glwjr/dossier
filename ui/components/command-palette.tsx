@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Program, RequirementWithProgram, Recommender, OutreachContactWithProgram, DocumentWithProgram } from "@/lib/types";
+import { Program, RequirementWithProgram, Recommender, AdvisorWithProgram, DocumentWithProgram } from "@/lib/types";
 import { PROGRAM_STATUS_LABEL } from "@/lib/display";
 import {
   Dialog,
@@ -15,13 +15,13 @@ type Result =
   | { kind: "program"; id: number; label: string; sub: string }
   | { kind: "requirement"; id: number; label: string; sub: string; programId: number }
   | { kind: "recommender"; id: number; label: string; sub: string }
-  | { kind: "outreach"; id: number; label: string; sub: string; programId: number }
+  | { kind: "advisor"; id: number; label: string; sub: string; programId: number }
   | { kind: "document"; id: number; label: string; sub: string; programId: number };
 
 function href(r: Result): string {
   if (r.kind === "program") return `/programs/${r.id}`;
   if (r.kind === "requirement") return `/programs/${r.programId}?tab=requirements`;
-  if (r.kind === "outreach") return `/programs/${r.programId}?tab=outreach`;
+  if (r.kind === "advisor") return `/programs/${r.programId}?tab=advisors`;
   if (r.kind === "document") return `/programs/${r.programId}?tab=documents`;
   return `/recommenders`;
 }
@@ -51,9 +51,9 @@ export function CommandPalette() {
     enabled: open,
   });
 
-  const { data: outreach = [] } = useQuery<OutreachContactWithProgram[]>({
-    queryKey: ["outreach-all"],
-    queryFn: () => api.get("/outreach"),
+  const { data: advisors = [] } = useQuery<AdvisorWithProgram[]>({
+    queryKey: ["advisors-all"],
+    queryFn: () => api.get("/advisors"),
     enabled: open,
   });
 
@@ -135,15 +135,15 @@ export function CommandPalette() {
       });
     }
 
-    const matchedOutreach = outreach.filter(
+    const matchedAdvisors = advisors.filter(
       (o) =>
         o.name.toLowerCase().includes(q) ||
         (o.email ?? "").toLowerCase().includes(q) ||
         o.program.school.toLowerCase().includes(q)
     );
-    for (const o of matchedOutreach.slice(0, 3)) {
+    for (const o of matchedAdvisors.slice(0, 3)) {
       results.push({
-        kind: "outreach",
+        kind: "advisor",
         id: o.id,
         label: o.name,
         sub: o.program.school,
@@ -192,7 +192,7 @@ export function CommandPalette() {
     program: "Program",
     requirement: "Requirement",
     recommender: "Recommender",
-    outreach: "Advisor",
+    advisor: "Advisor",
     document: "Document",
   };
 

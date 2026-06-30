@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.db import get_db
+from app.models.advisor import Advisor
 from app.models.deadline import Deadline
 from app.models.document import Document
-from app.models.outreach import OutreachContact
 from app.models.program import Program
 from app.models.recommender import ProgramRecommender, Recommender
 from app.models.requirement import Requirement
@@ -45,8 +45,8 @@ def export(
     deadlines = db.scalars(
         select(Deadline).where(Deadline.program_id.in_(program_ids))
     ).all()
-    outreach = db.scalars(
-        select(OutreachContact).where(OutreachContact.program_id.in_(program_ids))
+    advisors = db.scalars(
+        select(Advisor).where(Advisor.program_id.in_(program_ids))
     ).all()
     documents = db.scalars(
         select(Document).where(Document.program_id.in_(program_ids))
@@ -62,7 +62,7 @@ def export(
 
     reqs_by_pid: dict[int, list] = defaultdict(list)
     dls_by_pid: dict[int, list] = defaultdict(list)
-    out_by_pid: dict[int, list] = defaultdict(list)
+    adv_by_pid: dict[int, list] = defaultdict(list)
     docs_by_pid: dict[int, list] = defaultdict(list)
     recs_by_pid: dict[int, list] = defaultdict(list)
 
@@ -72,8 +72,8 @@ def export(
         reqs_by_pid[r.program_id].append(r)
     for d in deadlines:
         dls_by_pid[d.program_id].append(d)
-    for o in outreach:
-        out_by_pid[o.program_id].append(o)
+    for o in advisors:
+        adv_by_pid[o.program_id].append(o)
     for d in documents:
         docs_by_pid[d.program_id].append(d)
     for pr in prog_recs:
@@ -125,18 +125,19 @@ def export(
                     }
                     for d in dls_by_pid[p.id]
                 ],
-                "outreach": [
+                "advisors": [
                     {
                         "name": o.name,
                         "email": o.email,
                         "url": o.url,
+                        "research_area": o.research_area,
                         "contacted_on": (
                             o.contacted_on.isoformat() if o.contacted_on else None
                         ),
                         "response": o.response,
                         "notes": o.notes,
                     }
-                    for o in out_by_pid[p.id]
+                    for o in adv_by_pid[p.id]
                 ],
                 "documents": [
                     {

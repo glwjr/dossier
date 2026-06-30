@@ -186,19 +186,19 @@ def test_delete_program_cascades_to_children(client, dev_user):
         f"/programs/{pid}/deadlines",
         json={"kind": "application", "due_date": "2025-12-01"},
     )
-    client.post(f"/programs/{pid}/outreach", json={"name": "Prof. X"})
+    client.post(f"/programs/{pid}/advisors", json={"name": "Prof. X"})
     client.post(f"/programs/{pid}/documents", json={"kind": "sop", "title": "My SOP"})
 
     assert len(client.get("/requirements").json()) == 1
     assert len(client.get("/deadlines").json()) == 1
-    assert len(client.get("/outreach").json()) == 1
+    assert len(client.get("/advisors").json()) == 1
     assert len(client.get("/documents").json()) == 1
 
     assert client.delete(f"/programs/{pid}").status_code == 204
 
     assert client.get("/requirements").json() == []
     assert client.get("/deadlines").json() == []
-    assert client.get("/outreach").json() == []
+    assert client.get("/advisors").json() == []
     assert client.get("/documents").json() == []
 
 

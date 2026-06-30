@@ -27,23 +27,23 @@ export interface DocumentCreate {
 
 export type DocumentUpdate = Partial<DocumentCreate>;
 
-export type OutreachResponse =
+export type AdvisorResponse =
   | "none"
   | "positive"
   | "negative"
   | "meeting_scheduled";
 
-export interface OutreachCreate {
+export interface AdvisorCreate {
   name: string;
   email?: string | null;
   url?: string | null;
   research_area?: string | null;
   contacted_on?: string | null;
-  response?: OutreachResponse;
+  response?: AdvisorResponse;
   notes?: string | null;
 }
 
-export type OutreachUpdate = Partial<OutreachCreate>;
+export type AdvisorUpdate = Partial<AdvisorCreate>;
 
 export interface RecommenderCreate {
   name: string;
@@ -183,7 +183,7 @@ export interface ProgramRecommender {
   recommender: Recommender;
 }
 
-export interface OutreachContact {
+export interface Advisor {
   id: number;
   program_id: number;
   name: string;
@@ -195,7 +195,7 @@ export interface OutreachContact {
   notes: string | null;
 }
 
-export interface OutreachContactWithProgram extends OutreachContact {
+export interface AdvisorWithProgram extends Advisor {
   program: { id: number; school: string; department: string };
 }
 

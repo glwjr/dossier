@@ -1,6 +1,6 @@
 import pytest
 
-from app.models.outreach import OutreachContact
+from app.models.advisor import Advisor
 from app.models.program import Program
 from app.models.user import User
 
@@ -28,13 +28,13 @@ def program(client, dev_user):
 
 @pytest.fixture()
 def contact(client, program):
-    response = client.post(f"/programs/{program['id']}/outreach", json=CONTACT_PAYLOAD)
+    response = client.post(f"/programs/{program['id']}/advisors", json=CONTACT_PAYLOAD)
     assert response.status_code == 201
     return response.json()
 
 
 def test_create_contact(client, program):
-    response = client.post(f"/programs/{program['id']}/outreach", json=CONTACT_PAYLOAD)
+    response = client.post(f"/programs/{program['id']}/advisors", json=CONTACT_PAYLOAD)
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Prof. Robert Malenka"
@@ -47,7 +47,7 @@ def test_create_contact(client, program):
 
 def test_create_contact_with_date_and_response(client, program):
     response = client.post(
-        f"/programs/{program['id']}/outreach",
+        f"/programs/{program['id']}/advisors",
         json={**CONTACT_PAYLOAD, "contacted_on": "2026-01-15", "response": "positive"},
     )
     assert response.status_code == 201
@@ -58,7 +58,7 @@ def test_create_contact_with_date_and_response(client, program):
 
 def test_create_contact_with_research_area(client, program):
     response = client.post(
-        f"/programs/{program['id']}/outreach",
+        f"/programs/{program['id']}/advisors",
         json={**CONTACT_PAYLOAD, "research_area": "Synaptic plasticity"},
     )
     assert response.status_code == 201
@@ -66,13 +66,13 @@ def test_create_contact_with_research_area(client, program):
 
 
 def test_create_contact_defaults_research_area_none(client, program):
-    response = client.post(f"/programs/{program['id']}/outreach", json=CONTACT_PAYLOAD)
+    response = client.post(f"/programs/{program['id']}/advisors", json=CONTACT_PAYLOAD)
     assert response.status_code == 201
     assert response.json()["research_area"] is None
 
 
 def test_list_contacts(client, program, contact):
-    response = client.get(f"/programs/{program['id']}/outreach")
+    response = client.get(f"/programs/{program['id']}/advisors")
     assert response.status_code == 200
     items = response.json()
     assert len(items) == 1
@@ -81,7 +81,7 @@ def test_list_contacts(client, program, contact):
 
 def test_update_contact(client, contact):
     response = client.patch(
-        f"/outreach/{contact['id']}",
+        f"/advisors/{contact['id']}",
         json={"response": "meeting_scheduled", "notes": "Zoom call booked for Feb 3"},
     )
     assert response.status_code == 200
@@ -92,16 +92,16 @@ def test_update_contact(client, contact):
 
 
 def test_delete_contact(client, contact):
-    response = client.delete(f"/outreach/{contact['id']}")
+    response = client.delete(f"/advisors/{contact['id']}")
     assert response.status_code == 204
 
-    response = client.patch(f"/outreach/{contact['id']}", json={"response": "positive"})
+    response = client.patch(f"/advisors/{contact['id']}", json={"response": "positive"})
     assert response.status_code == 404
 
 
-def test_list_all_outreach(client, program, contact):
-    # GET /outreach returns all contacts across programs with nested program info.
-    r = client.get("/outreach")
+def test_list_all_advisor(client, program, contact):
+    # GET /advisors returns all contacts across programs with nested program info.
+    r = client.get("/advisors")
     assert r.status_code == 200
     items = r.json()
     assert len(items) == 1
@@ -110,9 +110,9 @@ def test_list_all_outreach(client, program, contact):
     assert items[0]["program"]["id"] == program["id"]
 
 
-def test_list_all_outreach_isolation(client, db_session):
+def test_list_all_advisor_isolation(client, db_session):
     # Contacts from other users' programs must not appear.
-    user_b = User(email="user-b-outreach-all@example.com", name="User B")
+    user_b = User(email="user-b-advisor-all@example.com", name="User B")
     db_session.add(user_b)
     db_session.flush()
     prog_b = Program(
@@ -126,36 +126,36 @@ def test_list_all_outreach_isolation(client, db_session):
     db_session.add(prog_b)
     db_session.flush()
     db_session.add(
-        OutreachContact(program_id=prog_b.id, name="Prof. X", response="none")
+        Advisor(program_id=prog_b.id, name="Prof. X", response="none")
     )
     db_session.flush()
 
-    r = client.get("/outreach")
+    r = client.get("/advisors")
     assert r.status_code == 200
     assert r.json() == []
 
 
 def test_create_contact_invalid_response(client, program):
     response = client.post(
-        f"/programs/{program['id']}/outreach",
+        f"/programs/{program['id']}/advisors",
         json={**CONTACT_PAYLOAD, "response": "pending"},
     )
     assert response.status_code == 422
 
 
 def test_list_on_nonexistent_program_returns_404(client, dev_user):
-    response = client.get("/programs/99999/outreach")
+    response = client.get("/programs/99999/advisors")
     assert response.status_code == 404
 
 
 def test_create_on_nonexistent_program_returns_404(client, dev_user):
-    response = client.post("/programs/99999/outreach", json=CONTACT_PAYLOAD)
+    response = client.post("/programs/99999/advisors", json=CONTACT_PAYLOAD)
     assert response.status_code == 404
 
 
-def test_outreach_isolation(client, db_session):
-    """User A cannot access or mutate User B's outreach contacts."""
-    user_b = User(email="user-b-outreach@example.com", name="User B")
+def test_advisor_isolation(client, db_session):
+    """User A cannot access or mutate User B's advisor contacts."""
+    user_b = User(email="user-b-advisor@example.com", name="User B")
     db_session.add(user_b)
     db_session.flush()
 
@@ -170,7 +170,7 @@ def test_outreach_isolation(client, db_session):
     db_session.add(program_b)
     db_session.flush()
 
-    contact_b = OutreachContact(
+    contact_b = Advisor(
         program_id=program_b.id,
         name="Prof. Secret",
         response="none",
@@ -178,17 +178,17 @@ def test_outreach_isolation(client, db_session):
     db_session.add(contact_b)
     db_session.flush()
 
-    assert client.get(f"/programs/{program_b.id}/outreach").status_code == 404
+    assert client.get(f"/programs/{program_b.id}/advisors").status_code == 404
     assert (
         client.post(
-            f"/programs/{program_b.id}/outreach", json=CONTACT_PAYLOAD
+            f"/programs/{program_b.id}/advisors", json=CONTACT_PAYLOAD
         ).status_code
         == 404
     )
     assert (
         client.patch(
-            f"/outreach/{contact_b.id}", json={"response": "positive"}
+            f"/advisors/{contact_b.id}", json={"response": "positive"}
         ).status_code
         == 404
     )
-    assert client.delete(f"/outreach/{contact_b.id}").status_code == 404
+    assert client.delete(f"/advisors/{contact_b.id}").status_code == 404

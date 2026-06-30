@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 import {
   Deadline,
   Document,
-  OutreachContact,
+  Advisor,
   Program,
   ProgramRecommender,
   Requirement,
@@ -18,7 +18,7 @@ import {
   DEADLINE_KIND_LABEL,
   DOCUMENT_KIND_LABEL,
   DOCUMENT_STATUS_LABEL,
-  OUTREACH_RESPONSE_LABEL,
+  ADVISOR_RESPONSE_LABEL,
   PROGRAM_STATUS_LABEL,
   PROGRAM_TIER_LABEL,
   PROGRAM_TIER_VARIANT,
@@ -32,7 +32,7 @@ import { ProgramDialog } from "@/components/program-dialog";
 import { RequirementDialog } from "@/components/requirement-dialog";
 import { DeadlineDialog } from "@/components/deadline-dialog";
 import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
-import { OutreachDialog } from "@/components/outreach-dialog";
+import { AdvisorDialog } from "@/components/advisor-dialog";
 import { DocumentDialog } from "@/components/document-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -412,18 +412,18 @@ function RecommendersTab({ programId }: { programId: number }) {
   );
 }
 
-function OutreachTab({ programId }: { programId: number }) {
+function AdvisorsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
-  const { data = [] } = useQuery<OutreachContact[]>({
-    queryKey: ["outreach", programId],
-    queryFn: () => api.get(`/programs/${programId}/outreach`),
+  const { data = [] } = useQuery<Advisor[]>({
+    queryKey: ["advisors", programId],
+    queryFn: () => api.get(`/programs/${programId}/advisors`),
   });
 
   const deleteContact = useMutation({
-    mutationFn: (id: number) => api.delete(`/outreach/${id}`),
+    mutationFn: (id: number) => api.delete(`/advisors/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["outreach", programId] });
-      queryClient.invalidateQueries({ queryKey: ["outreach-all"] });
+      queryClient.invalidateQueries({ queryKey: ["advisors", programId] });
+      queryClient.invalidateQueries({ queryKey: ["advisors-all"] });
       toast.success("Deleted");
     },
     onError: onMutationError,
@@ -434,7 +434,7 @@ function OutreachTab({ programId }: { programId: number }) {
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
-        <OutreachDialog
+        <AdvisorDialog
           programId={programId}
           trigger={<Button size="sm"><Plus />Add advisor</Button>}
         />
@@ -468,13 +468,13 @@ function OutreachTab({ programId }: { programId: number }) {
               </a>
             )}
             <span className="mt-1 block text-xs text-muted-foreground">
-              {OUTREACH_RESPONSE_LABEL[c.response]}
+              {ADVISOR_RESPONSE_LABEL[c.response]}
               {c.contacted_on ? ` · ${formatDate(c.contacted_on)}` : ""}
             </span>
             {c.notes && <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <OutreachDialog
+            <AdvisorDialog
               programId={programId}
               contact={c}
               trigger={
@@ -653,13 +653,13 @@ function DocumentsTab({ programId }: { programId: number }) {
   );
 }
 
-const VALID_TABS = ["requirements", "deadlines", "recommenders", "outreach", "documents"];
+const VALID_TABS = ["requirements", "deadlines", "recommenders", "advisors", "documents"];
 
 const TAB_LABEL: Record<string, string> = {
   requirements: "Requirements",
   deadlines: "Deadlines",
   recommenders: "Recommenders",
-  outreach: "Advisors",
+  advisors: "Advisors",
   documents: "Documents",
 };
 
@@ -705,9 +705,9 @@ function ProgramDetail({ id }: { id: number }) {
     queryFn: () => api.get(`/programs/${id}/recommenders`),
     enabled: !!program,
   });
-  const { data: outreach = [] } = useQuery<OutreachContact[]>({
-    queryKey: ["outreach", id],
-    queryFn: () => api.get(`/programs/${id}/outreach`),
+  const { data: advisors = [] } = useQuery<Advisor[]>({
+    queryKey: ["advisors", id],
+    queryFn: () => api.get(`/programs/${id}/advisors`),
     enabled: !!program,
   });
   const { data: documents = [] } = useQuery<Document[]>({
@@ -884,8 +884,8 @@ function ProgramDetail({ id }: { id: number }) {
               <SelectItem value="recommenders">
                 Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
               </SelectItem>
-              <SelectItem value="outreach">
-                Advisors{outreach.length > 0 && ` (${outreach.length})`}
+              <SelectItem value="advisors">
+                Advisors{advisors.length > 0 && ` (${advisors.length})`}
               </SelectItem>
               <SelectItem value="documents">
                 Documents{documents.length > 0 && ` (${documents.length})`}
@@ -905,8 +905,8 @@ function ProgramDetail({ id }: { id: number }) {
             <TabsTrigger value="recommenders">
               Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
             </TabsTrigger>
-            <TabsTrigger value="outreach">
-              Advisors{outreach.length > 0 && ` (${outreach.length})`}
+            <TabsTrigger value="advisors">
+              Advisors{advisors.length > 0 && ` (${advisors.length})`}
             </TabsTrigger>
             <TabsTrigger value="documents">
               Documents{documents.length > 0 && ` (${documents.length})`}
@@ -923,8 +923,8 @@ function ProgramDetail({ id }: { id: number }) {
           <TabsContent value="recommenders">
             <RecommendersTab programId={id} />
           </TabsContent>
-          <TabsContent value="outreach">
-            <OutreachTab programId={id} />
+          <TabsContent value="advisors">
+            <AdvisorsTab programId={id} />
           </TabsContent>
           <TabsContent value="documents">
             <DocumentsTab programId={id} />

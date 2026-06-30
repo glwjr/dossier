@@ -90,7 +90,7 @@ export const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   final: "Final",
 };
 
-export const OUTREACH_RESPONSE_LABEL: Record<string, string> = {
+export const ADVISOR_RESPONSE_LABEL: Record<string, string> = {
   none: "None",
   positive: "Positive",
   negative: "Negative",

@@ -2,26 +2,26 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from app.models.outreach import OutreachResponse
+from app.models.advisor import AdvisorResponse
 
 
-class OutreachContactCreate(BaseModel):
+class AdvisorCreate(BaseModel):
     name: str
     email: EmailStr | None = None
     url: str | None = None
     research_area: str | None = None
     contacted_on: date | None = None
-    response: OutreachResponse = OutreachResponse.none
+    response: AdvisorResponse = AdvisorResponse.none
     notes: str | None = None
 
 
-class OutreachContactUpdate(BaseModel):
+class AdvisorUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
     url: str | None = None
     research_area: str | None = None
     contacted_on: date | None = None
-    response: OutreachResponse | None = None
+    response: AdvisorResponse | None = None
     notes: str | None = None
 
 
@@ -33,7 +33,7 @@ class ProgramSummary(BaseModel):
     department: str
 
 
-class OutreachContactRead(BaseModel):
+class AdvisorRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -43,9 +43,9 @@ class OutreachContactRead(BaseModel):
     url: str | None
     research_area: str | None
     contacted_on: date | None
-    response: OutreachResponse
+    response: AdvisorResponse
     notes: str | None
 
 
-class OutreachContactWithProgramRead(OutreachContactRead):
+class AdvisorWithProgramRead(AdvisorRead):
     program: ProgramSummary
