@@ -115,8 +115,17 @@ export function AssignToProgramDialog({
                     </div>
                   ) : (
                     available.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.school} — {p.department}
+                      <SelectItem
+                        key={p.id}
+                        value={String(p.id)}
+                        className="py-2"
+                      >
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="truncate">{p.school}</span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {p.department}
+                          </span>
+                        </div>
                       </SelectItem>
                     ))
                   )}
