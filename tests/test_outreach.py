@@ -56,6 +56,21 @@ def test_create_contact_with_date_and_response(client, program):
     assert data["response"] == "positive"
 
 
+def test_create_contact_with_research_area(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/outreach",
+        json={**CONTACT_PAYLOAD, "research_area": "Synaptic plasticity"},
+    )
+    assert response.status_code == 201
+    assert response.json()["research_area"] == "Synaptic plasticity"
+
+
+def test_create_contact_defaults_research_area_none(client, program):
+    response = client.post(f"/programs/{program['id']}/outreach", json=CONTACT_PAYLOAD)
+    assert response.status_code == 201
+    assert response.json()["research_area"] is None
+
+
 def test_list_contacts(client, program, contact):
     response = client.get(f"/programs/{program['id']}/outreach")
     assert response.status_code == 200

@@ -9,6 +9,7 @@ class OutreachContactCreate(BaseModel):
     name: str
     email: EmailStr | None = None
     url: str | None = None
+    research_area: str | None = None
     contacted_on: date | None = None
     response: OutreachResponse = OutreachResponse.none
     notes: str | None = None
@@ -18,6 +19,7 @@ class OutreachContactUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
     url: str | None = None
+    research_area: str | None = None
     contacted_on: date | None = None
     response: OutreachResponse | None = None
     notes: str | None = None
@@ -39,6 +41,7 @@ class OutreachContactRead(BaseModel):
     name: str
     email: str | None
     url: str | None
+    research_area: str | None
     contacted_on: date | None
     response: OutreachResponse
     notes: str | None

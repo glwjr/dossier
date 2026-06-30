@@ -29,6 +29,7 @@ class OutreachContact(Base):
     name: Mapped[str] = mapped_column(String)
     email: Mapped[str | None] = mapped_column(String)
     url: Mapped[str | None] = mapped_column(String)
+    research_area: Mapped[str | None] = mapped_column(String)
     contacted_on: Mapped[date | None] = mapped_column(Date)
     response: Mapped[OutreachResponse] = mapped_column(
         SAEnum(OutreachResponse), default=OutreachResponse.none
