@@ -62,9 +62,7 @@ def list_advisors(
     db: Session = Depends(get_db),
 ):
     get_program_or_404(program_id, current_user, db)
-    return db.scalars(
-        select(Advisor).where(Advisor.program_id == program_id)
-    ).all()
+    return db.scalars(select(Advisor).where(Advisor.program_id == program_id)).all()
 
 
 @router.post(

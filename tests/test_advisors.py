@@ -125,9 +125,7 @@ def test_list_all_advisor_isolation(client, db_session):
     )
     db_session.add(prog_b)
     db_session.flush()
-    db_session.add(
-        Advisor(program_id=prog_b.id, name="Prof. X", response="none")
-    )
+    db_session.add(Advisor(program_id=prog_b.id, name="Prof. X", response="none"))
     db_session.flush()
 
     r = client.get("/advisors")
