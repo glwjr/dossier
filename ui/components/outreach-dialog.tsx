@@ -35,6 +35,7 @@ const EMPTY: OutreachCreate = {
   name: "",
   email: "",
   url: "",
+  research_area: "",
   contacted_on: "",
   response: "none",
   notes: "",
@@ -45,6 +46,7 @@ function fromContact(c: OutreachContact): OutreachCreate {
     name: c.name,
     email: c.email ?? "",
     url: c.url ?? "",
+    research_area: c.research_area ?? "",
     contacted_on: c.contacted_on ?? "",
     response: c.response as OutreachCreate["response"],
     notes: c.notes ?? "",
@@ -91,6 +93,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
       ...form,
       email: form.email || null,
       url: form.url || null,
+      research_area: form.research_area || null,
       contacted_on: form.contacted_on || null,
       notes: form.notes || null,
     });
@@ -105,7 +108,7 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isEdit ? "Edit contact" : "Add outreach contact"}
+              {isEdit ? "Edit advisor" : "Add advisor"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
@@ -116,6 +119,16 @@ export function OutreachDialog({ programId, contact, trigger }: Props) {
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="contact-research">Research area</Label>
+              <Input
+                id="contact-research"
+                value={form.research_area ?? ""}
+                onChange={(e) => set("research_area", e.target.value)}
+                placeholder="e.g. Computational neuroscience"
               />
             </div>
 

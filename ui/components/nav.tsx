@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser, Columns2, FileText, Globe, Search } from "lucide-react";
+import { CircleUser, Columns2, FileText, GraduationCap, Search } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 const LINKS = [
@@ -47,11 +47,11 @@ export function Nav() {
             <Search className="h-4 w-4" />
           </button>
           <Link
-            href="/outreach"
-            title="Outreach"
-            className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
+            href="/advisors"
+            title="Advisors"
+            className={`transition-colors hover:text-foreground ${pathname === "/advisors" ? "text-foreground" : "text-muted-foreground"}`}
           >
-            <Globe className="h-4 w-4" />
+            <GraduationCap className="h-4 w-4" />
           </Link>
           <Link
             href="/documents"
@@ -135,12 +135,12 @@ export function Nav() {
                 <Search className="h-5 w-5" />
               </button>
               <Link
-                href="/outreach"
-                aria-label="Outreach"
-                className={`transition-colors hover:text-foreground ${pathname === "/outreach" ? "text-foreground" : "text-muted-foreground"}`}
+                href="/advisors"
+                aria-label="Advisors"
+                className={`transition-colors hover:text-foreground ${pathname === "/advisors" ? "text-foreground" : "text-muted-foreground"}`}
                 onClick={() => setOpen(false)}
               >
-                <Globe className="h-5 w-5" />
+                <GraduationCap className="h-5 w-5" />
               </Link>
               <Link
                 href="/documents"

@@ -436,13 +436,13 @@ function OutreachTab({ programId }: { programId: number }) {
       <div className="flex justify-end">
         <OutreachDialog
           programId={programId}
-          trigger={<Button size="sm"><Plus />Add contact</Button>}
+          trigger={<Button size="sm"><Plus />Add advisor</Button>}
         />
       </div>
       {data.length === 0 && (
         <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No outreach contacts yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Track faculty you&apos;ve contacted and their responses.</p>
+          <p className="text-sm font-medium">No advisors yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Track potential faculty advisors, their research, and any outreach.</p>
         </div>
       )}
       {data.map((c) => (
@@ -452,6 +452,9 @@ function OutreachTab({ programId }: { programId: number }) {
         >
           <div className="min-w-0 flex-1">
             <span className="block truncate">{c.name}</span>
+            {c.research_area && (
+              <span className="block truncate text-xs text-muted-foreground">{c.research_area}</span>
+            )}
             {c.url && (
               <a
                 href={c.url}
@@ -656,7 +659,7 @@ const TAB_LABEL: Record<string, string> = {
   requirements: "Requirements",
   deadlines: "Deadlines",
   recommenders: "Recommenders",
-  outreach: "Outreach",
+  outreach: "Advisors",
   documents: "Documents",
 };
 
@@ -882,7 +885,7 @@ function ProgramDetail({ id }: { id: number }) {
                 Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
               </SelectItem>
               <SelectItem value="outreach">
-                Outreach{outreach.length > 0 && ` (${outreach.length})`}
+                Advisors{outreach.length > 0 && ` (${outreach.length})`}
               </SelectItem>
               <SelectItem value="documents">
                 Documents{documents.length > 0 && ` (${documents.length})`}
@@ -903,7 +906,7 @@ function ProgramDetail({ id }: { id: number }) {
               Recommenders{programRecommenders.length > 0 && ` (${programRecommenders.length})`}
             </TabsTrigger>
             <TabsTrigger value="outreach">
-              Outreach{outreach.length > 0 && ` (${outreach.length})`}
+              Advisors{outreach.length > 0 && ` (${outreach.length})`}
             </TabsTrigger>
             <TabsTrigger value="documents">
               Documents{documents.length > 0 && ` (${documents.length})`}

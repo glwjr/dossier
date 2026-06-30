@@ -74,14 +74,14 @@ function OutreachInner() {
       </div>
     );
 
-  if (error) return <ErrorState title="Failed to load outreach contacts" message="Something went wrong. Try refreshing the page." />;
+  if (error) return <ErrorState title="Failed to load advisors" message="Something went wrong. Try refreshing the page." />;
 
   if (data.length === 0)
     return (
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
-        <p className="text-sm font-medium">No outreach contacts yet</p>
+        <p className="text-sm font-medium">No advisors yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add faculty contacts from a program's Outreach tab.
+          Add potential advisors from a program's Advisors tab.
         </p>
         <Link
           href="/programs"
@@ -100,6 +100,7 @@ function OutreachInner() {
         !q ||
         c.name.toLowerCase().includes(q) ||
         (c.email ?? "").toLowerCase().includes(q) ||
+        (c.research_area ?? "").toLowerCase().includes(q) ||
         c.program.school.toLowerCase().includes(q)
     );
 
@@ -135,6 +136,11 @@ function OutreachInner() {
             </Link>
           )}
           <span className="block truncate font-medium">{c.name}</span>
+          {c.research_area && (
+            <span className="block truncate text-xs text-muted-foreground">
+              {c.research_area}
+            </span>
+          )}
           {c.email && (
             <a
               href={`mailto:${c.email}`}
@@ -245,11 +251,11 @@ function OutreachInner() {
   );
 }
 
-export default function OutreachPage() {
-  usePageTitle("Outreach");
+export default function AdvisorsPage() {
+  usePageTitle("Advisors");
   return (
     <RequireAuth>
-      <h1 className="mb-6 text-2xl font-semibold">Outreach</h1>
+      <h1 className="mb-6 text-2xl font-semibold">Advisors</h1>
       <Suspense
         fallback={
           <div className="space-y-4">

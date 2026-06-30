@@ -37,6 +37,7 @@ export interface OutreachCreate {
   name: string;
   email?: string | null;
   url?: string | null;
+  research_area?: string | null;
   contacted_on?: string | null;
   response?: OutreachResponse;
   notes?: string | null;
@@ -188,6 +189,7 @@ export interface OutreachContact {
   name: string;
   email: string | null;
   url: string | null;
+  research_area: string | null;
   contacted_on: string | null;
   response: "none" | "positive" | "negative" | "meeting_scheduled";
   notes: string | null;

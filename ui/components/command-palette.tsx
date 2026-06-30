@@ -192,7 +192,7 @@ export function CommandPalette() {
     program: "Program",
     requirement: "Requirement",
     recommender: "Recommender",
-    outreach: "Outreach",
+    outreach: "Advisor",
     document: "Document",
   };
 
