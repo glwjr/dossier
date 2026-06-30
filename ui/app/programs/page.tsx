@@ -26,7 +26,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
-import { LayoutList, LayoutGrid, Download } from "lucide-react";
+import { LayoutList, LayoutGrid, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -591,7 +591,7 @@ function ProgramsInner() {
             </PopoverContent>
           </Popover>
           <ProgramDialog
-            trigger={<Button>New program</Button>}
+            trigger={<Button><Plus />New program</Button>}
             open={newProgramOpen}
             onOpenChange={setNewProgramOpen}
           />

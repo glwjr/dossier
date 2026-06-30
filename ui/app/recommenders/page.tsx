@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Recommender } from "@/lib/types";
@@ -272,7 +273,7 @@ export default function RecommendersPage() {
       <div className="mb-6 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Recommenders</h1>
-          <RecommenderDialog trigger={<Button>Add recommender</Button>} />
+          <RecommenderDialog trigger={<Button><Plus />Add recommender</Button>} />
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input

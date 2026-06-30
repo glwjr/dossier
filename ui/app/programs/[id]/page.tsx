@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -120,7 +120,7 @@ function RequirementsTab({ programId }: { programId: number }) {
       <div className="flex justify-end">
         <RequirementDialog
           programId={programId}
-          trigger={<Button size="sm">Add requirement</Button>}
+          trigger={<Button size="sm"><Plus />Add requirement</Button>}
         />
       </div>
       {sorted.length === 0 && (
@@ -240,7 +240,7 @@ function DeadlinesTab({ programId }: { programId: number }) {
       <div className="flex justify-end">
         <DeadlineDialog
           programId={programId}
-          trigger={<Button size="sm">Add deadline</Button>}
+          trigger={<Button size="sm"><Plus />Add deadline</Button>}
         />
       </div>
       {sortedDeadlines.length === 0 && (
@@ -435,7 +435,7 @@ function OutreachTab({ programId }: { programId: number }) {
       <div className="flex justify-end">
         <OutreachDialog
           programId={programId}
-          trigger={<Button size="sm">Add contact</Button>}
+          trigger={<Button size="sm"><Plus />Add contact</Button>}
         />
       </div>
       {data.length === 0 && (
@@ -551,7 +551,7 @@ function DocumentsTab({ programId }: { programId: number }) {
       <div className="flex justify-end">
         <DocumentDialog
           programId={programId}
-          trigger={<Button size="sm">Add document</Button>}
+          trigger={<Button size="sm"><Plus />Add document</Button>}
         />
       </div>
       {data.length === 0 && (
