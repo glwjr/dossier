@@ -124,8 +124,17 @@ def test_assign_recommender_to_program(client, program, recommender):
     data = response.json()
     assert data["recommender_id"] == recommender["id"]
     assert data["program_id"] == program["id"]
-    assert data["status"] == "asked"
+    assert data["status"] == "to_ask"
     assert data["recommender"]["name"] == "Dr. Jane Smith"
+
+
+def test_assign_recommender_with_to_ask_status(client, program, recommender):
+    response = client.post(
+        f"/programs/{program['id']}/recommenders",
+        json={"recommender_id": recommender["id"], "status": "to_ask"},
+    )
+    assert response.status_code == 201
+    assert response.json()["status"] == "to_ask"
 
 
 def test_list_program_recommenders(client, assignment, program):

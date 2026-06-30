@@ -58,6 +58,7 @@ const STATUS_BORDER: Record<string, string> = {
 };
 
 const REC_STATUS_BORDER: Record<string, string> = {
+  to_ask: "",
   asked: "",
   confirmed: "border-l-yellow-500",
   submitted: "border-l-green-500",

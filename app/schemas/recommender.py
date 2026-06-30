@@ -53,7 +53,7 @@ class RecommenderWithAssignmentsRead(RecommenderRead):
 
 class ProgramRecommenderCreate(BaseModel):
     recommender_id: int
-    status: RecommenderStatus = RecommenderStatus.asked
+    status: RecommenderStatus = RecommenderStatus.to_ask
     due_date: date | None = None
     notes: str | None = None
 

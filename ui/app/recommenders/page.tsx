@@ -238,6 +238,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
                         <SelectValue>{REC_STATUS_LABEL[a.status]}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="to_ask">To ask</SelectItem>
                         <SelectItem value="asked">Asked</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
                         <SelectItem value="submitted">Submitted</SelectItem>
@@ -290,6 +291,7 @@ export default function RecommendersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="to_ask">To ask</SelectItem>
               <SelectItem value="asked">Asked</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
               <SelectItem value="submitted">Submitted</SelectItem>

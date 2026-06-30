@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 class RecommenderStatus(str, enum.Enum):
+    to_ask = "to_ask"
     asked = "asked"
     confirmed = "confirmed"
     submitted = "submitted"
@@ -46,7 +47,7 @@ class ProgramRecommender(Base):
         ForeignKey("programs.id", ondelete="CASCADE"), index=True
     )
     status: Mapped[RecommenderStatus] = mapped_column(
-        SAEnum(RecommenderStatus), default=RecommenderStatus.asked
+        SAEnum(RecommenderStatus), default=RecommenderStatus.to_ask
     )
     due_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)

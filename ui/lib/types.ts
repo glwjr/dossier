@@ -55,7 +55,7 @@ export type RecommenderUpdate = Partial<RecommenderCreate>;
 
 export interface ProgramRecommenderCreate {
   recommender_id: number;
-  status: "asked" | "confirmed" | "submitted";
+  status: "to_ask" | "asked" | "confirmed" | "submitted";
   due_date?: string | null;
   notes?: string | null;
 }
@@ -157,7 +157,7 @@ export interface DeadlineWithProgram extends Deadline {
 
 export interface ProgramAssignmentSummary {
   program_id: number;
-  status: "asked" | "confirmed" | "submitted";
+  status: "to_ask" | "asked" | "confirmed" | "submitted";
   due_date: string | null;
   program: { id: number; school: string; department: string };
 }
@@ -176,7 +176,7 @@ export interface ProgramRecommender {
   id: number;
   recommender_id: number;
   program_id: number;
-  status: "asked" | "confirmed" | "submitted";
+  status: "to_ask" | "asked" | "confirmed" | "submitted";
   due_date: string | null;
   notes: string | null;
   recommender: Recommender;

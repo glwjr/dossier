@@ -70,6 +70,7 @@ export const DEADLINE_KIND_LABEL: Record<string, string> = {
 };
 
 export const REC_STATUS_LABEL: Record<string, string> = {
+  to_ask: "To ask",
   asked: "Asked",
   confirmed: "Confirmed",
   submitted: "Submitted",

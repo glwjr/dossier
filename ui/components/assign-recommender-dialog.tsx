@@ -37,6 +37,7 @@ interface Props {
 }
 
 const STATUS_OPTIONS = [
+  { value: "to_ask", label: "To ask" },
   { value: "asked", label: "Asked" },
   { value: "confirmed", label: "Confirmed" },
   { value: "submitted", label: "Submitted" },
@@ -52,7 +53,7 @@ export function AssignRecommenderDialog({
   const [recommenderId, setRecommenderId] = useState<number | "">(
     assignment?.recommender_id ?? ""
   );
-  const [status, setStatus] = useState(assignment?.status ?? "asked");
+  const [status, setStatus] = useState(assignment?.status ?? "to_ask");
   const [dueDate, setDueDate] = useState(assignment?.due_date ?? "");
   const [notes, setNotes] = useState(assignment?.notes ?? "");
   const queryClient = useQueryClient();
@@ -88,7 +89,7 @@ export function AssignRecommenderDialog({
 
   function handleOpen() {
     setRecommenderId(assignment?.recommender_id ?? "");
-    setStatus(assignment?.status ?? "asked");
+    setStatus(assignment?.status ?? "to_ask");
     setDueDate(assignment?.due_date ?? "");
     setNotes(assignment?.notes ?? "");
     setOpen(true);

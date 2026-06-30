@@ -38,7 +38,7 @@ export function AssignToProgramDialog({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [programId, setProgramId] = useState<number | "">("");
-  const [status, setStatus] = useState("asked");
+  const [status, setStatus] = useState("to_ask");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
@@ -70,7 +70,7 @@ export function AssignToProgramDialog({
 
   function handleOpen() {
     setProgramId("");
-    setStatus("asked");
+    setStatus("to_ask");
     setDueDate("");
     setNotes("");
     setOpen(true);
@@ -141,6 +141,7 @@ export function AssignToProgramDialog({
                     <SelectValue>{REC_STATUS_LABEL[status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="to_ask">To ask</SelectItem>
                     <SelectItem value="asked">Asked</SelectItem>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="submitted">Submitted</SelectItem>
