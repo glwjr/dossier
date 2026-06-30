@@ -32,7 +32,7 @@ export function Nav() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex">
           {LINKS.map(({ href, label }) => (
             <Link key={href} href={href} className={linkClass(href)}>
               {label}
@@ -93,7 +93,7 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="cursor-pointer text-muted-foreground hover:text-foreground md:hidden"
+          className="cursor-pointer text-muted-foreground hover:text-foreground lg:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -114,7 +114,7 @@ export function Nav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t md:hidden">
+        <div className="border-t lg:hidden">
           <nav className="flex flex-col gap-4 px-4 py-4">
             {LINKS.map(({ href, label }) => (
               <Link
