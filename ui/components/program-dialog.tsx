@@ -250,7 +250,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="decision_deadline">Decision deadline</Label>
+              <Label htmlFor="decision_deadline">Reply deadline</Label>
               <Input
                 id="decision_deadline"
                 type="date"

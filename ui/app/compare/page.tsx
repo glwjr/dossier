@@ -215,7 +215,7 @@ function CompareInner() {
 
               <tr className="border-b">
                 <td className="sticky left-0 z-10 bg-background px-4 py-3 text-xs font-medium text-muted-foreground">
-                  Decision by
+                  Reply by
                 </td>
                 {selected.map((p) => {
                   if (!p.decision_deadline)

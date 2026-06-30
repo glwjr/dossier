@@ -712,6 +712,9 @@ function ProgramDetail({ id }: { id: number }) {
     queryFn: () => api.get(`/programs/${id}/documents`),
     enabled: !!program,
   });
+  const applicationDeadline = [...deadlines]
+    .filter((d) => d.kind === "application")
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))[0];
 
   usePageTitle(program ? program.school : "Program");
 
@@ -797,12 +800,15 @@ function ProgramDetail({ id }: { id: number }) {
             <p className="mt-0.5 text-sm text-muted-foreground">{program.location}</p>
           )}
           <div className="mt-2 text-sm text-muted-foreground">
-            {(program.app_fee != null || program.stipend != null || program.decision_deadline) && (
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+            {(program.app_fee != null || program.stipend != null || applicationDeadline || program.decision_deadline) && (
+              <div className="flex flex-wrap gap-x-2 gap-y-0.5 [&>span~span]:before:mr-2 [&>span~span]:before:text-muted-foreground/50 [&>span~span]:before:content-['·']">
                 {program.app_fee != null && <span>${program.app_fee} fee</span>}
                 {program.stipend != null && <span>${program.stipend.toLocaleString()}/yr stipend</span>}
+                {applicationDeadline && (
+                  <span>Apply by {formatDate(applicationDeadline.due_date)}</span>
+                )}
                 {program.decision_deadline && (
-                  <span>Decision by {formatDate(program.decision_deadline)}</span>
+                  <span>Reply by {formatDate(program.decision_deadline)}</span>
                 )}
               </div>
             )}
