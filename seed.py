@@ -13,10 +13,10 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.db import SessionLocal, engine
+from app.models.advisor import Advisor, AdvisorResponse
 from app.models.base import Base
 from app.models.deadline import Deadline, DeadlineKind
 from app.models.document import Document, DocumentKind, DocumentStatus
-from app.models.outreach import OutreachContact, OutreachResponse
 from app.models.program import Program, ProgramStatus, Tier
 from app.models.recommender import (
     ProgramRecommender,
@@ -259,7 +259,9 @@ _ASSIGNMENTS: dict[
         (1, RecommenderStatus.confirmed, date(2025, 12, 15), None),
         (2, RecommenderStatus.asked, date(2025, 12, 15), None),
     ],
-    9: [],  # Georgetown — researching, no assignments yet
+    9: [  # Georgetown — researching; planning to ask for next cycle
+        (0, RecommenderStatus.to_ask, None, "Plan to ask if applying next cycle."),
+    ],
 }
 
 # ---------------------------------------------------------------------------
@@ -592,17 +594,18 @@ _DEADLINES: dict[int, list[dict]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Outreach contacts
+# Advisors
 # ---------------------------------------------------------------------------
 
-_OUTREACH: dict[int, list[dict]] = {
+_ADVISORS: dict[int, list[dict]] = {
     0: [  # MIT
         {
             "name": "Prof. Regina Barzilay",
+            "research_area": "Clinical NLP & ML for medicine",
             "email": "regina@csail.mit.edu",
             "url": "https://people.csail.mit.edu/regina/",
             "contacted_on": date(2025, 10, 3),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": (
                 "Replied within 48h. Encouraged applying."
                 " Mentioned her clinical NLP work."
@@ -610,20 +613,22 @@ _OUTREACH: dict[int, list[dict]] = {
         },
         {
             "name": "Prof. Yoon Kim",
+            "research_area": "Deep learning & structured prediction for NLP",
             "email": "yoonkim@mit.edu",
             "url": "https://people.csail.mit.edu/yoonkim/",
             "contacted_on": date(2025, 10, 10),
-            "response": OutreachResponse.none,
+            "response": AdvisorResponse.none,
             "notes": "No response after two weeks.",
         },
     ],
     1: [  # Stanford
         {
             "name": "Prof. Christopher Manning",
+            "research_area": "Foundations of NLP & deep learning",
             "email": "manning@cs.stanford.edu",
             "url": "https://nlp.stanford.edu/~manning/",
             "contacted_on": date(2025, 10, 5),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": (
                 "Encouraged applying. Noted the lab is relatively full"
                 " but will review apps closely."
@@ -631,19 +636,21 @@ _OUTREACH: dict[int, list[dict]] = {
         },
         {
             "name": "Prof. Dan Jurafsky",
+            "research_area": "Computational linguistics & NLP for social science",
             "email": "jurafsky@stanford.edu",
             "contacted_on": date(2025, 10, 12),
-            "response": OutreachResponse.none,
+            "response": AdvisorResponse.none,
             "notes": "Auto-reply directing to application portal.",
         },
     ],
     2: [  # CMU
         {
             "name": "Prof. Graham Neubig",
+            "research_area": "Multilingual NLP & machine translation",
             "email": "gneubig@cs.cmu.edu",
             "url": "http://www.phontron.com/",
             "contacted_on": date(2025, 10, 8),
-            "response": OutreachResponse.meeting_scheduled,
+            "response": AdvisorResponse.meeting_scheduled,
             "notes": (
                 "Zoom call Oct 22. Discussed multilingual LLM evaluation project."
                 " Very positive — thinks I'm a good fit."
@@ -651,9 +658,10 @@ _OUTREACH: dict[int, list[dict]] = {
         },
         {
             "name": "Prof. Yulia Tsvetkov",
+            "research_area": "Multilingual & socially-aware NLP",
             "email": "ytsvetko@cs.cmu.edu",
             "contacted_on": date(2025, 10, 20),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": (
                 "Brief reply — said she's taking 1-2 students"
                 " and to mention our conversation in the SOP."
@@ -663,10 +671,11 @@ _OUTREACH: dict[int, list[dict]] = {
     3: [  # Berkeley
         {
             "name": "Prof. David Bamman",
+            "research_area": "NLP for the humanities & cultural analytics",
             "email": "dbamman@berkeley.edu",
             "url": "http://people.ischool.berkeley.edu/~dbamman/",
             "contacted_on": date(2025, 10, 15),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": (
                 "Replied; noted the application deadline"
                 " and said he reviews all materials carefully."
@@ -676,10 +685,11 @@ _OUTREACH: dict[int, list[dict]] = {
     4: [  # UW
         {
             "name": "Prof. Noah Smith",
+            "research_area": "NLP with structured & low-resource models",
             "email": "nasmith@cs.washington.edu",
             "url": "https://nasmith.github.io/",
             "contacted_on": date(2025, 10, 7),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": (
                 "Responded quickly. Interested in my work on low-resource parsing."
                 " Suggested connecting with his postdoc."
@@ -687,38 +697,42 @@ _OUTREACH: dict[int, list[dict]] = {
         },
         {
             "name": "Prof. Luke Zettlemoyer",
+            "research_area": "Semantic parsing & large language models",
             "email": "lsz@cs.washington.edu",
             "contacted_on": date(2025, 10, 20),
-            "response": OutreachResponse.none,
+            "response": AdvisorResponse.none,
             "notes": "No response.",
         },
     ],
     5: [  # JHU
         {
             "name": "Prof. Benjamin Van Durme",
+            "research_area": "Semantics & information extraction",
             "email": "vandurme@cs.jhu.edu",
             "url": "https://www.cs.jhu.edu/~vandurme/",
             "contacted_on": date(2025, 10, 18),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": "Enthusiastic reply. CLSP community seems very collaborative.",
         },
     ],
     8: [  # Ohio State
         {
             "name": "Prof. Micha Elsner",
+            "research_area": "Computational morphology & psycholinguistics",
             "email": "elsner@ling.osu.edu",
             "contacted_on": date(2025, 11, 1),
-            "response": OutreachResponse.positive,
+            "response": AdvisorResponse.positive,
             "notes": "Brief but encouraging reply.",
         },
     ],
     9: [  # Georgetown
         {
             "name": "Prof. Nathan Schneider",
+            "research_area": "Computational semantics & Universal Dependencies",
             "email": "nathan.schneider@georgetown.edu",
             "url": "https://people.cs.georgetown.edu/nschneid/",
             "contacted_on": date(2026, 3, 15),
-            "response": OutreachResponse.meeting_scheduled,
+            "response": AdvisorResponse.meeting_scheduled,
             "notes": (
                 "Zoom call April 2. Interested in Universal Dependencies work."
                 " Considering applying next cycle."
@@ -856,7 +870,7 @@ def seed() -> None:
         db.flush()
         print(f"Created {len(recommenders)} recommender(s).")
 
-        total_reqs = total_deadlines = total_outreach = 0
+        total_reqs = total_deadlines = total_advisors = 0
         total_docs = total_assignments = 0
 
         for i, prog_data in enumerate(_PROGRAMS):
@@ -895,9 +909,9 @@ def seed() -> None:
                 )
                 total_assignments += 1
 
-            for contact_data in _OUTREACH.get(i, []):
-                db.add(OutreachContact(**contact_data, program_id=prog.id))
-                total_outreach += 1
+            for advisor_data in _ADVISORS.get(i, []):
+                db.add(Advisor(**advisor_data, program_id=prog.id))
+                total_advisors += 1
 
             for doc_data in _documents(i, prog.status):
                 db.add(Document(**doc_data, program_id=prog.id))
@@ -909,7 +923,7 @@ def seed() -> None:
         print(f"  {total_reqs} requirements")
         print(f"  {total_deadlines} deadlines")
         print(f"  {total_assignments} recommender assignments")
-        print(f"  {total_outreach} outreach contacts")
+        print(f"  {total_advisors} advisors")
         print(f"  {total_docs} documents")
 
 

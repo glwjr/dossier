@@ -1,6 +1,6 @@
 # Dossier
 
-Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, faculty outreach, and draft documents — all in one place.
+Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, potential faculty advisors, and draft documents — all in one place.
 
 - **Backend**: FastAPI + SQLAlchemy, deployed on Render
 - **Frontend**: Next.js 16 App Router, deployed on Vercel
@@ -104,7 +104,7 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 
 ## API endpoints
 
-Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/recommenders`, `/outreach`, `/documents`) support **opt-in pagination** via `?limit=` (1–500) and `?offset=` query params. With no params, the full collection is returned, so existing clients are unaffected.
+Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/recommenders`, `/advisors`, `/documents`) support **opt-in pagination** via `?limit=` (1–500) and `?offset=` query params. With no params, the full collection is returned, so existing clients are unaffected.
 
 | Method | Path | Description |
 |---|---|---|
@@ -118,7 +118,7 @@ Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/re
 | `GET` | `/dashboard` | Per-program summary (completion %, next deadline, blocking requirements) |
 | `GET` | `/requirements` | List all requirements across programs |
 | `GET` | `/deadlines` | List all deadlines across programs |
-| `GET` | `/outreach` | List all outreach contacts across programs |
+| `GET` | `/advisors` | List all potential advisors across programs |
 | `GET` | `/documents` | List all documents across programs |
 | `GET` `POST` | `/programs` | List / create programs |
 | `GET` `PATCH` `DELETE` | `/programs/{id}` | Get / update / delete a program |
@@ -130,8 +130,8 @@ Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/re
 | `PATCH` `DELETE` | `/recommenders/{id}` | Update / delete a recommender |
 | `GET` `POST` | `/programs/{id}/recommenders` | List / assign recommenders to a program |
 | `PATCH` `DELETE` | `/programs/{id}/recommenders/{rec_id}` | Update / remove assignment |
-| `GET` `POST` | `/programs/{id}/outreach` | List / create faculty outreach contacts |
-| `PATCH` `DELETE` | `/outreach/{id}` | Update / delete a contact |
+| `GET` `POST` | `/programs/{id}/advisors` | List / create potential faculty advisors |
+| `PATCH` `DELETE` | `/advisors/{id}` | Update / delete an advisor |
 | `GET` `POST` | `/programs/{id}/documents` | List / create documents |
 | `PATCH` `DELETE` | `/documents/{id}` | Update / delete a document |
 
