@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.dossiertool.com";
-
 export function proxy(request: NextRequest) {
   const token = request.cookies.get("dossier_token")?.value;
   if (!token) {
-    return NextResponse.redirect(`${API_URL}/auth/login`);
+    // In-app landing page (offers Google sign-in and the no-signup demo).
+    // Exempt from this matcher via the `auth/` exclusion below, so no loop.
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
   return NextResponse.next();
 }
