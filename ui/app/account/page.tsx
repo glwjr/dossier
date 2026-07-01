@@ -18,6 +18,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 function AccountInner() {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["me"],
     queryFn: () => api.get("/me"),
@@ -33,6 +34,15 @@ function AccountInner() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       toast.success("Calendar link disabled");
+    },
+    onError: onMutationError,
+  });
+
+  const deleteAccount = useMutation({
+    mutationFn: () => api.delete("/me"),
+    onSuccess: () => {
+      clearToken();
+      redirectToHome();
     },
     onError: onMutationError,
   });
@@ -160,6 +170,38 @@ function AccountInner() {
           Sign out
         </Button>
       </div>
+
+      <div className="space-y-2 border-t pt-6">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Danger zone
+        </p>
+        {confirmDelete ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              This permanently deletes your account and everything in it —
+              programs, requirements, deadlines, recommenders, advisors, and
+              documents. This cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                onClick={() => deleteAccount.mutate()}
+                disabled={deleteAccount.isPending}
+              >
+                {deleteAccount.isPending ? "Deleting…" : "Delete everything"}
+              </Button>
+              <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+            Delete account
+          </Button>
+        )}
+      </div>
+
     </div>
   );
 }

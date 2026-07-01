@@ -3,9 +3,9 @@ import secrets
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import Response
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
@@ -25,6 +25,31 @@ router = APIRouter(tags=["me"])
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Permanently delete the account and all of its data (GDPR erasure).
+
+    Children are removed explicitly in foreign-key-safe order rather than
+    relying on ON DELETE CASCADE, so deletion works regardless of the schema's
+    cascade configuration.
+    """
+    program_ids = select(Program.id).where(Program.user_id == current_user.id)
+    db.execute(delete(Requirement).where(Requirement.program_id.in_(program_ids)))
+    db.execute(delete(Deadline).where(Deadline.program_id.in_(program_ids)))
+    db.execute(delete(Advisor).where(Advisor.program_id.in_(program_ids)))
+    db.execute(delete(Document).where(Document.program_id.in_(program_ids)))
+    db.execute(
+        delete(ProgramRecommender).where(ProgramRecommender.program_id.in_(program_ids))
+    )
+    db.execute(delete(Program).where(Program.user_id == current_user.id))
+    db.execute(delete(Recommender).where(Recommender.user_id == current_user.id))
+    db.delete(current_user)
+    db.commit()
 
 
 @router.post("/me/calendar-token", response_model=UserRead)
