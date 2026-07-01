@@ -1,25 +1,56 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { User } from "@/lib/types";
 import { clearToken, getToken, redirectToHome } from "@/lib/auth";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { formatDate } from "@/lib/display";
+import { onMutationError } from "@/lib/mutation-error";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
 
 function AccountInner() {
+  const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["me"],
     queryFn: () => api.get("/me"),
   });
 
+  const generateToken = useMutation({
+    mutationFn: () => api.post<User>("/me/calendar-token", {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] }),
+    onError: onMutationError,
+  });
+  const revokeToken = useMutation({
+    mutationFn: () => api.delete("/me/calendar-token"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Calendar link disabled");
+    },
+    onError: onMutationError,
+  });
+
   function handleSignOut() {
     clearToken();
     redirectToHome();
+  }
+
+  const feedUrl = user?.calendar_token
+    ? `${process.env.NEXT_PUBLIC_API_URL}/calendar/${user.calendar_token}.ics`
+    : "";
+  const webcalUrl = feedUrl.replace(/^https?:\/\//, "webcal://");
+
+  function copyFeed() {
+    navigator.clipboard.writeText(feedUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   async function handleExport() {
@@ -68,7 +99,60 @@ function AccountInner() {
           </p>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="space-y-2 border-t pt-6">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Calendar subscription
+        </p>
+        {user.calendar_token ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Subscribe in Google/Apple Calendar to get your deadlines and dated
+              requirements as events. Keep this link private.
+            </p>
+            <div className="flex gap-2">
+              <Input readOnly value={feedUrl} className="text-xs" />
+              <Button variant="outline" onClick={copyFeed}>
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a href={webcalUrl} className={buttonVariants({ variant: "outline" })}>
+                Subscribe
+              </a>
+              <Button
+                variant="outline"
+                onClick={() => generateToken.mutate()}
+                disabled={generateToken.isPending}
+              >
+                Regenerate
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => revokeToken.mutate()}
+                disabled={revokeToken.isPending}
+              >
+                Disable
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Generate a private link to subscribe to your deadlines from any
+              calendar app.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => generateToken.mutate()}
+              disabled={generateToken.isPending}
+            >
+              {generateToken.isPending ? "Generating…" : "Generate calendar link"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2 border-t pt-6">
         <Button variant="outline" onClick={handleExport}>
           Export my data
         </Button>

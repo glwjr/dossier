@@ -11,6 +11,7 @@ from app.routers import (
     admin,
     advisor,
     auth,
+    calendar,
     dashboard,
     deadlines,
     documents,
@@ -45,6 +46,7 @@ app.include_router(recommenders.router)
 app.include_router(advisor.router)
 app.include_router(documents.router)
 app.include_router(dashboard.router)
+app.include_router(calendar.router)
 
 
 @app.get("/health")

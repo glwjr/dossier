@@ -1,4 +1,5 @@
 import json
+import secrets
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -23,6 +24,30 @@ router = APIRouter(tags=["me"])
 
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.post("/me/calendar-token", response_model=UserRead)
+def rotate_calendar_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate (or rotate) the secret token for the private .ics calendar feed."""
+    current_user.calendar_token = secrets.token_urlsafe(24)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.delete("/me/calendar-token", response_model=UserRead)
+def revoke_calendar_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke the calendar feed; existing subscribers stop receiving updates."""
+    current_user.calendar_token = None
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 

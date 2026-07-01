@@ -9,4 +9,5 @@ class UserRead(BaseModel):
     id: int
     email: str
     name: str
+    calendar_token: str | None
     created_at: datetime

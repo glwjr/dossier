@@ -235,5 +235,6 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  calendar_token: string | null;
   created_at: string;
 }
