@@ -538,7 +538,7 @@ function ProgramsInner() {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
         <div className="flex items-center gap-2">
           <div className="hidden items-center rounded-md border md:flex">

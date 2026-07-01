@@ -378,7 +378,7 @@ function RequirementsInner() {
 
   return (
     <>
-      <div className="mb-6 space-y-3">
+      <div className="mb-6 space-y-6">
         <h1 className="text-2xl font-semibold">Requirements</h1>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input

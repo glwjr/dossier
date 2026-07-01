@@ -271,7 +271,7 @@ export default function RecommendersPage() {
 
   return (
     <RequireAuth>
-      <div className="mb-6 space-y-3">
+      <div className="mb-6 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Recommenders</h1>
           <RecommenderDialog trigger={<Button><Plus />Add recommender</Button>} />

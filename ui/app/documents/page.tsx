@@ -245,7 +245,7 @@ function DocumentsInner() {
 
   return (
     <>
-      <div className="mb-6 space-y-3">
+      <div className="mb-6 space-y-6">
         <h1 className="text-2xl font-semibold">Documents</h1>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input
@@ -305,7 +305,7 @@ function DocumentsInner() {
 function DocumentsPageSkeleton() {
   return (
     <>
-      <div className="mb-6 space-y-3">
+      <div className="mb-6 space-y-6">
         <Skeleton className="h-8 w-36" />
         <Skeleton className="h-9 w-full" />
         <div className="flex gap-2">
