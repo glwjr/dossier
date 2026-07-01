@@ -5,12 +5,23 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.db import get_db
 from app.models.program import Program
+from app.models.requirement import Requirement, RequirementKind
 from app.models.user import User
 from app.ownership import get_program_or_404
 from app.pagination import Pagination, pagination
 from app.schemas.program import ProgramCreate, ProgramRead, ProgramUpdate
 
 router = APIRouter(prefix="/programs", tags=["programs"])
+
+# Standard checklist auto-created when a program is added with
+# ?with_default_requirements=true. (label, kind)
+_DEFAULT_REQUIREMENTS = [
+    ("Statement of Purpose", RequirementKind.sop),
+    ("CV / Résumé", RequirementKind.cv),
+    ("Transcripts", RequirementKind.transcript),
+    ("Letters of recommendation", RequirementKind.other),
+    ("Application fee", RequirementKind.fee),
+]
 
 
 @router.get("", response_model=list[ProgramRead])
@@ -30,11 +41,16 @@ def list_programs(
 @router.post("", response_model=ProgramRead, status_code=status.HTTP_201_CREATED)
 def create_program(
     body: ProgramCreate,
+    with_default_requirements: bool = False,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     program = Program(**body.model_dump(), user_id=current_user.id)
     db.add(program)
+    db.flush()
+    if with_default_requirements:
+        for label, kind in _DEFAULT_REQUIREMENTS:
+            db.add(Requirement(program_id=program.id, label=label, kind=kind))
     db.commit()
     db.refresh(program)
     return program

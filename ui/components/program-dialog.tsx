@@ -9,6 +9,7 @@ import {
   PROGRAM_TIER_LABEL,
 } from "@/lib/display";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import {
@@ -74,16 +75,22 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
   const [form, setForm] = useState<ProgramCreate>(
     program ? fromProgram(program) : EMPTY
   );
+  const [withDefaults, setWithDefaults] = useState(true);
   const queryClient = useQueryClient();
 
   const mutation = useMutation<Program, Error, ProgramCreate>({
     mutationFn: (data) =>
       isEdit
         ? api.patch<Program>(`/programs/${program.id}`, data)
-        : api.post<Program>("/programs", data),
+        : api.post<Program>(
+            `/programs${withDefaults ? "?with_default_requirements=true" : ""}`,
+            data
+          ),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["programs"] });
       queryClient.invalidateQueries({ queryKey: ["program", result.id] });
+      queryClient.invalidateQueries({ queryKey: ["requirements", result.id] });
+      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(isEdit ? "Program updated" : "Program created");
       setOpen(false);
@@ -98,6 +105,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
 
   function handleOpen() {
     setForm(program ? fromProgram(program) : EMPTY);
+    setWithDefaults(true);
     setOpen(true);
   }
 
@@ -269,6 +277,16 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                 rows={3}
               />
             </div>
+
+            {!isEdit && (
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  checked={withDefaults}
+                  onCheckedChange={(v) => setWithDefaults(v === true)}
+                />
+                Add standard requirements (SOP, CV, transcripts, letters, fee)
+              </label>
+            )}
 
             {mutation.error && (
               <p className="text-sm text-destructive">

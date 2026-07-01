@@ -33,6 +33,30 @@ def test_create_program(client, dev_user):
     assert "updated_at" in data
 
 
+def test_create_program_no_default_requirements_by_default(client, dev_user):
+    pid = client.post("/programs", json=PROGRAM_PAYLOAD).json()["id"]
+    reqs = client.get(f"/programs/{pid}/requirements").json()
+    assert reqs == []
+
+
+def test_create_program_with_default_requirements(client, dev_user):
+    response = client.post(
+        "/programs?with_default_requirements=true", json=PROGRAM_PAYLOAD
+    )
+    assert response.status_code == 201
+    pid = response.json()["id"]
+    reqs = client.get(f"/programs/{pid}/requirements").json()
+    labels = [r["label"] for r in reqs]
+    assert labels == [
+        "Statement of Purpose",
+        "CV / Résumé",
+        "Transcripts",
+        "Letters of recommendation",
+        "Application fee",
+    ]
+    assert all(r["status"] == "todo" for r in reqs)
+
+
 def test_create_program_rejects_negative_app_fee(client, dev_user):
     response = client.post("/programs", json={**PROGRAM_PAYLOAD, "app_fee": -5})
     assert response.status_code == 422
