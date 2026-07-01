@@ -18,7 +18,16 @@ export function clearToken(): void {
 }
 
 export function redirectToLogin(): void {
+  // In-app landing page offering Google sign-in and the no-signup demo.
+  window.location.href = "/auth/login";
+}
+
+export function startGoogleLogin(): void {
   window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
+}
+
+export function startDemo(): void {
+  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/demo`;
 }
 
 export function redirectToHome(): void {

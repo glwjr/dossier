@@ -13,7 +13,9 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.db import SessionLocal, engine
+from app.demo import _delete_users
 from app.models.advisor import Advisor, AdvisorResponse
+from app.models.app_meta import AppMeta
 from app.models.base import Base
 from app.models.deadline import Deadline, DeadlineKind
 from app.models.document import Document, DocumentKind, DocumentStatus
@@ -838,19 +840,25 @@ _APP_DEADLINE: dict[int, date] = {
 }
 
 
-def seed() -> None:
+def seed(email: str | None = None, name: str = "Dev User") -> None:
+    """Seed the given user (defaults to the dev user) with sample data.
+
+    Pass the demo template email to build the source account that /auth/demo
+    clones for each visitor, e.g. `python seed.py demo-template@dossiertool.com`.
+    """
+    email = email or settings.dev_user_email
+
     Base.metadata.create_all(engine)
 
     with SessionLocal() as db:
-        # Dev user
-        user = db.scalar(select(User).where(User.email == settings.dev_user_email))
+        user = db.scalar(select(User).where(User.email == email))
         if user is None:
-            user = User(email=settings.dev_user_email, name="Dev User")
+            user = User(email=email, name=name)
             db.add(user)
             db.flush()
-            print(f"Created dev user: {settings.dev_user_email}")
+            print(f"Created user: {email}")
         else:
-            print(f"Dev user already exists: {settings.dev_user_email}")
+            print(f"User already exists: {email}")
 
         existing = db.scalars(select(Program).where(Program.user_id == user.id)).all()
         if existing:
@@ -927,5 +935,67 @@ def seed() -> None:
         print(f"  {total_docs} documents")
 
 
+# Bump when the sample content below changes so deploys rebuild the template.
+DEMO_TEMPLATE_VERSION = 1
+_DEMO_VERSION_KEY = "demo_template_version"
+
+
+def _get_meta(db, key: str) -> str | None:
+    return db.scalar(select(AppMeta.value).where(AppMeta.key == key))
+
+
+def _set_meta(db, key: str, value: str) -> None:
+    row = db.get(AppMeta, key)
+    if row is None:
+        db.add(AppMeta(key=key, value=value))
+    else:
+        row.value = value
+
+
+def _needs_reseed(user_exists: bool, stored: str | None, current: str) -> bool:
+    """Rebuild unless the template exists AND its stored version is current."""
+    return not (user_exists and stored == current)
+
+
+def seed_demo_template() -> None:
+    """Idempotently seed (and version) the /auth/demo template account.
+
+    Safe to run on every deploy: a no-op when DEMO_TEMPLATE_EMAIL is unset or
+    the template is already at DEMO_TEMPLATE_VERSION. When the version has been
+    bumped, the old template is wiped and rebuilt so sample changes ship.
+    """
+    if not settings.demo_template_email:
+        print("DEMO_TEMPLATE_EMAIL not set — skipping demo template seed.")
+        return
+
+    Base.metadata.create_all(engine)
+    email = settings.demo_template_email
+    current = str(DEMO_TEMPLATE_VERSION)
+
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.email == email))
+        stored = _get_meta(db, _DEMO_VERSION_KEY)
+        if not _needs_reseed(user is not None, stored, current):
+            print(f"Demo template already at v{current} — skipping.")
+            return
+        if user is not None:
+            print(f"Demo template outdated (v{stored} → v{current}) — rebuilding.")
+            _delete_users(db, [user.id])
+            db.commit()
+
+    seed(email=email, name="Demo User")
+
+    with SessionLocal() as db:
+        _set_meta(db, _DEMO_VERSION_KEY, current)
+        db.commit()
+
+
 if __name__ == "__main__":
-    seed()
+    import sys
+
+    if "--demo" in sys.argv[1:]:
+        seed_demo_template()
+    elif len(sys.argv) > 1:
+        seed(email=sys.argv[1], name="Demo User")
+    else:
+        seed()

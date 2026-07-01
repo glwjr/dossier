@@ -1,4 +1,5 @@
 from app.models.advisor import Advisor
+from app.models.app_meta import AppMeta
 from app.models.base import Base
 from app.models.deadline import Deadline
 from app.models.document import Document
@@ -9,6 +10,7 @@ from app.models.user import User
 
 __all__ = [
     "Advisor",
+    "AppMeta",
     "Base",
     "Deadline",
     "Document",

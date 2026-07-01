@@ -16,6 +16,16 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/auth/callback"
     frontend_url: str = ""
     admin_email: str = ""
+    # Ephemeral demo login: /auth/demo clones this user's data into a throwaway
+    # account. Leave blank to disable the demo endpoint entirely.
+    demo_template_email: str = ""
+    # Demo accounts older than this are garbage-collected. Kept >= the token
+    # lifetime (access_token_expire_minutes) so a session's data never vanishes
+    # mid-use.
+    demo_ttl_hours: int = 24 * 7
+    # Hard ceiling on live demo accounts — the oldest are evicted past this to
+    # bound DB bloat (each demo login writes ~150 rows).
+    demo_max_users: int = 500
 
     @model_validator(mode="after")
     def _require_secret_key_in_prod(self) -> "Settings":
