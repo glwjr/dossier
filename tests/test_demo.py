@@ -347,3 +347,25 @@ def test_demo_user_cannot_delete_account(raw_client, db_session):
     response = raw_client.delete("/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 403
     assert db_session.scalar(select(User).where(User.id == demo.id)) is not None
+
+
+def test_demo_user_cannot_create_calendar_token(raw_client, db_session):
+    demo = _demo_user(db_session, "cal", hours_old=0)
+    token = create_access_token({"sub": demo.email})
+
+    response = raw_client.post(
+        "/me/calendar-token", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 403
+    db_session.refresh(demo)
+    assert demo.calendar_token is None
+
+
+def test_demo_user_cannot_revoke_calendar_token(raw_client, db_session):
+    demo = _demo_user(db_session, "cal2", hours_old=0)
+    token = create_access_token({"sub": demo.email})
+
+    response = raw_client.delete(
+        "/me/calendar-token", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 403

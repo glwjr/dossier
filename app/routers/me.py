@@ -22,6 +22,15 @@ from app.schemas.user import UserRead
 router = APIRouter(tags=["me"])
 
 
+def _reject_demo(current_user: User) -> None:
+    """Block account-management mutations on TTL-managed demo accounts."""
+    if current_user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not available on demo accounts",
+        )
+
+
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -38,13 +47,8 @@ def delete_me(
     relying on ON DELETE CASCADE, so deletion works regardless of the schema's
     cascade configuration.
     """
-    if current_user.is_demo:
-        # Demo accounts are TTL-managed; self-deletion would just orphan the
-        # session and confuse the visitor.
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Demo accounts cannot be deleted",
-        )
+    # Demo accounts are TTL-managed; self-deletion would just orphan the session.
+    _reject_demo(current_user)
 
     program_ids = select(Program.id).where(Program.user_id == current_user.id)
     db.execute(delete(Requirement).where(Requirement.program_id.in_(program_ids)))
@@ -66,6 +70,7 @@ def rotate_calendar_token(
     db: Session = Depends(get_db),
 ):
     """Generate (or rotate) the secret token for the private .ics calendar feed."""
+    _reject_demo(current_user)
     current_user.calendar_token = secrets.token_urlsafe(24)
     db.commit()
     db.refresh(current_user)
@@ -78,6 +83,7 @@ def revoke_calendar_token(
     db: Session = Depends(get_db),
 ):
     """Revoke the calendar feed; existing subscribers stop receiving updates."""
+    _reject_demo(current_user)
     current_user.calendar_token = None
     db.commit()
     db.refresh(current_user)
