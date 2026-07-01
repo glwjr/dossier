@@ -119,12 +119,15 @@ def callback(
     return _issue_token(email)
 
 
-@router.get("/demo")
+@router.post("/demo")
 def demo_login(db: Session = Depends(get_db)):
     """Log into a throwaway account seeded with a copy of the demo template data.
 
     No OAuth: mints a JWT for a fresh, isolated demo user. Expired demo accounts
     are garbage-collected here, so cleanup piggybacks on demo traffic.
+
+    POST (not GET) so link-preview bots, crawlers, and browser prefetch can't
+    spawn accounts by following the marketing-site link.
     """
     if not settings.demo_template_email:
         raise HTTPException(
@@ -150,14 +153,16 @@ def demo_login(db: Session = Depends(get_db)):
     clone_user_data(db, template, demo_user)
     db.commit()
 
-    return _issue_token(email)
+    # 303: this is a POST, so the browser must GET the callback, not re-POST it.
+    return _issue_token(email, redirect_status=status.HTTP_303_SEE_OTHER)
 
 
-def _issue_token(email: str):
+def _issue_token(email: str, redirect_status: int = status.HTTP_307_TEMPORARY_REDIRECT):
     """Redirect to the frontend with a JWT, or return it as JSON in dev."""
     access_token = create_access_token({"sub": email})
     if settings.frontend_url:
         return RedirectResponse(
-            f"{settings.frontend_url}/auth/callback?token={access_token}"
+            f"{settings.frontend_url}/auth/callback?token={access_token}",
+            status_code=redirect_status,
         )
     return {"access_token": access_token, "token_type": "bearer"}

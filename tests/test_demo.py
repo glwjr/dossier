@@ -275,7 +275,7 @@ def test_demo_endpoint_creates_isolated_account(raw_client, db_session, monkeypa
     monkeypatch.setattr(settings, "demo_template_email", template.email)
     monkeypatch.setattr(settings, "frontend_url", "")
 
-    response = raw_client.get("/auth/demo")
+    response = raw_client.post("/auth/demo")
     assert response.status_code == 200
     token = response.json()["access_token"]
 
@@ -296,8 +296,9 @@ def test_demo_endpoint_redirects_to_frontend(raw_client, db_session, monkeypatch
     monkeypatch.setattr(settings, "demo_template_email", template.email)
     monkeypatch.setattr(settings, "frontend_url", "http://localhost:3000")
 
-    response = raw_client.get("/auth/demo", follow_redirects=False)
-    assert response.status_code in (302, 307)
+    response = raw_client.post("/auth/demo", follow_redirects=False)
+    # 303 See Other so the browser issues a GET on the callback after our POST.
+    assert response.status_code == 303
     assert response.headers["location"].startswith(
         "http://localhost:3000/auth/callback?token="
     )
@@ -305,7 +306,7 @@ def test_demo_endpoint_redirects_to_frontend(raw_client, db_session, monkeypatch
 
 def test_demo_endpoint_501_when_disabled(raw_client, monkeypatch):
     monkeypatch.setattr(settings, "demo_template_email", "")
-    response = raw_client.get("/auth/demo")
+    response = raw_client.post("/auth/demo")
     assert response.status_code == 501
 
 
@@ -314,8 +315,8 @@ def test_each_demo_login_is_a_separate_account(raw_client, db_session, monkeypat
     monkeypatch.setattr(settings, "demo_template_email", template.email)
     monkeypatch.setattr(settings, "frontend_url", "")
 
-    first = raw_client.get("/auth/demo").json()["access_token"]
-    second = raw_client.get("/auth/demo").json()["access_token"]
+    first = raw_client.post("/auth/demo").json()["access_token"]
+    second = raw_client.post("/auth/demo").json()["access_token"]
 
     email1 = raw_client.get("/me", headers={"Authorization": f"Bearer {first}"}).json()[
         "email"
@@ -333,7 +334,7 @@ def test_demo_endpoint_enforces_cap(raw_client, db_session, monkeypatch):
     monkeypatch.setattr(settings, "demo_max_users", 2)
 
     for _ in range(4):
-        assert raw_client.get("/auth/demo").status_code == 200
+        assert raw_client.post("/auth/demo").status_code == 200
 
     live = db_session.scalar(select(func.count()).select_from(User).where(User.is_demo))
     assert live <= 2

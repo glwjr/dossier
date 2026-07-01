@@ -98,10 +98,16 @@
       border-radius: var(--radius);
       font-size: 0.875rem;
       font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
       transition: opacity 0.15s;
+      /* Reset native <button> chrome; variants below re-add bg/border. */
+      background: transparent;
+      border: none;
     }
     .btn:hover { opacity: 0.8; }
+
+    .demo-form { display: inline; }
 
     .btn-primary {
       background: var(--accent);
@@ -246,7 +252,9 @@
       <p>Track schools, deadlines, requirements, and recommendation letters — nothing falls through the cracks.</p>
       <div class="btn-group">
         <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
-        <a href="https://api.dossiertool.com/auth/demo" class="btn btn-outline">Try the demo</a>
+        <form method="POST" action="https://api.dossiertool.com/auth/demo" class="demo-form">
+          <button type="submit" class="btn btn-outline">Try the demo</button>
+        </form>
       </div>
     </section>
 
@@ -287,7 +295,9 @@
       <p>Sign in with Google and start tracking in under a minute — or explore a sample account first, no sign-up required.</p>
       <div class="btn-group">
         <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
-        <a href="https://api.dossiertool.com/auth/demo" class="btn btn-outline">Try the demo</a>
+        <form method="POST" action="https://api.dossiertool.com/auth/demo" class="demo-form">
+          <button type="submit" class="btn btn-outline">Try the demo</button>
+        </form>
       </div>
     </section>
   </main>
