@@ -6,6 +6,21 @@ def test_me_returns_current_user(client, dev_user):
     assert data["name"] == dev_user.name
     assert "id" in data
     assert "created_at" in data
+    # Regular users are flagged as non-demo so the UI can hide demo affordances.
+    assert data["is_demo"] is False
+
+
+def test_me_flags_demo_user(raw_client, db_session):
+    from app.auth import create_access_token
+    from app.models.user import User
+
+    demo = User(email="demo-me@demo.local", name="Demo User", is_demo=True)
+    db_session.add(demo)
+    db_session.flush()
+    token = create_access_token({"sub": demo.email})
+
+    data = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).json()
+    assert data["is_demo"] is True
 
 
 def test_export_isolation(client, db_session):

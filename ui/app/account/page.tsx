@@ -91,8 +91,16 @@ function AccountInner() {
   if (error) return <ErrorState title="Failed to load account" message="Something went wrong. Try refreshing the page." />;
   if (!user) return null;
 
+  const isDemo = user.is_demo;
+
   return (
     <div className="max-w-sm space-y-6">
+      {isDemo && (
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          You’re exploring a demo account. Your data is temporary and resets
+          automatically — sign in with Google to start your own.
+        </div>
+      )}
       <div className="space-y-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Name</p>
@@ -109,6 +117,7 @@ function AccountInner() {
           </p>
         </div>
       </div>
+      {!isDemo && (
       <div className="space-y-2 border-t pt-6">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           Calendar subscription
@@ -161,16 +170,18 @@ function AccountInner() {
           </div>
         )}
       </div>
+      )}
 
       <div className="flex gap-2 border-t pt-6">
         <Button variant="outline" onClick={handleExport}>
           Export my data
         </Button>
         <Button variant="outline" onClick={handleSignOut}>
-          Sign out
+          {isDemo ? "Exit demo" : "Sign out"}
         </Button>
       </div>
 
+      {!isDemo && (
       <div className="space-y-2 border-t pt-6">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           Danger zone
@@ -201,6 +212,7 @@ function AccountInner() {
           </Button>
         )}
       </div>
+      )}
 
     </div>
   );

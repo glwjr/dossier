@@ -10,4 +10,5 @@ class UserRead(BaseModel):
     email: str
     name: str
     calendar_token: str | None
+    is_demo: bool
     created_at: datetime
