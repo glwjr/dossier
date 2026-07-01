@@ -210,7 +210,9 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
             </div>
 
             <div className="space-y-4">
-              {r.program_assignments.map((a) => (
+              {r.program_assignments
+                .filter((a) => statusFilter === "all" || a.status === statusFilter)
+                .map((a) => (
                   <div key={a.program_id} className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <Link
