@@ -340,6 +340,19 @@ def test_demo_endpoint_enforces_cap(raw_client, db_session, monkeypatch):
     assert live <= 2
 
 
+def test_demo_endpoint_rate_limited(raw_client, db_session, monkeypatch):
+    template = _build_template(db_session)
+    monkeypatch.setattr(settings, "demo_template_email", template.email)
+    monkeypatch.setattr(settings, "frontend_url", "")
+    monkeypatch.setattr(settings, "demo_rate_limit_per_minute", 3)
+
+    for _ in range(3):
+        assert raw_client.post("/auth/demo").status_code == 200
+    blocked = raw_client.post("/auth/demo")
+    assert blocked.status_code == 429
+    assert "retry-after" in {k.lower() for k in blocked.headers}
+
+
 def test_demo_user_cannot_delete_account(raw_client, db_session):
     demo = _demo_user(db_session, "del", hours_old=0)
     token = create_access_token({"sub": demo.email})

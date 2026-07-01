@@ -37,6 +37,16 @@ def _create_schema():
     _engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def _reset_demo_rate_limiter():
+    # The demo limiter is process-global; clear it so counts don't bleed across
+    # tests that hit POST /auth/demo.
+    from app.ratelimit import demo_limiter
+
+    demo_limiter.reset()
+    yield
+
+
 @pytest.fixture()
 def db_session():
     with _engine.connect() as conn:

@@ -17,6 +17,7 @@ from app.demo import (
     purge_surplus_demo_users,
 )
 from app.models.user import User
+from app.ratelimit import rate_limit_demo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -119,7 +120,7 @@ def callback(
     return _issue_token(email)
 
 
-@router.post("/demo")
+@router.post("/demo", dependencies=[Depends(rate_limit_demo)])
 def demo_login(db: Session = Depends(get_db)):
     """Log into a throwaway account seeded with a copy of the demo template data.
 

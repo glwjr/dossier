@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # Hard ceiling on live demo accounts — the oldest are evicted past this to
     # bound DB bloat (each demo login writes ~150 rows).
     demo_max_users: int = 500
+    # Per-IP cap on POST /auth/demo per minute (0 disables). Each request clones
+    # ~150 rows, so this bounds the churn a single client can cause.
+    demo_rate_limit_per_minute: int = 10
 
     @model_validator(mode="after")
     def _require_secret_key_in_prod(self) -> "Settings":
