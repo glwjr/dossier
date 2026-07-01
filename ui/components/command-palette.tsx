@@ -12,11 +12,47 @@ import {
 } from "@/components/ui/dialog";
 
 type Result =
-  | { kind: "program"; id: number; label: string; sub: string }
-  | { kind: "requirement"; id: number; label: string; sub: string; programId: number }
-  | { kind: "recommender"; id: number; label: string; sub: string }
-  | { kind: "advisor"; id: number; label: string; sub: string; programId: number }
-  | { kind: "document"; id: number; label: string; sub: string; programId: number };
+  | { kind: "program"; id: number; label: string; sub: string; snippet?: string }
+  | { kind: "requirement"; id: number; label: string; sub: string; programId: number; snippet?: string }
+  | { kind: "recommender"; id: number; label: string; sub: string; snippet?: string }
+  | { kind: "advisor"; id: number; label: string; sub: string; programId: number; snippet?: string }
+  | { kind: "document"; id: number; label: string; sub: string; programId: number; snippet?: string };
+
+// Return a trimmed excerpt of the first field that contains the query, centered
+// on the match — used to show *why* a result matched (e.g. a notes hit).
+function snippetOf(
+  q: string,
+  ...fields: (string | null | undefined)[]
+): string | undefined {
+  for (const f of fields) {
+    if (!f) continue;
+    const i = f.toLowerCase().indexOf(q);
+    if (i === -1) continue;
+    const start = Math.max(0, i - 30);
+    const end = Math.min(f.length, i + q.length + 30);
+    return (
+      (start > 0 ? "…" : "") +
+      f.slice(start, end).trim() +
+      (end < f.length ? "…" : "")
+    );
+  }
+  return undefined;
+}
+
+// Render text with the (case-insensitive) query occurrence emphasized.
+function Highlight({ text, q }: { text: string; q: string }) {
+  const i = q ? text.toLowerCase().indexOf(q) : -1;
+  if (i === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="font-medium text-foreground">
+        {text.slice(i, i + q.length)}
+      </span>
+      {text.slice(i + q.length)}
+    </>
+  );
+}
 
 function href(r: Result): string {
   if (r.kind === "program") return `/programs/${r.id}`;
@@ -95,7 +131,8 @@ export function CommandPalette() {
     const matchedPrograms = programs.filter(
       (p) =>
         p.school.toLowerCase().includes(q) ||
-        p.department.toLowerCase().includes(q)
+        p.department.toLowerCase().includes(q) ||
+        (p.notes ?? "").toLowerCase().includes(q)
     );
     for (const p of matchedPrograms.slice(0, 5)) {
       results.push({
@@ -103,13 +140,15 @@ export function CommandPalette() {
         id: p.id,
         label: p.school,
         sub: `${p.department} · ${PROGRAM_STATUS_LABEL[p.status]}`,
+        snippet: snippetOf(q, p.notes),
       });
     }
 
     const matchedReqs = requirements.filter(
       (r) =>
         r.label.toLowerCase().includes(q) ||
-        r.program.school.toLowerCase().includes(q)
+        r.program.school.toLowerCase().includes(q) ||
+        (r.notes ?? "").toLowerCase().includes(q)
     );
     for (const r of matchedReqs.slice(0, 3)) {
       results.push({
@@ -118,13 +157,15 @@ export function CommandPalette() {
         label: r.label,
         sub: r.program.school,
         programId: r.program.id,
+        snippet: snippetOf(q, r.notes),
       });
     }
 
     const matchedRecs = recommenders.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
-        (r.institution ?? "").toLowerCase().includes(q)
+        (r.institution ?? "").toLowerCase().includes(q) ||
+        (r.notes ?? "").toLowerCase().includes(q)
     );
     for (const r of matchedRecs.slice(0, 3)) {
       results.push({
@@ -132,6 +173,7 @@ export function CommandPalette() {
         id: r.id,
         label: r.name,
         sub: r.institution ?? "Recommender",
+        snippet: snippetOf(q, r.notes),
       });
     }
 
@@ -139,6 +181,8 @@ export function CommandPalette() {
       (o) =>
         o.name.toLowerCase().includes(q) ||
         (o.email ?? "").toLowerCase().includes(q) ||
+        (o.research_area ?? "").toLowerCase().includes(q) ||
+        (o.notes ?? "").toLowerCase().includes(q) ||
         o.program.school.toLowerCase().includes(q)
     );
     for (const o of matchedAdvisors.slice(0, 3)) {
@@ -148,13 +192,15 @@ export function CommandPalette() {
         label: o.name,
         sub: o.program.school,
         programId: o.program.id,
+        snippet: snippetOf(q, o.research_area, o.notes, o.email),
       });
     }
 
     const matchedDocs = documents.filter(
       (d) =>
         d.title.toLowerCase().includes(q) ||
-        d.program.school.toLowerCase().includes(q)
+        d.program.school.toLowerCase().includes(q) ||
+        (d.notes ?? "").toLowerCase().includes(q)
     );
     for (const d of matchedDocs.slice(0, 3)) {
       results.push({
@@ -163,6 +209,7 @@ export function CommandPalette() {
         label: d.title,
         sub: d.program.school,
         programId: d.program.id,
+        snippet: snippetOf(q, d.notes),
       });
     }
   }
@@ -230,6 +277,11 @@ export function CommandPalette() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{r.label}</span>
                   <span className="block truncate text-xs text-muted-foreground">{r.sub}</span>
+                  {r.snippet && (
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground/80">
+                      <Highlight text={r.snippet} q={q} />
+                    </span>
+                  )}
                 </span>
               </button>
             ))}
