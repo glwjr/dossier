@@ -192,7 +192,7 @@ function TimelineInner() {
           placeholder="Search…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 text-sm sm:flex-1"
+          className="h-8 text-sm sm:flex-1"
         />
         <div className="flex gap-2">
         <Select value={programFilter} onValueChange={(v) => v && setProgramFilter(v)}>
@@ -236,7 +236,7 @@ function TimelineInner() {
             {items.filter((d) => !d.isDone).length} upcoming ·{" "}
             {items.filter((d) => d.isDone).length} done
           </p>
-          <Button variant="outline" size="sm" onClick={() => setShowAll((v) => !v)}>
+          <Button variant="outline" className="h-8" onClick={() => setShowAll((v) => !v)}>
             {showAll ? "Hide done" : "Show all"}
           </Button>
         </div>

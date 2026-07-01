@@ -602,7 +602,7 @@ function ProgramsInner() {
           placeholder="Search school or department…"
           value={search}
           onChange={(e) => setParam("q", e.target.value)}
-          className="h-9 text-sm sm:flex-1"
+          className="h-8 text-sm sm:flex-1"
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex gap-2">

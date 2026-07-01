@@ -281,7 +281,7 @@ export default function RecommendersPage() {
             placeholder="Search…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 text-sm sm:flex-1"
+            className="h-8 text-sm sm:flex-1"
           />
           <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
             <SelectTrigger className="h-9 w-full text-sm sm:w-36">

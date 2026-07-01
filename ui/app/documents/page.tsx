@@ -252,7 +252,7 @@ function DocumentsInner() {
             placeholder="Search…"
             value={search}
             onChange={(e) => setParam("q", e.target.value)}
-            className="h-9 text-sm sm:flex-1"
+            className="h-8 text-sm sm:flex-1"
           />
           <div className="flex gap-2">
             <Select value={sort} onValueChange={(v) => v && setParam("sort", v)}>
