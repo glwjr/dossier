@@ -115,6 +115,7 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
                     <SelectItem value="application">Application</SelectItem>
                     <SelectItem value="fellowship">Fellowship</SelectItem>
                     <SelectItem value="fee_waiver">Fee waiver</SelectItem>
+                    <SelectItem value="interview">Interview</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

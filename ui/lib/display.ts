@@ -65,6 +65,7 @@ export const REQUIREMENT_STATUS_LABEL: Record<string, string> = {
 
 export const DEADLINE_KIND_LABEL: Record<string, string> = {
   application: "Application",
+  interview: "Interview",
   fellowship: "Fellowship",
   fee_waiver: "Fee waiver",
 };

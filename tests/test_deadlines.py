@@ -77,9 +77,18 @@ def test_delete_deadline(client, deadline):
 def test_create_deadline_invalid_kind(client, program):
     response = client.post(
         f"/programs/{program['id']}/deadlines",
-        json={**DEADLINE_PAYLOAD, "kind": "interview"},
+        json={**DEADLINE_PAYLOAD, "kind": "phone_screen"},
     )
     assert response.status_code == 422
+
+
+def test_create_deadline_interview_kind(client, program):
+    response = client.post(
+        f"/programs/{program['id']}/deadlines",
+        json={**DEADLINE_PAYLOAD, "kind": "interview"},
+    )
+    assert response.status_code == 201
+    assert response.json()["kind"] == "interview"
 
 
 def test_create_deadline_invalid_date_format(client, program):

@@ -31,6 +31,7 @@ const DEADLINE_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline"
   application: "default",
   fellowship: "secondary",
   fee_waiver: "outline",
+  interview: "secondary",
 };
 
 type TimelineItem =

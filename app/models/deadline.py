@@ -16,6 +16,7 @@ class DeadlineKind(str, enum.Enum):
     application = "application"
     fellowship = "fellowship"
     fee_waiver = "fee_waiver"
+    interview = "interview"
 
 
 class Deadline(Base):

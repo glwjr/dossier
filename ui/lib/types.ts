@@ -63,7 +63,7 @@ export interface ProgramRecommenderCreate {
 
 export type ProgramRecommenderUpdate = Partial<Omit<ProgramRecommenderCreate, "recommender_id">>;
 
-export type DeadlineKind = "application" | "fellowship" | "fee_waiver";
+export type DeadlineKind = "application" | "fellowship" | "fee_waiver" | "interview";
 
 export interface DeadlineCreate {
   kind: DeadlineKind;
@@ -146,7 +146,7 @@ export interface RequirementWithProgram extends Requirement {
 export interface Deadline {
   id: number;
   program_id: number;
-  kind: "application" | "fellowship" | "fee_waiver";
+  kind: "application" | "fellowship" | "fee_waiver" | "interview";
   due_date: string;
   done: boolean;
   notes: string | null;
