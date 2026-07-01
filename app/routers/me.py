@@ -3,7 +3,7 @@ import secrets
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -38,6 +38,14 @@ def delete_me(
     relying on ON DELETE CASCADE, so deletion works regardless of the schema's
     cascade configuration.
     """
+    if current_user.is_demo:
+        # Demo accounts are TTL-managed; self-deletion would just orphan the
+        # session and confuse the visitor.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo accounts cannot be deleted",
+        )
+
     program_ids = select(Program.id).where(Program.user_id == current_user.id)
     db.execute(delete(Requirement).where(Requirement.program_id.in_(program_ids)))
     db.execute(delete(Deadline).where(Deadline.program_id.in_(program_ids)))

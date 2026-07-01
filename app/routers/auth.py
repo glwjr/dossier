@@ -11,6 +11,11 @@ from sqlalchemy.orm import Session
 from app.auth import create_access_token
 from app.config import settings
 from app.db import get_db
+from app.demo import (
+    clone_user_data,
+    purge_expired_demo_users,
+    purge_surplus_demo_users,
+)
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -111,8 +116,46 @@ def callback(
         user.name = name
         db.commit()
 
-    access_token = create_access_token({"sub": email})
+    return _issue_token(email)
 
+
+@router.get("/demo")
+def demo_login(db: Session = Depends(get_db)):
+    """Log into a throwaway account seeded with a copy of the demo template data.
+
+    No OAuth: mints a JWT for a fresh, isolated demo user. Expired demo accounts
+    are garbage-collected here, so cleanup piggybacks on demo traffic.
+    """
+    if not settings.demo_template_email:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Demo login is not configured",
+        )
+
+    purge_expired_demo_users(db, ttl_hours=settings.demo_ttl_hours)
+    # Evict down to cap-1 so this new account keeps us at or under the ceiling.
+    purge_surplus_demo_users(db, max_users=max(settings.demo_max_users - 1, 0))
+
+    template = db.scalar(select(User).where(User.email == settings.demo_template_email))
+    if template is None:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Demo template user has not been seeded",
+        )
+
+    email = f"demo-{secrets.token_urlsafe(8)}@demo.local"
+    demo_user = User(email=email, name="Demo User", is_demo=True)
+    db.add(demo_user)
+    db.flush()
+    clone_user_data(db, template, demo_user)
+    db.commit()
+
+    return _issue_token(email)
+
+
+def _issue_token(email: str):
+    """Redirect to the frontend with a JWT, or return it as JSON in dev."""
+    access_token = create_access_token({"sub": email})
     if settings.frontend_url:
         return RedirectResponse(
             f"{settings.frontend_url}/auth/callback?token={access_token}"

@@ -838,19 +838,25 @@ _APP_DEADLINE: dict[int, date] = {
 }
 
 
-def seed() -> None:
+def seed(email: str | None = None, name: str = "Dev User") -> None:
+    """Seed the given user (defaults to the dev user) with sample data.
+
+    Pass the demo template email to build the source account that /auth/demo
+    clones for each visitor, e.g. `python seed.py demo-template@dossiertool.com`.
+    """
+    email = email or settings.dev_user_email
+
     Base.metadata.create_all(engine)
 
     with SessionLocal() as db:
-        # Dev user
-        user = db.scalar(select(User).where(User.email == settings.dev_user_email))
+        user = db.scalar(select(User).where(User.email == email))
         if user is None:
-            user = User(email=settings.dev_user_email, name="Dev User")
+            user = User(email=email, name=name)
             db.add(user)
             db.flush()
-            print(f"Created dev user: {settings.dev_user_email}")
+            print(f"Created user: {email}")
         else:
-            print(f"Dev user already exists: {settings.dev_user_email}")
+            print(f"User already exists: {email}")
 
         existing = db.scalars(select(Program).where(Program.user_id == user.id)).all()
         if existing:
@@ -928,4 +934,9 @@ def seed() -> None:
 
 
 if __name__ == "__main__":
-    seed()
+    import sys
+
+    if len(sys.argv) > 1:
+        seed(email=sys.argv[1], name="Demo User")
+    else:
+        seed()
