@@ -1,6 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -70,4 +69,5 @@ def ready(db: Session = Depends(get_db)):
 
 @app.get("/", include_in_schema=False)
 def root():
-    return RedirectResponse(url="/docs")
+    """Minimal API-root response — no redirect to the interactive docs."""
+    return {"service": "dossier-api", "status": "ok"}
