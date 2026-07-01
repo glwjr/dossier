@@ -16,4 +16,4 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && python seed.py --demo && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

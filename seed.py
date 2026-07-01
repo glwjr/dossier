@@ -933,10 +933,24 @@ def seed(email: str | None = None, name: str = "Dev User") -> None:
         print(f"  {total_docs} documents")
 
 
+def seed_demo_template() -> None:
+    """Idempotently seed the /auth/demo template account, if configured.
+
+    Safe to run on every deploy: a no-op when DEMO_TEMPLATE_EMAIL is unset, and
+    seed() skips the account once it already has programs.
+    """
+    if not settings.demo_template_email:
+        print("DEMO_TEMPLATE_EMAIL not set — skipping demo template seed.")
+        return
+    seed(email=settings.demo_template_email, name="Demo User")
+
+
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) > 1:
+    if "--demo" in sys.argv[1:]:
+        seed_demo_template()
+    elif len(sys.argv) > 1:
         seed(email=sys.argv[1], name="Demo User")
     else:
         seed()
