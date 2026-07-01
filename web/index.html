@@ -93,21 +93,30 @@
     :root[data-theme="light"] .icon-moon { display: block; }
 
     .btn {
-      display: inline-block;
-      padding: 0.45rem 1rem;
+      /* inline-flex + centering so <a> and <button> compute an identical box
+         (element-type baseline/line-box quirks otherwise differ by ~1px). */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 2.375rem;
+      padding: 0 1rem;
       border-radius: var(--radius);
       font-size: 0.875rem;
       font-weight: 500;
       font-family: inherit;
+      line-height: 1;
       cursor: pointer;
       transition: opacity 0.15s;
-      /* Reset native <button> chrome; variants below re-add bg/border. */
+      /* Reset native <button> chrome. Transparent 1px border keeps the box the
+         same size as .btn-outline (which re-colors it); variants add bg below. */
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
     }
     .btn:hover { opacity: 0.8; }
 
-    .demo-form { display: inline; }
+    /* Let the wrapped <button> be a direct flex item of .btn-group, so it's
+       sized identically to the sibling <a> instead of the form stretching. */
+    .demo-form { display: contents; }
 
     .btn-primary {
       background: var(--accent);
