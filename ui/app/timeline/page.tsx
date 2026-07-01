@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { DeadlineWithProgram, RequirementWithProgram } from "@/lib/types";
@@ -44,6 +45,16 @@ function TimelineInner() {
   const [programFilter, setProgramFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  function toggleCollapsed(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   const { data: deadlines = [], isLoading: dlLoading, error: dlError } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
@@ -240,11 +251,44 @@ function TimelineInner() {
         </p>
       )}
 
-      {Object.entries(grouped).map(([key, groupItems]) => (
+      {visible.length > 0 && (
+        <div className="flex justify-end gap-3 text-xs">
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set())}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Expand all
+          </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set(Object.keys(grouped)))}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Collapse all
+          </button>
+        </div>
+      )}
+
+      {Object.entries(grouped).map(([key, groupItems]) => {
+        const isCollapsed = collapsed.has(key);
+        return (
         <div key={key} className="space-y-2">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => toggleCollapsed(key)}
+            aria-expanded={!isCollapsed}
+            className="flex w-full items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight
+              className={`h-4 w-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+            />
             {monthLabel(key)}
-          </h2>
+            <span className="ml-auto normal-case tracking-normal">
+              {groupItems.length}
+            </span>
+          </button>
+          {!isCollapsed && (
           <div className="space-y-2">
             {groupItems.map((item) => {
               const days = daysUntil(item.dueDate);
@@ -332,8 +376,10 @@ function TimelineInner() {
               );
             })}
           </div>
+          )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

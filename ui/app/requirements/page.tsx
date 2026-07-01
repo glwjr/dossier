@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
@@ -15,7 +16,6 @@ import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,16 @@ function RequirementsList({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  function toggleCollapsed(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -284,23 +294,62 @@ function RequirementsList({
     return acc;
   }, {});
 
+  const programIds = Object.keys(byProgram);
+
   return (
     <div className="space-y-6">
-      {selectionBar}
-      {Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-        <div key={programId} className="space-y-3">
-          <div className="flex min-w-0 items-baseline gap-3">
-            <Link
-              href={`/programs/${programId}?tab=requirements`}
-              className="min-w-0 shrink truncate text-sm font-medium hover:underline"
-            >
-              {school}
-            </Link>
-            <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
-          </div>
-          {items.map((r) => renderRow(r, false))}
+      <div className="flex items-center justify-between gap-2">
+        {selectionBar}
+        <div className="flex shrink-0 gap-3 text-xs">
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set())}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Expand all
+          </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set(programIds))}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Collapse all
+          </button>
         </div>
-      ))}
+      </div>
+      {Object.entries(byProgram).map(([programId, { school, department, items }]) => {
+        const isCollapsed = collapsed.has(programId);
+        return (
+          <div key={programId} className="space-y-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggleCollapsed(programId)}
+                aria-expanded={!isCollapsed}
+                aria-label={isCollapsed ? "Expand" : "Collapse"}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <ChevronRight
+                  className={`h-4 w-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                />
+              </button>
+              <Link
+                href={`/programs/${programId}?tab=requirements`}
+                className="min-w-0 shrink truncate text-sm font-medium hover:underline"
+              >
+                {school}
+              </Link>
+              <span className="min-w-0 shrink truncate text-xs text-muted-foreground">
+                {department}
+              </span>
+              <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                {items.length}
+              </span>
+            </div>
+            {!isCollapsed && items.map((r) => renderRow(r, false))}
+          </div>
+        );
+      })}
     </div>
   );
 }
