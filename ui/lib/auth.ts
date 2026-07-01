@@ -1,5 +1,10 @@
 const TOKEN_KEY = "dossier_token";
 
+// Marketing site (dossiertool.com) — the landing/login page with the Google
+// and demo CTAs. Unauthenticated app visitors are sent here.
+const MARKETING_URL =
+  process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://dossiertool.com";
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
@@ -18,18 +23,9 @@ export function clearToken(): void {
 }
 
 export function redirectToLogin(): void {
-  // In-app landing page offering Google sign-in and the no-signup demo.
-  window.location.href = "/auth/login";
-}
-
-export function startGoogleLogin(): void {
-  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/login`;
-}
-
-export function startDemo(): void {
-  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/demo`;
+  window.location.href = MARKETING_URL;
 }
 
 export function redirectToHome(): void {
-  window.location.href = "https://dossiertool.com";
+  window.location.href = MARKETING_URL;
 }

@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const MARKETING_URL =
+  process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://dossiertool.com";
+
 export function proxy(request: NextRequest) {
   const token = request.cookies.get("dossier_token")?.value;
   if (!token) {
-    // In-app landing page (offers Google sign-in and the no-signup demo).
-    // Exempt from this matcher via the `auth/` exclusion below, so no loop.
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    // No in-app login page: bounce to the marketing site, which hosts the
+    // Google sign-in and no-signup demo CTAs.
+    return NextResponse.redirect(MARKETING_URL);
   }
   return NextResponse.next();
 }

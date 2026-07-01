@@ -113,6 +113,13 @@
       color: var(--fg);
     }
 
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
     /* Hero */
     .hero {
       max-width: var(--max);
@@ -237,7 +244,10 @@
     <section class="hero">
       <h1>Every part of your graduate school applications, in one place.</h1>
       <p>Track schools, deadlines, requirements, and recommendation letters — nothing falls through the cracks.</p>
-      <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
+      <div class="btn-group">
+        <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
+        <a href="https://api.dossiertool.com/auth/demo" class="btn btn-outline">Try the demo</a>
+      </div>
     </section>
 
     <section class="features">
@@ -274,8 +284,11 @@
 
     <section class="cta">
       <h2>Ready to get organized?</h2>
-      <p>Sign in with Google and start tracking in under a minute.</p>
-      <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
+      <p>Sign in with Google and start tracking in under a minute — or explore a sample account first, no sign-up required.</p>
+      <div class="btn-group">
+        <a href="https://api.dossiertool.com/auth/login" class="btn btn-primary">Get started free</a>
+        <a href="https://api.dossiertool.com/auth/demo" class="btn btn-outline">Try the demo</a>
+      </div>
     </section>
   </main>
 
