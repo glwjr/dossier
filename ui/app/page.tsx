@@ -6,8 +6,14 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/display";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DashboardEntry, ProgramStatus } from "@/lib/types";
 import {
+  DashboardEntry,
+  DeadlineWithProgram,
+  ProgramStatus,
+  RequirementWithProgram,
+} from "@/lib/types";
+import {
+  DEADLINE_KIND_LABEL,
   PROGRAM_STATUS_LABEL,
   PROGRAM_TIER_LABEL,
   PROGRAM_TIER_VARIANT,
@@ -20,8 +26,17 @@ import { Badge } from "@/components/ui/badge";
 
 const ACTIVE_STATUSES: ProgramStatus[] = ["researching", "drafting", "submitted", "interview"];
 const DECIDED_STATUSES: ProgramStatus[] = ["accepted", "waitlisted", "rejected"];
+// Programs whose fee likely hasn't been paid yet (still working on the app).
+const UNSUBMITTED_STATUSES: ProgramStatus[] = ["researching", "drafting"];
 
 type DashboardFilter = "all" | "active" | "decided";
+
+function daysUntil(dateStr: string): number {
+  const due = new Date(dateStr + "T00:00:00");
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - now.getTime()) / 86_400_000);
+}
 
 function ProgramCard({ entry }: { entry: DashboardEntry }) {
   const { program, completion_pct, next_deadline, days_remaining, blocking_requirements } =
@@ -96,6 +111,14 @@ function Dashboard() {
     queryKey: ["dashboard"],
     queryFn: () => api.get("/dashboard"),
   });
+  const { data: allDeadlines = [] } = useQuery<DeadlineWithProgram[]>({
+    queryKey: ["deadlines-all"],
+    queryFn: () => api.get("/deadlines"),
+  });
+  const { data: allRequirements = [] } = useQuery<RequirementWithProgram[]>({
+    queryKey: ["requirements-all"],
+    queryFn: () => api.get("/requirements"),
+  });
 
   if (isLoading)
     return (
@@ -145,6 +168,13 @@ function Dashboard() {
   ).length;
   const blockingCount = visible.reduce((sum, e) => sum + e.blocking_requirements.length, 0);
   const totalFees = visible.reduce((sum, e) => sum + (e.program.app_fee ?? 0), 0);
+  const remainingFees = visible.reduce(
+    (sum, e) =>
+      UNSUBMITTED_STATUSES.includes(e.program.status)
+        ? sum + (e.program.app_fee ?? 0)
+        : sum,
+    0
+  );
   const acceptedCount = visible.filter((e) => e.program.status === "accepted").length;
   const waitlistedCount = visible.filter((e) => e.program.status === "waitlisted").length;
   const rejectedCount = visible.filter((e) => e.program.status === "rejected").length;
@@ -155,9 +185,40 @@ function Dashboard() {
     return a.days_remaining - b.days_remaining;
   });
 
-  const upcomingList = visible
-    .filter((e) => e.next_deadline !== null && e.days_remaining !== null && e.days_remaining >= 0 && e.days_remaining <= 14)
-    .sort((a, b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999));
+  // Everything due in the next 14 days across programs: deadlines + dated,
+  // still-open requirements. Only for programs visible under the current filter.
+  const visibleIds = new Set(visible.map((e) => e.program.id));
+  const dueSoon = [
+    ...allDeadlines
+      .filter((d) => !d.done && visibleIds.has(d.program_id))
+      .map((d) => ({
+        key: `d${d.id}`,
+        programId: d.program_id,
+        school: d.program.school,
+        label: `${DEADLINE_KIND_LABEL[d.kind]} deadline`,
+        date: d.due_date,
+        tab: "deadlines",
+      })),
+    ...allRequirements
+      .filter(
+        (r) =>
+          r.due_date &&
+          r.status !== "done" &&
+          r.status !== "waived" &&
+          visibleIds.has(r.program_id)
+      )
+      .map((r) => ({
+        key: `r${r.id}`,
+        programId: r.program_id,
+        school: r.program.school,
+        label: r.label,
+        date: r.due_date as string,
+        tab: "requirements",
+      })),
+  ]
+    .map((i) => ({ ...i, days: daysUntil(i.date) }))
+    .filter((i) => i.days >= 0 && i.days <= 14)
+    .sort((a, b) => a.days - b.days);
 
   const FILTERS: { value: DashboardFilter; label: string }[] = [
     { value: "all", label: "All" },
@@ -186,7 +247,9 @@ function Dashboard() {
               <span className="font-medium">
                 {totalFees > 0 ? `$${totalFees.toLocaleString()}` : "—"}
               </span>
-              <span className="ml-1 text-muted-foreground">in fees</span>
+              <span className="ml-1 text-muted-foreground">
+              in fees{remainingFees > 0 && ` · $${remainingFees.toLocaleString()} left`}
+            </span>
             </div>
           )}
           {filter === "decided" ? (
@@ -254,7 +317,9 @@ function Dashboard() {
             <span className="font-medium">
               {totalFees > 0 ? `$${totalFees.toLocaleString()}` : "—"}
             </span>
-            <span className="ml-1 text-muted-foreground">in fees</span>
+            <span className="ml-1 text-muted-foreground">
+              in fees{remainingFees > 0 && ` · $${remainingFees.toLocaleString()} left`}
+            </span>
           </div>
         )}
         {filter === "decided" ? (
@@ -306,21 +371,23 @@ function Dashboard() {
           ))}
         </div>
       </div>
-      {upcomingList.length > 0 && (
+      {dueSoon.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">Next 14 days</h2>
-          {upcomingList.map((e) => (
-            <div
-              key={e.program.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+          {dueSoon.map((i) => (
+            <Link
+              key={i.key}
+              href={`/programs/${i.programId}?tab=${i.tab}`}
+              className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted/50"
             >
-              <Link href={`/programs/${e.program.id}?tab=deadlines`} className="font-medium hover:underline">
-                {e.program.school}
-              </Link>
-              <span className={`text-xs ${(e.days_remaining ?? 99) <= 3 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                {formatDate(e.next_deadline!)} · {e.days_remaining === 0 ? "Today" : `${e.days_remaining}d`}
+              <span className="min-w-0 truncate">
+                <span className="font-medium">{i.school}</span>
+                <span className="text-muted-foreground"> · {i.label}</span>
               </span>
-            </div>
+              <span className={`shrink-0 text-xs ${i.days <= 3 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                {formatDate(i.date)} · {i.days === 0 ? "Today" : `${i.days}d`}
+              </span>
+            </Link>
           ))}
         </div>
       )}
