@@ -4,6 +4,9 @@ services:
     runtime: docker
     plan: starter
     healthCheckPath: /health
+    # Runs once per deploy (not per instance), so migrations and the demo
+    # template seed can't race if the web service is ever scaled past one node.
+    preDeployCommand: "alembic upgrade head && python seed.py --demo"
     envVars:
       - key: DATABASE_URL
         fromDatabase:

@@ -16,4 +16,6 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && python seed.py --demo && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# Migrations + demo seed run once per deploy via render.yaml preDeployCommand,
+# not here, so scaling to multiple instances can't race them.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
