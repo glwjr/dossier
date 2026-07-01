@@ -54,7 +54,11 @@ def _mock_google(email="oauth-user@example.com", name="OAuth User"):
     mock_token_resp.raise_for_status = MagicMock()
 
     mock_userinfo_resp = MagicMock()
-    mock_userinfo_resp.json.return_value = {"email": email, "name": name}
+    mock_userinfo_resp.json.return_value = {
+        "email": email,
+        "name": name,
+        "verified_email": True,
+    }
     mock_userinfo_resp.raise_for_status = MagicMock()
 
     mock_client = MagicMock()
@@ -154,6 +158,23 @@ def test_callback_returns_400_when_no_email(raw_client, monkeypatch):
 
     mock_client = _mock_google()
     mock_client.get.return_value.json.return_value = {"name": "No Email"}
+    with patch("app.routers.auth.httpx.Client", return_value=mock_client):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+        )
+    assert response.status_code == 400
+
+
+def test_callback_rejects_unverified_email(raw_client, monkeypatch):
+    state, state_cookie = _valid_state(raw_client, monkeypatch)
+
+    mock_client = _mock_google()
+    mock_client.get.return_value.json.return_value = {
+        "email": "unverified@example.com",
+        "name": "Unverified",
+        "verified_email": False,
+    }
     with patch("app.routers.auth.httpx.Client", return_value=mock_client):
         response = raw_client.get(
             f"/auth/callback?code=test_code&state={state}",

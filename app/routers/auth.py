@@ -105,6 +105,13 @@ def callback(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Google account did not provide an email address",
         )
+    # Only trust a Google-verified email as identity — every downstream decision
+    # (user identity, ADMIN_EMAIL gating) keys off it.
+    if not userinfo.get("verified_email"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google account email is not verified",
+        )
     # Fall back to the email for a null/empty/missing name — users.name is NOT NULL.
     name: str = userinfo.get("name") or email
 
