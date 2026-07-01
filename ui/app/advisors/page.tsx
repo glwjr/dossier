@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useCollapsedSections } from "@/lib/use-collapsed";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -61,6 +62,13 @@ function AdvisorsInner() {
     queryFn: () => api.get("/advisors"),
   });
 
+  const {
+    collapsed,
+    toggle: toggleCollapsed,
+    collapseAll,
+    expandAll,
+  } = useCollapsedSections("dossier_collapsed_advisors");
+
   if (isLoading)
     return (
       <div className="space-y-4">
@@ -81,7 +89,7 @@ function AdvisorsInner() {
       <div className="rounded-lg border border-dashed px-6 py-12 text-center">
         <p className="text-sm font-medium">No advisors yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add potential advisors from a program's Advisors tab.
+          Add potential advisors from a program&apos;s Advisors tab.
         </p>
         <Link
           href="/programs"
@@ -122,6 +130,11 @@ function AdvisorsInner() {
   const byResponse = RESPONSE_ORDER
     .map((r) => ({ response: r, items: filtered.filter((c) => c.response === r) }))
     .filter(({ items }) => items.length > 0);
+
+  const sectionKeys =
+    sort === "response"
+      ? byResponse.map((b) => b.response)
+      : Object.keys(byProgram);
 
   function renderContact(c: AdvisorWithProgram, showProgram = false) {
     return (
@@ -224,29 +237,81 @@ function AdvisorsInner() {
         <p className="text-sm text-muted-foreground">Nothing matches the current filter.</p>
       )}
 
-      {sort === "response" ? (
-        byResponse.map(({ response, items }) => (
-          <div key={response} className="space-y-3">
-            <p className="text-sm font-medium">{ADVISOR_RESPONSE_LABEL[response]}</p>
-            {items.map((c) => renderContact(c, true))}
-          </div>
-        ))
-      ) : (
-        Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-          <div key={programId} className="space-y-3">
-            <div className="flex min-w-0 items-baseline gap-3">
-              <Link
-                href={`/programs/${programId}?tab=advisors`}
-                className="min-w-0 shrink truncate text-sm font-medium hover:underline"
-              >
-                {school}
-              </Link>
-              <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
-            </div>
-            {items.map((c) => renderContact(c))}
-          </div>
-        ))
+      {filtered.length > 0 && (
+        <div className="flex justify-end gap-3 text-xs">
+          <button
+            type="button"
+            onClick={expandAll}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Expand all
+          </button>
+          <button
+            type="button"
+            onClick={() => collapseAll(sectionKeys)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Collapse all
+          </button>
+        </div>
       )}
+
+      {sort === "response"
+        ? byResponse.map(({ response, items }) => {
+            const isCollapsed = collapsed.has(response);
+            return (
+              <div key={response} className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => toggleCollapsed(response)}
+                  aria-expanded={!isCollapsed}
+                  className="flex w-full items-center gap-2 text-sm font-medium hover:text-foreground"
+                >
+                  <ChevronRight
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                  />
+                  {ADVISOR_RESPONSE_LABEL[response]}
+                  <span className="ml-auto text-xs font-normal text-muted-foreground">
+                    {items.length}
+                  </span>
+                </button>
+                {!isCollapsed && items.map((c) => renderContact(c, true))}
+              </div>
+            );
+          })
+        : Object.entries(byProgram).map(([programId, { school, department, items }]) => {
+            const isCollapsed = collapsed.has(programId);
+            return (
+              <div key={programId} className="space-y-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapsed(programId)}
+                    aria-expanded={!isCollapsed}
+                    aria-label={isCollapsed ? "Expand" : "Collapse"}
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight
+                      className={`h-4 w-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                    />
+                  </button>
+                  <Link
+                    href={`/programs/${programId}?tab=advisors`}
+                    className="min-w-0 shrink truncate text-sm font-medium hover:underline"
+                  >
+                    {school}
+                  </Link>
+                  <span className="min-w-0 shrink truncate text-xs text-muted-foreground">
+                    {department}
+                  </span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    {items.length}
+                  </span>
+                </div>
+                {!isCollapsed && items.map((c) => renderContact(c))}
+              </div>
+            );
+          })}
     </div>
   );
 }

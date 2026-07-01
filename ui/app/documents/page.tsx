@@ -1,14 +1,13 @@
 "use client";
 
 import { Suspense, useCallback } from "react";
-import { ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
-import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
@@ -22,9 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useCollapsedSections } from "@/lib/use-collapsed";
 
 function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilter: string; kindFilter: string; search: string; sort: string }) {
   const queryClient = useQueryClient();
+  const {
+    collapsed,
+    toggle: toggleCollapsed,
+    collapseAll,
+    expandAll,
+  } = useCollapsedSections("dossier_collapsed_documents");
   const { data, isLoading, error } = useQuery<DocumentWithProgram[]>({
     queryKey: ["documents-all"],
     queryFn: () => api.get("/documents"),
@@ -86,6 +92,9 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
     .map((k) => ({ kind: k, items: filtered.filter((d) => d.kind === k) }))
     .filter(({ items }) => items.length > 0);
 
+  const sectionKeys =
+    sort === "kind" ? byKind.map((b) => b.kind) : Object.keys(byProgram);
+
   function renderDocument(d: DocumentWithProgram, showProgram = false) {
     return (
       <div key={d.id} className="flex items-start gap-4 rounded-md border px-3 py-2 text-sm">
@@ -138,29 +147,79 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
 
   return (
     <div className="space-y-6">
-      {sort === "kind" ? (
-        byKind.map(({ kind, items }) => (
-          <div key={kind} className="space-y-3">
-            <p className="text-sm font-medium">{DOCUMENT_KIND_LABEL[kind]}</p>
-            {items.map((d) => renderDocument(d, true))}
-          </div>
-        ))
-      ) : (
-        Object.entries(byProgram).map(([programId, { school, department, items }]) => (
-          <div key={programId} className="space-y-3">
-            <div className="flex min-w-0 items-baseline gap-3">
-              <Link
-                href={`/programs/${programId}?tab=documents`}
-                className="min-w-0 shrink truncate text-sm font-medium hover:underline"
-              >
-                {school}
-              </Link>
-              <span className="shrink-0 text-xs text-muted-foreground">{department}</span>
-            </div>
-            {items.map((d) => renderDocument(d))}
-          </div>
-        ))
-      )}
+      <div className="flex justify-end gap-3 text-xs">
+        <button
+          type="button"
+          onClick={expandAll}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Expand all
+        </button>
+        <button
+          type="button"
+          onClick={() => collapseAll(sectionKeys)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Collapse all
+        </button>
+      </div>
+
+      {sort === "kind"
+        ? byKind.map(({ kind, items }) => {
+            const isCollapsed = collapsed.has(kind);
+            return (
+              <div key={kind} className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => toggleCollapsed(kind)}
+                  aria-expanded={!isCollapsed}
+                  className="flex w-full items-center gap-2 text-sm font-medium hover:text-foreground"
+                >
+                  <ChevronRight
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                  />
+                  {DOCUMENT_KIND_LABEL[kind]}
+                  <span className="ml-auto text-xs font-normal text-muted-foreground">
+                    {items.length}
+                  </span>
+                </button>
+                {!isCollapsed && items.map((d) => renderDocument(d, true))}
+              </div>
+            );
+          })
+        : Object.entries(byProgram).map(([programId, { school, department, items }]) => {
+            const isCollapsed = collapsed.has(programId);
+            return (
+              <div key={programId} className="space-y-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapsed(programId)}
+                    aria-expanded={!isCollapsed}
+                    aria-label={isCollapsed ? "Expand" : "Collapse"}
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight
+                      className={`h-4 w-4 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                    />
+                  </button>
+                  <Link
+                    href={`/programs/${programId}?tab=documents`}
+                    className="min-w-0 shrink truncate text-sm font-medium hover:underline"
+                  >
+                    {school}
+                  </Link>
+                  <span className="min-w-0 shrink truncate text-xs text-muted-foreground">
+                    {department}
+                  </span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    {items.length}
+                  </span>
+                </div>
+                {!isCollapsed && items.map((d) => renderDocument(d))}
+              </div>
+            );
+          })}
     </div>
   );
 }
