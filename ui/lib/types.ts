@@ -105,6 +105,7 @@ export interface ProgramCreate {
   status: ProgramStatus;
   app_fee?: number | null;
   stipend?: number | null;
+  required_letters?: number | null;
   decision_deadline?: string | null;
   notes?: string | null;
 }
@@ -123,6 +124,7 @@ export interface Program {
   status: ProgramStatus;
   app_fee: number | null;
   stipend: number | null;
+  required_letters: number | null;
   decision_deadline: string | null;
   notes: string | null;
   created_at: string;

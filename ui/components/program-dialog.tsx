@@ -47,6 +47,7 @@ const EMPTY: ProgramCreate = {
   status: "researching",
   app_fee: undefined,
   stipend: undefined,
+  required_letters: undefined,
   decision_deadline: "",
   notes: "",
 };
@@ -61,6 +62,7 @@ function fromProgram(p: Program): ProgramCreate {
     status: p.status,
     app_fee: p.app_fee ?? undefined,
     stipend: p.stipend ?? undefined,
+    required_letters: p.required_letters ?? undefined,
     decision_deadline: p.decision_deadline ?? "",
     location: p.location ?? "",
     notes: p.notes ?? "",
@@ -118,6 +120,7 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
       notes: form.notes || null,
       app_fee: form.app_fee ?? null,
       stipend: form.stipend ?? null,
+      required_letters: form.required_letters ?? null,
       decision_deadline: form.decision_deadline || null,
     });
   }
@@ -257,15 +260,33 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="decision_deadline">Reply deadline</Label>
-              <Input
-                id="decision_deadline"
-                type="date"
-                value={form.decision_deadline ?? ""}
-                onChange={(e) => set("decision_deadline", e.target.value)}
-                className="w-full appearance-none sm:appearance-auto"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="decision_deadline">Reply deadline</Label>
+                <Input
+                  id="decision_deadline"
+                  type="date"
+                  value={form.decision_deadline ?? ""}
+                  onChange={(e) => set("decision_deadline", e.target.value)}
+                  className="w-full appearance-none sm:appearance-auto"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="required_letters">Letters required</Label>
+                <Input
+                  id="required_letters"
+                  type="number"
+                  min={0}
+                  value={form.required_letters ?? ""}
+                  onChange={(e) =>
+                    set(
+                      "required_letters",
+                      e.target.value ? Number(e.target.value) : undefined
+                    )
+                  }
+                  placeholder="e.g. 3"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">

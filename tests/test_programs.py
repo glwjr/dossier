@@ -57,6 +57,18 @@ def test_create_program_with_default_requirements(client, dev_user):
     assert all(r["status"] == "todo" for r in reqs)
 
 
+def test_create_program_with_required_letters(client, dev_user):
+    response = client.post("/programs", json={**PROGRAM_PAYLOAD, "required_letters": 3})
+    assert response.status_code == 201
+    assert response.json()["required_letters"] == 3
+
+
+def test_create_program_defaults_required_letters_none(client, dev_user):
+    response = client.post("/programs", json=PROGRAM_PAYLOAD)
+    assert response.status_code == 201
+    assert response.json()["required_letters"] is None
+
+
 def test_create_program_rejects_negative_app_fee(client, dev_user):
     response = client.post("/programs", json={**PROGRAM_PAYLOAD, "app_fee": -5})
     assert response.status_code == 422

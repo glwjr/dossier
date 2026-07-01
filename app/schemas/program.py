@@ -15,6 +15,7 @@ class ProgramCreate(BaseModel):
     status: ProgramStatus = ProgramStatus.researching
     app_fee: int | None = Field(default=None, ge=0)
     stipend: int | None = Field(default=None, ge=0)
+    required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
     notes: str | None = None
 
@@ -29,6 +30,7 @@ class ProgramUpdate(BaseModel):
     status: ProgramStatus | None = None
     app_fee: int | None = Field(default=None, ge=0)
     stipend: int | None = Field(default=None, ge=0)
+    required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
     notes: str | None = None
 
@@ -47,6 +49,7 @@ class ProgramRead(BaseModel):
     status: ProgramStatus
     app_fee: int | None
     stipend: int | None
+    required_letters: int | None
     decision_deadline: date | None
     notes: str | None
     created_at: datetime

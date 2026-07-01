@@ -313,12 +313,22 @@ function DeadlinesTab({ programId }: { programId: number }) {
   );
 }
 
-function RecommendersTab({ programId }: { programId: number }) {
+function RecommendersTab({
+  programId,
+  requiredLetters,
+}: {
+  programId: number;
+  requiredLetters: number | null;
+}) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<ProgramRecommender[]>({
     queryKey: ["program-recommenders", programId],
     queryFn: () => api.get(`/programs/${programId}/recommenders`),
   });
+
+  const submittedCount = data.filter((a) => a.status === "submitted").length;
+  const shortBy =
+    requiredLetters != null ? Math.max(requiredLetters - data.length, 0) : 0;
 
   const removeAssignment = useMutation({
     mutationFn: (recommenderId: number) =>
@@ -335,7 +345,20 @@ function RecommendersTab({ programId }: { programId: number }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-2">
+        {requiredLetters != null ? (
+          <p className="text-sm text-muted-foreground">
+            {submittedCount} of {requiredLetters} letters submitted
+            {shortBy > 0 && (
+              <span className="text-yellow-600 dark:text-yellow-500">
+                {" "}
+                · {shortBy} more to assign
+              </span>
+            )}
+          </p>
+        ) : (
+          <span />
+        )}
         <AssignRecommenderDialog
           programId={programId}
           trigger={<Button size="sm">Assign recommender</Button>}
@@ -921,7 +944,7 @@ function ProgramDetail({ id }: { id: number }) {
             <DeadlinesTab programId={id} />
           </TabsContent>
           <TabsContent value="recommenders">
-            <RecommendersTab programId={id} />
+            <RecommendersTab programId={id} requiredLetters={program.required_letters} />
           </TabsContent>
           <TabsContent value="advisors">
             <AdvisorsTab programId={id} />

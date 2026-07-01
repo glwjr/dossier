@@ -40,6 +40,7 @@ class Program(Base):
     location: Mapped[str | None] = mapped_column(String)
     app_fee: Mapped[int | None] = mapped_column(Integer)
     stipend: Mapped[int | None] = mapped_column(Integer)
+    required_letters: Mapped[int | None] = mapped_column(Integer)
     decision_deadline: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
