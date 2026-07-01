@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useCollapsedSections } from "@/lib/use-collapsed";
 
 const STATUS_BORDER: Record<string, string> = {
   todo: "",
@@ -48,16 +49,12 @@ function RequirementsList({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-
-  function toggleCollapsed(key: string) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const {
+    collapsed,
+    toggle: toggleCollapsed,
+    collapseAll,
+    expandAll,
+  } = useCollapsedSections("dossier_collapsed_requirements");
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
     queryKey: ["requirements-all"],
@@ -303,14 +300,14 @@ function RequirementsList({
         <div className="flex shrink-0 gap-3 text-xs">
           <button
             type="button"
-            onClick={() => setCollapsed(new Set())}
+            onClick={expandAll}
             className="text-muted-foreground hover:text-foreground"
           >
             Expand all
           </button>
           <button
             type="button"
-            onClick={() => setCollapsed(new Set(programIds))}
+            onClick={() => collapseAll(programIds)}
             className="text-muted-foreground hover:text-foreground"
           >
             Collapse all

@@ -15,6 +15,7 @@ import {
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useCollapsedSections } from "@/lib/use-collapsed";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,16 +46,12 @@ function TimelineInner() {
   const [programFilter, setProgramFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-
-  function toggleCollapsed(key: string) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const {
+    collapsed,
+    toggle: toggleCollapsed,
+    collapseAll,
+    expandAll,
+  } = useCollapsedSections("dossier_collapsed_timeline");
 
   const { data: deadlines = [], isLoading: dlLoading, error: dlError } = useQuery<DeadlineWithProgram[]>({
     queryKey: ["deadlines"],
@@ -255,14 +252,14 @@ function TimelineInner() {
         <div className="flex justify-end gap-3 text-xs">
           <button
             type="button"
-            onClick={() => setCollapsed(new Set())}
+            onClick={expandAll}
             className="text-muted-foreground hover:text-foreground"
           >
             Expand all
           </button>
           <button
             type="button"
-            onClick={() => setCollapsed(new Set(Object.keys(grouped)))}
+            onClick={() => collapseAll(Object.keys(grouped))}
             className="text-muted-foreground hover:text-foreground"
           >
             Collapse all
