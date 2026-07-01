@@ -541,11 +541,11 @@ function ProgramsInner() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Programs</h1>
         <div className="flex items-center gap-2">
-          <div className="hidden items-center rounded-md border md:flex">
+          <div className="hidden h-8 items-center rounded-md border md:flex">
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 rounded-r-none px-2 ${view === "list" ? "bg-muted" : ""}`}
+              className={`h-full rounded-r-none px-2 ${view === "list" ? "bg-muted" : ""}`}
               onClick={() => handleViewChange("list")}
               aria-label="List view"
             >
@@ -554,7 +554,7 @@ function ProgramsInner() {
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 rounded-l-none px-2 ${view === "board" ? "bg-muted" : ""}`}
+              className={`h-full rounded-l-none px-2 ${view === "board" ? "bg-muted" : ""}`}
               onClick={() => handleViewChange("board")}
               aria-label="Board view"
             >
