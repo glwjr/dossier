@@ -38,5 +38,17 @@ class Settings(BaseSettings):
             )
         return self
 
+    @model_validator(mode="after")
+    def _demo_ttl_covers_token_lifetime(self) -> "Settings":
+        # A demo account GC'd before its JWT expires would 401 a live session
+        # mid-use, so the TTL must be at least the token lifetime.
+        if self.demo_ttl_hours * 60 < self.access_token_expire_minutes:
+            raise ValueError(
+                "DEMO_TTL_HOURS must be >= the token lifetime "
+                "(access_token_expire_minutes) so demo data isn't purged "
+                "mid-session"
+            )
+        return self
+
 
 settings = Settings()
