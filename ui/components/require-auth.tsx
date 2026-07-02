@@ -10,6 +10,8 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     if (!getToken()) {
       redirectToLogin();
     } else {
+      // Client-only auth gate; the token isn't available during SSR.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReady(true);
     }
   }, []);

@@ -27,7 +27,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
 import { LayoutList, LayoutGrid, Download, Plus } from "lucide-react";
-import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -463,6 +462,8 @@ function ProgramsInner() {
 
   useEffect(() => {
     const saved = localStorage.getItem("programs_view");
+    // Mount-time sync from localStorage; unavailable during SSR render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (saved === "board") setView("board");
   }, []);
 

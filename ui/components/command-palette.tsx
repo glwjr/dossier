@@ -117,8 +117,11 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
+      // Reset the palette's UI to sync with the freshly-opened state.
+      /* eslint-disable react-hooks/set-state-in-effect */
       setQuery("");
       setFocused(0);
+      /* eslint-enable react-hooks/set-state-in-effect */
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -215,6 +218,8 @@ export function CommandPalette() {
   }
 
   useEffect(() => {
+    // Reset the highlighted result whenever the query changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFocused(0);
   }, [query]);
 
