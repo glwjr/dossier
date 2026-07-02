@@ -237,5 +237,6 @@ export interface User {
   name: string;
   calendar_token: string | null;
   is_demo: boolean;
+  email_reminders: boolean;
   created_at: string;
 }

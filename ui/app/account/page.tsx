@@ -38,6 +38,18 @@ function AccountInner() {
     onError: onMutationError,
   });
 
+  const setReminders = useMutation({
+    mutationFn: (enabled: boolean) =>
+      api.patch<User>("/me", { email_reminders: enabled }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["me"], updated);
+      toast.success(
+        updated.email_reminders ? "Reminders on" : "Reminders off"
+      );
+    },
+    onError: onMutationError,
+  });
+
   const deleteAccount = useMutation({
     mutationFn: () => api.delete("/me"),
     // The API clears the auth cookie as part of deletion; just leave.
@@ -120,6 +132,23 @@ function AccountInner() {
           </p>
         </div>
       </div>
+      {!isDemo && (
+      <div className="space-y-2 border-t pt-6">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Email reminders
+        </p>
+        <p className="text-sm text-muted-foreground">
+          A weekly email digest of deadlines and pending letters due soon.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => setReminders.mutate(!user.email_reminders)}
+          disabled={setReminders.isPending}
+        >
+          {user.email_reminders ? "Turn off reminders" : "Turn on reminders"}
+        </Button>
+      </div>
+      )}
       {!isDemo && (
       <div className="space-y-2 border-t pt-6">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
