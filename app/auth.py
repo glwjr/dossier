@@ -15,10 +15,9 @@ _bearer = HTTPBearer()
 
 def create_access_token(data: dict) -> str:
     payload = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
-    payload["exp"] = expire
+    now = datetime.now(timezone.utc)
+    payload["iat"] = now
+    payload["exp"] = now + timedelta(minutes=settings.access_token_expire_minutes)
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 

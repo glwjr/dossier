@@ -175,8 +175,11 @@ def _issue_token(
     """Redirect to the frontend with a JWT, or return it as JSON in dev."""
     access_token = create_access_token({"sub": email, "ver": token_version})
     if settings.frontend_url:
+        # Deliver the token in the URL fragment, not the query string: fragments
+        # are never sent to a server, kept out of access logs, or leaked via the
+        # Referer header. The SPA reads it from location.hash on the callback page.
         return RedirectResponse(
-            f"{settings.frontend_url}/auth/callback?token={access_token}",
+            f"{settings.frontend_url}/auth/callback#token={access_token}",
             status_code=redirect_status,
         )
     return {"access_token": access_token, "token_type": "bearer"}

@@ -1,38 +1,28 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { setToken } from "@/lib/auth";
 
-function CallbackInner() {
+export default function AuthCallback() {
   const router = useRouter();
-  const params = useSearchParams();
 
   useEffect(() => {
-    const token = params.get("token");
+    // The token arrives in the URL fragment (#token=…), which the browser never
+    // sends to a server (so it stays out of access logs and the Referer header).
+    // Parse it client-side, then replace the history entry so the raw token
+    // isn't left sitting in the address bar or browser history.
+    const hash = window.location.hash.replace(/^#/, "");
+    const token = new URLSearchParams(hash).get("token");
     if (token) {
       setToken(token);
     }
     router.replace("/");
-  }, [params, router]);
+  }, [router]);
 
   return (
     <div className="flex h-64 items-center justify-center text-muted-foreground">
       Signing you in…
     </div>
-  );
-}
-
-export default function AuthCallback() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
-          Signing you in…
-        </div>
-      }
-    >
-      <CallbackInner />
-    </Suspense>
   );
 }

@@ -299,9 +299,10 @@ def test_demo_endpoint_redirects_to_frontend(raw_client, db_session, monkeypatch
     response = raw_client.post("/auth/demo", follow_redirects=False)
     # 303 See Other so the browser issues a GET on the callback after our POST.
     assert response.status_code == 303
-    assert response.headers["location"].startswith(
-        "http://localhost:3000/auth/callback?token="
-    )
+    location = response.headers["location"]
+    # Token rides in the URL fragment (never sent to a server), not the query.
+    assert location.startswith("http://localhost:3000/auth/callback#token=")
+    assert "?token=" not in location
 
 
 def test_demo_endpoint_501_when_disabled(raw_client, monkeypatch):

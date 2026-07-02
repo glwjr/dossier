@@ -110,9 +110,11 @@ def test_callback_redirects_to_frontend_when_configured(
         )
 
     assert response.status_code in (302, 307)
-    assert response.headers["location"].startswith(
-        "http://localhost:3000/auth/callback?token="
-    )
+    location = response.headers["location"]
+    # The JWT is delivered in the URL *fragment*, not the query string, so it is
+    # never sent to a server, logged, or leaked via the Referer header.
+    assert location.startswith("http://localhost:3000/auth/callback#token=")
+    assert "?token=" not in location
 
 
 def test_callback_rejects_invalid_state(raw_client):
@@ -195,6 +197,15 @@ def test_valid_jwt_authenticates_user(raw_client, db_session):
     response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert response.json()["email"] == "jwt-user@example.com"
+
+
+def test_access_token_carries_issued_at(raw_client):
+    import jwt
+
+    token = create_access_token({"sub": "iat-user@example.com"})
+    claims = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    assert "iat" in claims
+    assert "exp" in claims
 
 
 def test_invalid_jwt_returns_401(raw_client):
