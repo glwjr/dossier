@@ -150,6 +150,8 @@ The `render.yaml` in this repo configures a Docker-based web service (Render **S
 
 `DATABASE_URL` and `SECRET_KEY` are handled automatically by Render. Because `FRONTEND_URL` is set in production, the API restricts CORS to that origin and refuses to start with the default `SECRET_KEY`.
 
+Database migrations and the demo-template seed run once per deploy via Render's `preDeployCommand` (`sh predeploy.sh`). See [BACKUPS.md](BACKUPS.md) for the backup/restore runbook.
+
 ### Frontend — Vercel
 
 Deploy the `ui/` directory. Set root directory to `ui/` in the Vercel project settings, then add:

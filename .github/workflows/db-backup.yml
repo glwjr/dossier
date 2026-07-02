@@ -1,0 +1,41 @@
+name: DB Backup
+
+# Off-site logical backup of the production database, on top of Render's own
+# managed backups. Opt-in: no-ops unless the BACKUP_DATABASE_URL secret (Render's
+# EXTERNAL connection string) is set. Artifacts contain user PII — keep the repo
+# private and retention short.
+
+on:
+  schedule:
+    - cron: "17 4 * * *" # daily, 04:17 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        env:
+          # Render Dashboard → your Postgres → "External Database URL".
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          if [ -z "$BACKUP_DATABASE_URL" ]; then
+            echo "BACKUP_DATABASE_URL not set — skipping backup."
+            exit 0
+          fi
+          ts=$(date -u +%Y%m%dT%H%M%SZ)
+          file="dossier-${ts}.sql.gz"
+          pg_dump --no-owner --no-privileges "$BACKUP_DATABASE_URL" | gzip > "$file"
+          echo "Wrote $file ($(du -h "$file" | cut -f1))"
+          echo "DUMP_FILE=$file" >> "$GITHUB_ENV"
+
+      - name: Upload backup artifact
+        if: env.DUMP_FILE != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ env.DUMP_FILE }}
+          retention-days: 30
