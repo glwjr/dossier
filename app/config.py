@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     # Fraction of requests traced for performance (0 = errors only).
     sentry_traces_sample_rate: float = 0.0
+    # Transactional email (Resend). Both blank disables all email — sends no-op.
+    resend_api_key: str = ""
+    reminder_from_email: str = ""  # e.g. "Dossier <reminders@dossiertool.com>"
+    # Shared secret the scheduled digest job presents to POST /tasks/weekly-digest.
+    # Blank disables the endpoint (403).
+    cron_secret: str = ""
+    # Deadlines/letters due within this many days go into the weekly digest.
+    reminder_window_days: int = 14
 
     @model_validator(mode="after")
     def _require_secret_key_in_prod(self) -> "Settings":
