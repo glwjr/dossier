@@ -1,6 +1,6 @@
 # Dossier
 
-Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, potential faculty advisors, and draft documents — all in one place.
+Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlines, recommenders, potential faculty advisors, and draft documents — with weekly email reminders and read-only sharing — all in one place.
 
 - **Backend**: FastAPI + SQLAlchemy, deployed on Render
 - **Frontend**: Next.js 16 App Router, deployed on Vercel
@@ -58,12 +58,12 @@ UI available at `http://localhost:3000`.
 
 ## Authentication
 
-Navigate to `http://localhost:8000/auth/login` — the server redirects to Google's consent screen. After granting access, Google redirects back to `/auth/callback`.
+Google OAuth. Navigate to `/auth/login` — the server redirects to Google's consent screen; after you grant access, Google redirects to `/auth/callback`, which sets the JWT as an **HttpOnly, Secure, SameSite=Lax `dossier_token` cookie** and redirects to the app. The token is never exposed to JavaScript, so XSS can't exfiltrate it.
 
-- **With `FRONTEND_URL` set**: the backend redirects to `{FRONTEND_URL}/auth/callback?token=…` and the UI stores the JWT in `localStorage`.
-- **Without `FRONTEND_URL`**: the backend returns `{"access_token": "eyJ...", "token_type": "bearer"}` as JSON — useful for testing with `/docs`.
+- **With `FRONTEND_URL` set** (deployed): redirects to `{FRONTEND_URL}/` with the cookie set.
+- **Without `FRONTEND_URL`** (local, API-only): also returns `{"access_token": …}` as JSON for convenience, and still sets the cookie.
 
-To use the API directly, paste the token into the `/docs` **Authorize** button.
+`get_current_user` reads the cookie; UI requests use `credentials: "include"` (no Bearer token to manage). `POST /auth/logout` clears the cookie in this browser; `POST /me/logout-all` invalidates every session. In production set `COOKIE_DOMAIN=.your-domain.com` so the API-set cookie is readable by the frontend subdomain.
 
 ---
 
@@ -78,16 +78,20 @@ To use the API directly, paste the token into the `/docs` **Authorize** button.
 | `GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
 | `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Must match Google Cloud Console |
-| `FRONTEND_URL` | *(empty)* | When set, marks a prod environment: OAuth redirects here with `?token=`, CORS trusts only this origin, and startup rejects the default `SECRET_KEY` |
+| `FRONTEND_URL` | *(empty)* | When set, marks a prod environment: OAuth redirects to `{FRONTEND_URL}/`, CORS trusts only this origin, the auth cookie is `Secure`, startup rejects the default `SECRET_KEY`, and the interactive docs are disabled |
+| `COOKIE_DOMAIN` | *(empty)* | Shared parent domain for the auth cookie in prod (e.g. `.dossiertool.com`); blank = host-only (correct for localhost) |
 | `ADMIN_EMAIL` | *(empty)* | When set, this user can access `GET /admin/stats`; blank disables admin access |
 | `DEV_USER_EMAIL` | `dev@example.com` | Email seeded by `seed.py` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` (7 days) | JWT lifetime |
+
+Optional feature toggles (all off by default — see [`.env.example`](.env.example) for the full list with defaults): **demo login** (`DEMO_TEMPLATE_EMAIL`, `DEMO_TTL_HOURS`, `DEMO_MAX_USERS`, `DEMO_RATE_LIMIT_PER_MINUTE`), **error tracking** (`SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`), and **reminder emails** (`RESEND_API_KEY`, `REMINDER_FROM_EMAIL`, `CRON_SECRET`, `REMINDER_WINDOW_DAYS`).
 
 ### Frontend (`ui/.env.local`)
 
 | Variable | Description |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Base URL of the backend API |
+| `NEXT_PUBLIC_MARKETING_URL` | Marketing site logged-out visitors are redirected to (default `https://dossiertool.com`) |
 
 ---
 
@@ -112,15 +116,24 @@ Top-level collection endpoints (`/programs`, `/requirements`, `/deadlines`, `/re
 | `GET` | `/health/ready` | Readiness check (runs `SELECT 1`; 503 if the DB is unreachable) |
 | `GET` | `/admin/stats` | User signup stats (requires `ADMIN_EMAIL`; 403 otherwise) |
 | `GET` | `/auth/login` | Redirect to Google OAuth |
-| `GET` | `/auth/callback` | Exchange code for JWT |
-| `GET` | `/me` | Current user |
+| `GET` | `/auth/callback` | Exchange code for a JWT cookie |
+| `POST` | `/auth/demo` | No-signup demo login (clones the template account) |
+| `POST` | `/auth/logout` | Clear the session cookie in this browser |
+| `GET` `PATCH` `DELETE` | `/me` | Current user / update prefs (e.g. `email_reminders`) / delete account |
+| `POST` | `/me/logout-all` | Invalidate every session (bumps `token_version`) |
+| `POST` `DELETE` | `/me/calendar-token` | Generate / revoke the private `.ics` feed token |
+| `POST` `DELETE` | `/me/share-token` | Generate / revoke the public read-only share token |
 | `GET` | `/me/export` | Full data export as JSON |
+| `GET` | `/calendar/{token}.ics` | Public token-authenticated calendar feed |
+| `GET` | `/share/{token}` | Public token-authenticated read-only program list |
+| `POST` | `/tasks/weekly-digest` | Send reminder digests (cron-only, `X-Cron-Key`) |
 | `GET` | `/dashboard` | Per-program summary (completion %, next deadline, blocking requirements) |
 | `GET` | `/requirements` | List all requirements across programs |
 | `GET` | `/deadlines` | List all deadlines across programs |
 | `GET` | `/advisors` | List all potential advisors across programs |
 | `GET` | `/documents` | List all documents across programs |
 | `GET` `POST` | `/programs` | List / create programs |
+| `POST` | `/programs/import` | Bulk-create programs (max 100 per request) |
 | `GET` `PATCH` `DELETE` | `/programs/{id}` | Get / update / delete a program |
 | `GET` `POST` | `/programs/{id}/requirements` | List / create requirements |
 | `PATCH` `DELETE` | `/requirements/{id}` | Update / delete a requirement |
