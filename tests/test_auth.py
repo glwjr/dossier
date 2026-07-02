@@ -213,3 +213,34 @@ def test_jwt_for_nonexistent_user_returns_401(raw_client):
     token = create_access_token({"sub": "ghost@example.com"})
     response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+def test_jwt_without_ver_claim_treated_as_zero(raw_client, db_session):
+    # Tokens issued before token_version existed carry no "ver"; they must still
+    # authenticate a user whose version is still the default 0.
+    user = User(email="nover@example.com", name="No Ver")
+    db_session.add(user)
+    db_session.flush()
+    token = create_access_token({"sub": user.email})
+    response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+
+
+def test_jwt_rejected_after_token_version_bump(raw_client, db_session):
+    user = User(email="ver-user@example.com", name="Ver User")
+    db_session.add(user)
+    db_session.flush()
+    token = create_access_token({"sub": user.email, "ver": user.token_version})
+
+    assert (
+        raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).status_code
+        == 200
+    )
+
+    # Bumping the version invalidates the previously issued token.
+    user.token_version += 1
+    db_session.flush()
+    assert (
+        raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).status_code
+        == 401
+    )

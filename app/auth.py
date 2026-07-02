@@ -43,4 +43,8 @@ def get_current_user(
     user = db.scalar(select(User).where(User.email == email))
     if user is None:
         raise credentials_exception
+    # Reject tokens minted before the user's last "sign out everywhere".
+    # Missing claim (tokens predating token_version) is treated as version 0.
+    if payload.get("ver", 0) != user.token_version:
+        raise credentials_exception
     return user

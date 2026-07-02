@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, false, func
+from sqlalchemy import Boolean, DateTime, Integer, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -17,6 +17,11 @@ class User(Base):
     # Ephemeral demo accounts: created by /auth/demo, garbage-collected by TTL.
     is_demo: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=false(), default=False, index=True
+    )
+    # Bumped to invalidate every outstanding JWT for this user ("sign out
+    # everywhere"); the current value is embedded in each issued token.
+    token_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0", default=0
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

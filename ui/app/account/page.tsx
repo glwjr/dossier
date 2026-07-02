@@ -52,6 +52,15 @@ function AccountInner() {
     redirectToHome();
   }
 
+  const signOutEverywhere = useMutation({
+    mutationFn: () => api.post("/me/logout-all", {}),
+    onSuccess: () => {
+      clearToken();
+      redirectToHome();
+    },
+    onError: onMutationError,
+  });
+
   const feedUrl = user?.calendar_token
     ? `${process.env.NEXT_PUBLIC_API_URL}/calendar/${user.calendar_token}.ics`
     : "";
@@ -172,13 +181,22 @@ function AccountInner() {
       </div>
       )}
 
-      <div className="flex gap-2 border-t pt-6">
+      <div className="flex flex-wrap gap-2 border-t pt-6">
         <Button variant="outline" onClick={handleExport}>
           Export my data
         </Button>
         <Button variant="outline" onClick={handleSignOut}>
           {isDemo ? "Exit demo" : "Sign out"}
         </Button>
+        {!isDemo && (
+          <Button
+            variant="outline"
+            onClick={() => signOutEverywhere.mutate()}
+            disabled={signOutEverywhere.isPending}
+          >
+            {signOutEverywhere.isPending ? "Signing out…" : "Sign out everywhere"}
+          </Button>
+        )}
       </div>
 
       {!isDemo && (

@@ -124,7 +124,7 @@ def callback(
         user.name = name
         db.commit()
 
-    return _issue_token(email)
+    return _issue_token(email, user.token_version)
 
 
 @router.post("/demo", dependencies=[Depends(rate_limit_demo)])
@@ -162,12 +162,18 @@ def demo_login(db: Session = Depends(get_db)):
     db.commit()
 
     # 303: this is a POST, so the browser must GET the callback, not re-POST it.
-    return _issue_token(email, redirect_status=status.HTTP_303_SEE_OTHER)
+    return _issue_token(
+        email, demo_user.token_version, redirect_status=status.HTTP_303_SEE_OTHER
+    )
 
 
-def _issue_token(email: str, redirect_status: int = status.HTTP_307_TEMPORARY_REDIRECT):
+def _issue_token(
+    email: str,
+    token_version: int,
+    redirect_status: int = status.HTTP_307_TEMPORARY_REDIRECT,
+):
     """Redirect to the frontend with a JWT, or return it as JSON in dev."""
-    access_token = create_access_token({"sub": email})
+    access_token = create_access_token({"sub": email, "ver": token_version})
     if settings.frontend_url:
         return RedirectResponse(
             f"{settings.frontend_url}/auth/callback?token={access_token}",

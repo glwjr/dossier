@@ -64,6 +64,20 @@ def delete_me(
     db.commit()
 
 
+@router.post("/me/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+def logout_all(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Invalidate every outstanding JWT for this user by bumping token_version.
+
+    The token used for this request is included — the caller is signed out
+    everywhere and must re-authenticate.
+    """
+    current_user.token_version += 1
+    db.commit()
+
+
 @router.post("/me/calendar-token", response_model=UserRead)
 def rotate_calendar_token(
     current_user: User = Depends(get_current_user),
