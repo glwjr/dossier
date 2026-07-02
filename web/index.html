@@ -41,7 +41,11 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      /* Soft glow anchored to the top of the page (behind the nav), then the
+         base colour beneath — no gap between the top and where it begins. */
+      background:
+        radial-gradient(70% 420px at 50% 0, rgba(99, 102, 241, 0.13), transparent 70%) no-repeat,
+        var(--bg);
       color: var(--fg);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
@@ -190,6 +194,20 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.25rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.25);
+    }
+
+    .feature-card .ficon {
+      width: 22px;
+      height: 22px;
+      color: var(--fg);
+      margin-bottom: 0.65rem;
+      display: block;
     }
 
     .feature-card h3 {
@@ -202,6 +220,144 @@
       font-size: 0.875rem;
       color: var(--muted);
       line-height: 1.5;
+    }
+
+    /* Hero eyebrow */
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22a06b;
+    }
+
+    /* Product preview mockup */
+    .preview {
+      max-width: 580px;
+      margin: 3.5rem auto 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      overflow: hidden;
+      box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+    .preview-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+    .preview-bar i {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--border);
+      flex: none;
+    }
+    .preview-url {
+      margin-left: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.15rem 0.6rem;
+    }
+    .preview-body { padding: 1rem 1.1rem 1.2rem; }
+    .preview-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .preview-head strong { font-size: 0.95rem; letter-spacing: -0.01em; }
+    .preview-head span { font-size: 0.75rem; color: var(--muted); }
+    /* Board (kanban) preview — mirrors the app's board view */
+    .pv-board {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .pv-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .pv-col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.15rem;
+    }
+    .pv-col-head h4 {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .pv-col-head span { font-size: 0.62rem; color: var(--muted); }
+    .pv-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.55rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .pv-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.3rem;
+    }
+    .pv-card .name { font-size: 0.78rem; font-weight: 600; line-height: 1.2; }
+    .pv-card .meta {
+      font-size: 0.66rem;
+      color: var(--muted);
+      margin-top: 0.18rem;
+    }
+    .pv-badge {
+      font-size: 0.56rem;
+      font-weight: 700;
+      padding: 0.08rem 0.4rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex: none;
+      letter-spacing: 0.01em;
+    }
+    .pv-badge.reach  { background: var(--accent); color: var(--accent-fg); }
+    .pv-badge.match  { background: rgba(120, 120, 128, 0.2); color: var(--fg); }
+    .pv-badge.likely { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .pv-prog {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--border);
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .pv-prog i { display: block; height: 100%; background: #22a06b; }
+
+    @media (max-width: 460px) {
+      .preview { margin-top: 2.5rem; }
+      /* Drop the third column so two fit comfortably on phones. */
+      .pv-col:nth-child(3) { display: none; }
     }
 
     /* CTA */
@@ -257,6 +413,7 @@
 
   <main>
     <section class="hero">
+      <span class="eyebrow">Free · Google sign-in · no credit card</span>
       <h1>Every part of your graduate school applications, in one place.</h1>
       <p>Track schools, deadlines, requirements, and recommendation letters — nothing falls through the cracks.</p>
       <div class="btn-group">
@@ -265,6 +422,70 @@
           <button type="submit" class="btn btn-outline">Try the demo</button>
         </form>
       </div>
+
+      <div class="preview" aria-hidden="true">
+        <div class="preview-bar">
+          <i></i><i></i><i></i>
+          <span class="preview-url">my.dossiertool.com</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-head">
+            <strong>Programs</strong>
+            <span>Board · 9 total</span>
+          </div>
+          <div class="pv-board">
+            <div class="pv-col">
+              <div class="pv-col-head"><h4>Submitted</h4><span>2</span></div>
+              <div class="pv-card">
+                <div class="pv-card-top">
+                  <span class="name">Stanford</span>
+                  <span class="pv-badge reach">Reach</span>
+                </div>
+                <div class="meta">Computer Science · PhD</div>
+                <div class="pv-prog"><i style="width:100%"></i></div>
+              </div>
+              <div class="pv-card">
+                <div class="pv-card-top">
+                  <span class="name">UW</span>
+                  <span class="pv-badge match">Match</span>
+                </div>
+                <div class="meta">CSE · PhD</div>
+                <div class="pv-prog"><i style="width:100%"></i></div>
+              </div>
+            </div>
+            <div class="pv-col">
+              <div class="pv-col-head"><h4>Interview</h4><span>1</span></div>
+              <div class="pv-card">
+                <div class="pv-card-top">
+                  <span class="name">Carnegie Mellon</span>
+                  <span class="pv-badge reach">Reach</span>
+                </div>
+                <div class="meta">LTI · PhD</div>
+                <div class="pv-prog"><i style="width:80%"></i></div>
+              </div>
+            </div>
+            <div class="pv-col">
+              <div class="pv-col-head"><h4>Accepted</h4><span>2</span></div>
+              <div class="pv-card">
+                <div class="pv-card-top">
+                  <span class="name">MIT</span>
+                  <span class="pv-badge reach">Reach</span>
+                </div>
+                <div class="meta">EECS · PhD</div>
+                <div class="pv-prog"><i style="width:100%"></i></div>
+              </div>
+              <div class="pv-card">
+                <div class="pv-card-top">
+                  <span class="name">UT Austin</span>
+                  <span class="pv-badge match">Match</span>
+                </div>
+                <div class="meta">Linguistics · PhD</div>
+                <div class="pv-prog"><i style="width:100%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="features">
@@ -272,26 +493,32 @@
         <h2>Everything you need</h2>
         <div class="feature-grid">
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
             <h3>Programs</h3>
             <p>Track every school — tier, status, location, stipend, fees, and interview details.</p>
           </div>
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             <h3>Deadlines &amp; reminders</h3>
             <p>A unified timeline across all programs, plus an optional weekly email digest so nothing slips.</p>
           </div>
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
             <h3>Requirements</h3>
             <p>Log every SOP, transcript, and writing sample, and track completion across all programs at once.</p>
           </div>
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <h3>Recommenders &amp; advisors</h3>
             <p>Manage letter writers and potential faculty advisors — submission status, outreach, and responses.</p>
           </div>
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
             <h3>Documents</h3>
             <p>Keep your statements and writing samples organized by program, version, and status.</p>
           </div>
           <div class="feature-card">
+            <svg class="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5 8.6 10.5"/></svg>
             <h3>Sharing</h3>
             <p>Generate a private read-only link to share your program slate with an advisor or mentor.</p>
           </div>
