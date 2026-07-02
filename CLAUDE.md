@@ -87,9 +87,9 @@ Bias to **boring and simple**. Build so the obvious next scale step is cheap, wi
 
 ## Data model
 
-**User** — `id, email (unique), name, calendar_token? (unique), is_demo, token_version, created_at`
+**User** — `id, email (unique), name, calendar_token? (unique), share_token? (unique), is_demo, token_version, email_reminders, created_at`
 
-**Program** — `id, user_id (FK), school, department, degree, url?, tier (reach|match|likely), status (researching|drafting|submitted|interview|accepted|waitlisted|rejected), location?, app_fee?, stipend?, required_letters?, decision_deadline?, notes?, created_at, updated_at`
+**Program** — `id, user_id (FK), school, department, degree, url?, tier (reach|match|likely), status (researching|drafting|submitted|interview|accepted|waitlisted|rejected), location?, app_fee?, stipend?, required_letters?, decision_deadline?, interview_date?, interview_notes?, notes?, created_at, updated_at`
 
 **Requirement** — `id, program_id (FK), label, kind (sop|cv|transcript|gre|writing_sample|fee|other), status (todo|in_progress|done|waived), due_date?, notes`
 
@@ -119,9 +119,11 @@ app/
   pagination.py # opt-in limit/offset Pagination dependency for list endpoints
   demo.py       # clone_user_data + purge_expired/surplus_demo_users (ephemeral demo accounts)
   ratelimit.py  # in-process fixed-window per-IP limiter (guards POST /auth/demo)
+  email.py      # send_email via Resend HTTP API (env-gated; no-op without keys)
+  reminders.py  # build the weekly digest (upcoming deadlines/requirements/letters)
   models/       # Base + one file per entity (incl. app_meta.py)
   schemas/      # Pydantic v2 Create/Update/Read per entity
-  routers/      # programs, requirements, deadlines, recommenders, advisor, documents, dashboard, calendar, auth, me, admin
+  routers/      # programs, requirements, deadlines, recommenders, advisor, documents, dashboard, calendar, share, tasks, auth, me, admin
 seed.py         # seeds a user's sample data; `python seed.py <email>` builds the demo template, `--demo` reseeds it (version-gated)
 tests/
 alembic/
@@ -180,7 +182,7 @@ pyproject.toml
 
 **Migrations + demo seed run in Render's `preDeployCommand`** (`alembic upgrade head && python seed.py --demo`), once per deploy — NOT in the Docker `CMD` (which only starts uvicorn). This avoids races if the web service ever scales past one instance. ⚠️ If you run the image anywhere other than Render, run that command yourself before serving.
 
-**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`, `COOKIE_DOMAIN=.dossiertool.com` (shared parent so the auth cookie the API sets reaches the frontend middleware; leave blank in local dev), `ADMIN_EMAIL` (optional — enables `/admin/stats`). Demo login (all optional): `DEMO_TEMPLATE_EMAIL` (set to enable, e.g. `demo@dossiertool.com`; must match the seeded template email), `DEMO_TTL_HOURS` (default 168; must be ≥ the token lifetime or startup fails), `DEMO_MAX_USERS` (default 500), `DEMO_RATE_LIMIT_PER_MINUTE` (default 10, 0 disables). Error tracking (optional): `SENTRY_DSN` (blank disables), `SENTRY_TRACES_SAMPLE_RATE` (default 0).
+**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`, `COOKIE_DOMAIN=.dossiertool.com` (shared parent so the auth cookie the API sets reaches the frontend middleware; leave blank in local dev), `ADMIN_EMAIL` (optional — enables `/admin/stats`). Demo login (all optional): `DEMO_TEMPLATE_EMAIL` (set to enable, e.g. `demo@dossiertool.com`; must match the seeded template email), `DEMO_TTL_HOURS` (default 168; must be ≥ the token lifetime or startup fails), `DEMO_MAX_USERS` (default 500), `DEMO_RATE_LIMIT_PER_MINUTE` (default 10, 0 disables). Error tracking (optional): `SENTRY_DSN` (blank disables), `SENTRY_TRACES_SAMPLE_RATE` (default 0). Reminder emails (optional): `RESEND_API_KEY` + `REMINDER_FROM_EMAIL` (both blank = email no-op), `CRON_SECRET` (shared key for the `.github/workflows/weekly-digest.yml` cron → `POST /tasks/weekly-digest`; blank disables the endpoint), `REMINDER_WINDOW_DAYS` (default 14).
 
 **Render plans:** web service on **Starter** (always on); Postgres on **Basic-256mb**. Setting `FRONTEND_URL` flips prod behavior: CORS drops `localhost:3000` and trusts only the deployed UI, startup refuses the dev `SECRET_KEY`, and the interactive docs (`/docs`, `/redoc`, `/openapi.json`) are disabled. `GET /` returns a minimal JSON status (no docs redirect). `healthCheckPath` is `/health`.
 
