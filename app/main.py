@@ -19,6 +19,7 @@ from app.routers import (
     programs,
     recommenders,
     requirements,
+    tasks,
 )
 
 _ROUTERS = (
@@ -33,6 +34,7 @@ _ROUTERS = (
     documents.router,
     dashboard.router,
     calendar.router,
+    tasks.router,
 )
 
 system_router = APIRouter()
