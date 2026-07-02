@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import select
 
 from app.models.program import Program
 from app.models.user import User
@@ -269,3 +270,42 @@ def test_user_isolation(client, dev_user, db_session):
 
     # GET /programs — user A's list must not include user B's program
     assert client.get("/programs").json() == []
+
+
+def _imp(school, department="EECS"):
+    return {
+        "school": school,
+        "department": department,
+        "degree": "PhD",
+        "tier": "match",
+    }
+
+
+def test_import_programs_bulk_creates_owner_scoped(client, dev_user, db_session):
+    from app.models.program import Program
+
+    resp = client.post(
+        "/programs/import",
+        json={"programs": [_imp("MIT"), _imp("Stanford")]},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert [p["school"] for p in body] == ["MIT", "Stanford"]
+    assert all(p["user_id"] == dev_user.id for p in body)
+    assert db_session.scalars(
+        select(Program).where(Program.user_id == dev_user.id)
+    ).all()
+
+
+def test_import_programs_empty_list_ok(client):
+    resp = client.post("/programs/import", json={"programs": []})
+    assert resp.status_code == 201
+    assert resp.json() == []
+
+
+def test_import_programs_over_cap_rejected(client):
+    resp = client.post(
+        "/programs/import",
+        json={"programs": [_imp(f"School {i}") for i in range(101)]},
+    )
+    assert resp.status_code == 422

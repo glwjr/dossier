@@ -21,6 +21,11 @@ class ProgramCreate(BaseModel):
     notes: Notes | None = None
 
 
+class ProgramImport(BaseModel):
+    # Bounded so a single request can't create an unbounded number of rows.
+    programs: list[ProgramCreate] = Field(..., max_length=100)
+
+
 class ProgramUpdate(BaseModel):
     school: ShortStr | None = None
     department: ShortStr | None = None

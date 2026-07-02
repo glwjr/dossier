@@ -14,6 +14,7 @@ import {
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { ProgramDialog } from "@/components/program-dialog";
+import { ImportProgramsDialog } from "@/components/import-programs-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { usePageTitle } from "@/lib/use-page-title";
-import { LayoutList, LayoutGrid, Download, Plus } from "lucide-react";
+import { LayoutList, LayoutGrid, Download, Plus, Upload } from "lucide-react";
 import { onMutationError } from "@/lib/mutation-error";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -592,6 +593,14 @@ function ProgramsInner() {
               </Button>
             </PopoverContent>
           </Popover>
+          <ImportProgramsDialog
+            trigger={
+              <Button variant="outline">
+                <Upload />
+                Import
+              </Button>
+            }
+          />
           <ProgramDialog
             trigger={<Button><Plus />New program</Button>}
             open={newProgramOpen}

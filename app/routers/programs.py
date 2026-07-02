@@ -9,7 +9,12 @@ from app.models.requirement import Requirement, RequirementKind
 from app.models.user import User
 from app.ownership import get_program_or_404
 from app.pagination import Pagination, pagination
-from app.schemas.program import ProgramCreate, ProgramRead, ProgramUpdate
+from app.schemas.program import (
+    ProgramCreate,
+    ProgramImport,
+    ProgramRead,
+    ProgramUpdate,
+)
 
 router = APIRouter(prefix="/programs", tags=["programs"])
 
@@ -54,6 +59,25 @@ def create_program(
     db.commit()
     db.refresh(program)
     return program
+
+
+@router.post(
+    "/import", response_model=list[ProgramRead], status_code=status.HTTP_201_CREATED
+)
+def import_programs(
+    body: ProgramImport,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Bulk-create programs (owner-scoped) — e.g. a pasted list from the UI."""
+    created = [
+        Program(**p.model_dump(), user_id=current_user.id) for p in body.programs
+    ]
+    db.add_all(created)
+    db.commit()
+    for c in created:
+        db.refresh(c)
+    return created
 
 
 @router.get("/{program_id}", response_model=ProgramRead)
