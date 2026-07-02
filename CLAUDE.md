@@ -45,7 +45,7 @@ There is a test proving one user cannot read or mutate another user's data.
 ## Guardrails
 
 - **No async** — synchronous SQLAlchemy only.
-- Do not add libraries beyond the stack without discussion.
+- **Prefer the existing stack.** Add a dependency only when it removes real risk or real duplication — never speculatively. Essential is fine; "might be handy" is not.
 
 ---
 
@@ -54,6 +54,34 @@ There is a test proving one user cannot read or mutate another user's data.
 - **TDD**: write the failing test first, then implement to green.
 - **Verify before moving on**: run `pytest` and `ruff` after each change. Never proceed with a red suite.
 - **Commits**: one logical change per commit, conventional-commit style.
+
+---
+
+## Production practices
+
+Bias to **boring and simple**. Build so the obvious next scale step is cheap, without paying for it now. These are settled — apply them to every change.
+
+**Security**
+- Every endpoint is authenticated (`Depends(get_current_user)`) and every row owner-scoped to `current_user`. The only public endpoints are auth, health, and the capability-token calendar feed — new endpoints follow suit.
+- Secrets live only in env vars (Render/Vercel) — never in the repo, logs, or CI artifacts. **The repo is public: assume anything it can emit is world-readable** (this is why there's no DB-dump CI job — see [BACKUPS.md](BACKUPS.md)).
+- The JWT is an HttpOnly/Secure/SameSite=Lax cookie; never expose it to JS. Auth changes stay behind `get_current_user`.
+- Validate and bound all user input via `app/schemas/validators.py` (length caps on text, http(s)-only URLs). Fail closed.
+- Rate-limit abuse-prone endpoints (`app/ratelimit.py`).
+
+**Data**
+- All schema changes go through Alembic migrations — never edit the DB directly. Migrations run once per deploy via `preDeployCommand`.
+- Destructive operations are reversible or guarded (FK-safe deletes; demo / self-delete guards).
+- Backups are Render-managed (private, encrypted); test-restore periodically.
+
+**Reliability & observability**
+- **Fail loudly, not silently.** A pipeline that can fail uses `set -o pipefail`; a job that produces nothing errors rather than reporting success.
+- Errors go to Sentry (env-gated via `SENTRY_DSN`). No `print` in app code.
+- Config validates at startup and refuses unsafe prod settings (dev `SECRET_KEY`; misordered demo TTL).
+
+**Scale-forward** (known single-instance assumptions — revisit before adding web instances)
+- The in-process rate limiter and the demo GC/seed assume one process. Multiple instances → a shared store (Redis) for limits, and seeding stays in `preDeployCommand` (already single-run).
+- Sessions are stateless JWTs with `token_version` revocation — no session store needed yet.
+- List endpoints support opt-in pagination (`app/pagination.py`); keep new ones paginatable, and index foreign keys and lookup columns.
 
 ---
 
