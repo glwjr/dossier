@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { safeExternalUrl } from "@/lib/url";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { onMutationError } from "@/lib/mutation-error";
@@ -108,9 +109,9 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
             </Link>
           )}
           <span className="block truncate font-medium">{d.title}</span>
-          {d.url && (
+          {safeExternalUrl(d.url) && (
             <a
-              href={d.url}
+              href={safeExternalUrl(d.url)!}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
