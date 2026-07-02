@@ -25,9 +25,7 @@ def shared_view(token: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Share link not found"
         )
     programs = db.scalars(
-        select(Program)
-        .where(Program.user_id == user.id)
-        .order_by(Program.school)
+        select(Program).where(Program.user_id == user.id).order_by(Program.school)
     ).all()
     return ShareView(
         name=user.name,
