@@ -3,12 +3,11 @@ import secrets
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user
+from app.auth import clear_auth_cookie, get_current_user
 from app.db import get_db
 from app.models.advisor import Advisor
 from app.models.deadline import Deadline
@@ -38,6 +37,7 @@ def me(current_user: User = Depends(get_current_user)):
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_me(
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -62,20 +62,23 @@ def delete_me(
     db.execute(delete(Recommender).where(Recommender.user_id == current_user.id))
     db.delete(current_user)
     db.commit()
+    clear_auth_cookie(response)
 
 
 @router.post("/me/logout-all", status_code=status.HTTP_204_NO_CONTENT)
 def logout_all(
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Invalidate every outstanding JWT for this user by bumping token_version.
 
     The token used for this request is included — the caller is signed out
-    everywhere and must re-authenticate.
+    everywhere and must re-authenticate. Also clears this browser's cookie.
     """
     current_user.token_version += 1
     db.commit()
+    clear_auth_cookie(response)
 
 
 @router.post("/me/calendar-token", response_model=UserRead)

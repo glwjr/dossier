@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/callback"
     frontend_url: str = ""
+    # Domain for the auth cookie. In production both apps are subdomains of the
+    # same site, so this must be the shared parent (e.g. ".dossiertool.com") for
+    # the cookie set by the API to reach the frontend middleware. Blank = the
+    # cookie is host-only (correct for localhost dev, where ports share a host).
+    cookie_domain: str = ""
     admin_email: str = ""
     # Ephemeral demo login: /auth/demo clones this user's data into a throwaway
     # account. Leave blank to disable the demo endpoint entirely.

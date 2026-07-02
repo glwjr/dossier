@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getToken, redirectToLogin } from "@/lib/auth";
-
+/**
+ * Auth boundary for app pages. The real gate is the Next.js middleware
+ * (ui/proxy.ts), which redirects anyone without the auth cookie before the page
+ * renders; an invalid or expired cookie is caught by the 401 handler on the
+ * first API call (see providers.tsx). Because the token is HttpOnly, there is
+ * nothing for the client to check here — this stays as the pages' wrapper.
+ */
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (!getToken()) {
-      redirectToLogin();
-    } else {
-      // Client-only auth gate; the token isn't available during SSR.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setReady(true);
-    }
-  }, []);
-
-  if (!ready) return null;
   return <>{children}</>;
 }

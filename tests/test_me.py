@@ -11,7 +11,7 @@ def test_me_returns_current_user(client, dev_user):
 
 
 def test_me_flags_demo_user(raw_client, db_session):
-    from app.auth import create_access_token
+    from app.auth import AUTH_COOKIE, create_access_token
     from app.models.user import User
 
     demo = User(email="demo-me@demo.local", name="Demo User", is_demo=True)
@@ -19,12 +19,12 @@ def test_me_flags_demo_user(raw_client, db_session):
     db_session.flush()
     token = create_access_token({"sub": demo.email})
 
-    data = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).json()
+    data = raw_client.get("/me", cookies={AUTH_COOKIE: token}).json()
     assert data["is_demo"] is True
 
 
 def test_logout_all_invalidates_existing_tokens(raw_client, db_session):
-    from app.auth import create_access_token
+    from app.auth import AUTH_COOKIE, create_access_token
     from app.models.user import User
 
     user = User(email="logout-all@example.com", name="LA")
@@ -32,13 +32,11 @@ def test_logout_all_invalidates_existing_tokens(raw_client, db_session):
     db_session.flush()
     token = create_access_token({"sub": user.email, "ver": user.token_version})
 
-    revoked = raw_client.post(
-        "/me/logout-all", headers={"Authorization": f"Bearer {token}"}
-    )
+    revoked = raw_client.post("/me/logout-all", cookies={AUTH_COOKIE: token})
     assert revoked.status_code == 204
 
     # The token used to make the request is now stale.
-    stale = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    stale = raw_client.get("/me", cookies={AUTH_COOKIE: token})
     assert stale.status_code == 401
 
 

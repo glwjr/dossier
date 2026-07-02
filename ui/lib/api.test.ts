@@ -1,13 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth", () => ({
-  getToken: vi.fn(),
-  clearToken: vi.fn(),
-  redirectToLogin: vi.fn(),
-}));
-
 import { api, AuthError } from "@/lib/api";
-import { clearToken, getToken, redirectToLogin } from "@/lib/auth";
 
 const mockFetch = vi.fn();
 
@@ -22,38 +15,29 @@ function response(body: unknown, status = 200) {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("fetch", mockFetch);
-  vi.mocked(getToken).mockReturnValue("tok123");
 });
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("api request", () => {
-  it("redirects to login and throws when there is no token", async () => {
-    vi.mocked(getToken).mockReturnValue(null);
-    await expect(api.get("/me")).rejects.toBeInstanceOf(AuthError);
-    expect(redirectToLogin).toHaveBeenCalledOnce();
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it("sends the bearer token and returns parsed JSON", async () => {
+  it("sends the auth cookie via credentials:include and returns parsed JSON", async () => {
     mockFetch.mockResolvedValue(response({ id: 1 }));
     const data = await api.get<{ id: number }>("/me");
 
     expect(data).toEqual({ id: 1 });
     const [url, opts] = mockFetch.mock.calls[0];
     expect(url).toBe("http://api.test/me");
-    expect((opts.headers as Record<string, string>).Authorization).toBe(
-      "Bearer tok123"
-    );
+    expect(opts.credentials).toBe("include");
     expect((opts.headers as Record<string, string>)["Content-Type"]).toBe(
       "application/json"
     );
+    // No Authorization header — the JWT is never in JS.
+    expect((opts.headers as Record<string, string>).Authorization).toBeUndefined();
   });
 
-  it("clears the token and throws AuthError on 401", async () => {
+  it("throws AuthError on 401", async () => {
     mockFetch.mockResolvedValue(response(null, 401));
     await expect(api.get("/me")).rejects.toBeInstanceOf(AuthError);
-    expect(clearToken).toHaveBeenCalledOnce();
   });
 
   it("returns undefined for a 204 with no body", async () => {

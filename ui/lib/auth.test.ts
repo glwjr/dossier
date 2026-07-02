@@ -1,26 +1,37 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { getToken, setToken, clearToken } from "@/lib/auth";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-describe("token storage", () => {
-  beforeEach(() => {
-    localStorage.clear();
-    document.cookie = "dossier_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+import { logout } from "@/lib/auth";
+
+const mockFetch = vi.fn();
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.stubGlobal("fetch", mockFetch);
+  mockFetch.mockResolvedValue({ ok: true } as Response);
+  // jsdom doesn't implement navigation; make window.location.href assignable.
+  Object.defineProperty(window, "location", {
+    value: { href: "" },
+    writable: true,
+  });
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("logout", () => {
+  it("clears the server session cookie and redirects to the marketing site", async () => {
+    await logout();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, opts] = mockFetch.mock.calls[0];
+    expect(url).toContain("/auth/logout");
+    expect(opts.method).toBe("POST");
+    expect(opts.credentials).toBe("include");
+    expect(window.location.href).toBe("https://dossiertool.com");
   });
 
-  it("returns null when no token is stored", () => {
-    expect(getToken()).toBeNull();
-  });
-
-  it("round-trips a token through localStorage and mirrors it to a cookie", () => {
-    setToken("abc.def.ghi");
-    expect(getToken()).toBe("abc.def.ghi");
-    expect(document.cookie).toContain("dossier_token=abc.def.ghi");
-  });
-
-  it("clears both localStorage and the cookie", () => {
-    setToken("abc.def.ghi");
-    clearToken();
-    expect(getToken()).toBeNull();
-    expect(document.cookie).not.toContain("abc.def.ghi");
+  it("still redirects even if the logout request fails", async () => {
+    mockFetch.mockRejectedValue(new Error("network"));
+    await logout();
+    expect(window.location.href).toBe("https://dossiertool.com");
   });
 });

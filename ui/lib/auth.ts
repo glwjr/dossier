@@ -1,26 +1,11 @@
-const TOKEN_KEY = "dossier_token";
+// The JWT lives only in an HttpOnly cookie set by the API, so there is no token
+// for client JS to read, store, or clear. Session checks are done server-side
+// (the Next.js middleware in proxy.ts) and sign-out goes through the API, which
+// is the only party that can clear the cookie.
 
-// Marketing site (dossiertool.com) — the landing/login page with the Google
-// and demo CTAs. Unauthenticated app visitors are sent here.
 const MARKETING_URL =
   process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://dossiertool.com";
-
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-  // Mirror to a cookie so Next.js middleware can read it server-side.
-  const secure = location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax${secure}`;
-}
-
-export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export function redirectToLogin(): void {
   window.location.href = MARKETING_URL;
@@ -28,4 +13,17 @@ export function redirectToLogin(): void {
 
 export function redirectToHome(): void {
   window.location.href = MARKETING_URL;
+}
+
+/** Sign out of this browser: clear the HttpOnly cookie server-side, then leave. */
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // Best effort — redirect regardless so the user still lands on the login page.
+  }
+  redirectToHome();
 }
