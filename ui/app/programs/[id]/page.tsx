@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { use } from "react";
 import { api } from "@/lib/api";
+import { safeExternalUrl } from "@/lib/url";
 import {
   Deadline,
   Document,
@@ -478,9 +479,9 @@ function AdvisorsTab({ programId }: { programId: number }) {
             {c.research_area && (
               <span className="block truncate text-xs text-muted-foreground">{c.research_area}</span>
             )}
-            {c.url && (
+            {safeExternalUrl(c.url) && (
               <a
-                href={c.url}
+                href={safeExternalUrl(c.url)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
@@ -593,9 +594,9 @@ function DocumentsTab({ programId }: { programId: number }) {
           className={`flex items-start gap-4 rounded-md border border-l-4 px-3 py-2 text-sm ${DOC_STATUS_BORDER[d.status]}`}
         >
           <div className="min-w-0 flex-1">
-            {d.url ? (
+            {safeExternalUrl(d.url) ? (
               <a
-                href={d.url}
+                href={safeExternalUrl(d.url)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex max-w-full items-center gap-1 underline underline-offset-2 hover:opacity-70"
@@ -838,9 +839,9 @@ function ProgramDetail({ id }: { id: number }) {
                 )}
               </div>
             )}
-            {program.url && (
+            {safeExternalUrl(program.url) && (
               <a
-                href={program.url}
+                href={safeExternalUrl(program.url)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1.5 inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-70"

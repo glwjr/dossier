@@ -1,5 +1,3 @@
-import { clearToken, getToken, redirectToLogin } from "./auth";
-
 const BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export class AuthError extends Error {
@@ -9,23 +7,18 @@ export class AuthError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  if (!token) {
-    redirectToLogin();
-    throw new AuthError();
-  }
-
+  // credentials: "include" sends the HttpOnly auth cookie on this cross-origin
+  // (same-site) request; no token is read or attached by JS.
   const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });
 
   if (res.status === 401) {
-    clearToken();
     throw new AuthError();
   }
 

@@ -3,9 +3,18 @@ from urllib.parse import parse_qs, urlparse
 
 import httpx
 
-from app.auth import create_access_token
+from app.auth import AUTH_COOKIE, create_access_token
 from app.config import settings
 from app.models.user import User
+
+
+def _get_with_cookie(client, path, token):
+    client.cookies.set(AUTH_COOKIE, token)
+    try:
+        return client.get(path)
+    finally:
+        client.cookies.clear()
+
 
 # --- /auth/login ---
 
@@ -110,9 +119,13 @@ def test_callback_redirects_to_frontend_when_configured(
         )
 
     assert response.status_code in (302, 307)
-    assert response.headers["location"].startswith(
-        "http://localhost:3000/auth/callback?token="
-    )
+    # The token never reaches the browser as text — it's set as an HttpOnly
+    # cookie and the user is redirected straight to the app.
+    assert response.headers["location"] == "http://localhost:3000/"
+    set_cookie = response.headers["set-cookie"]
+    assert f"{AUTH_COOKIE}=" in set_cookie
+    assert "HttpOnly" in set_cookie
+    assert "samesite=lax" in set_cookie.lower()
 
 
 def test_callback_rejects_invalid_state(raw_client):
@@ -192,26 +205,33 @@ def test_valid_jwt_authenticates_user(raw_client, db_session):
     db_session.flush()
 
     token = create_access_token({"sub": "jwt-user@example.com"})
-    response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    response = _get_with_cookie(raw_client, "/me", token)
     assert response.status_code == 200
     assert response.json()["email"] == "jwt-user@example.com"
 
 
+def test_access_token_carries_issued_at(raw_client):
+    import jwt
+
+    token = create_access_token({"sub": "iat-user@example.com"})
+    claims = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    assert "iat" in claims
+    assert "exp" in claims
+
+
 def test_invalid_jwt_returns_401(raw_client):
-    response = raw_client.get(
-        "/me", headers={"Authorization": "Bearer not.a.valid.token"}
-    )
+    response = _get_with_cookie(raw_client, "/me", "not.a.valid.token")
     assert response.status_code == 401
 
 
-def test_missing_auth_header_returns_401(raw_client):
+def test_missing_auth_cookie_returns_401(raw_client):
     response = raw_client.get("/me")
     assert response.status_code == 401
 
 
 def test_jwt_for_nonexistent_user_returns_401(raw_client):
     token = create_access_token({"sub": "ghost@example.com"})
-    response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    response = _get_with_cookie(raw_client, "/me", token)
     assert response.status_code == 401
 
 
@@ -222,7 +242,7 @@ def test_jwt_without_ver_claim_treated_as_zero(raw_client, db_session):
     db_session.add(user)
     db_session.flush()
     token = create_access_token({"sub": user.email})
-    response = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    response = _get_with_cookie(raw_client, "/me", token)
     assert response.status_code == 200
 
 
@@ -232,15 +252,18 @@ def test_jwt_rejected_after_token_version_bump(raw_client, db_session):
     db_session.flush()
     token = create_access_token({"sub": user.email, "ver": user.token_version})
 
-    assert (
-        raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).status_code
-        == 200
-    )
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 200
 
     # Bumping the version invalidates the previously issued token.
     user.token_version += 1
     db_session.flush()
-    assert (
-        raw_client.get("/me", headers={"Authorization": f"Bearer {token}"}).status_code
-        == 401
-    )
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 401
+
+
+def test_logout_clears_auth_cookie(raw_client):
+    response = raw_client.post("/auth/logout")
+    assert response.status_code == 204
+    set_cookie = response.headers["set-cookie"]
+    assert f"{AUTH_COOKIE}=" in set_cookie
+    # An expiry in the past tells the browser to drop the cookie.
+    assert "expires=" in set_cookie.lower() or "max-age=0" in set_cookie.lower()

@@ -3,12 +3,12 @@ import secrets
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token
+from app.auth import clear_auth_cookie, create_access_token, set_auth_cookie
 from app.config import settings
 from app.db import get_db
 from app.demo import (
@@ -161,10 +161,20 @@ def demo_login(db: Session = Depends(get_db)):
     clone_user_data(db, template, demo_user)
     db.commit()
 
-    # 303: this is a POST, so the browser must GET the callback, not re-POST it.
+    # 303: this is a POST, so the browser must GET the destination, not re-POST.
     return _issue_token(
         email, demo_user.token_version, redirect_status=status.HTTP_303_SEE_OTHER
     )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(response: Response):
+    """Sign out of this browser by clearing the auth cookie.
+
+    Only the server can clear an HttpOnly cookie, so sign-out is an endpoint
+    rather than client-side JS. Idempotent and safe to call unauthenticated.
+    """
+    clear_auth_cookie(response)
 
 
 def _issue_token(
@@ -172,11 +182,14 @@ def _issue_token(
     token_version: int,
     redirect_status: int = status.HTTP_307_TEMPORARY_REDIRECT,
 ):
-    """Redirect to the frontend with a JWT, or return it as JSON in dev."""
+    """Set the JWT as an HttpOnly cookie, then redirect to the app (or return
+    JSON when no frontend is configured, e.g. local API-only use and tests)."""
     access_token = create_access_token({"sub": email, "ver": token_version})
     if settings.frontend_url:
-        return RedirectResponse(
-            f"{settings.frontend_url}/auth/callback?token={access_token}",
-            status_code=redirect_status,
+        response: Response = RedirectResponse(
+            f"{settings.frontend_url}/", status_code=redirect_status
         )
-    return {"access_token": access_token, "token_type": "bearer"}
+    else:
+        response = JSONResponse({"access_token": access_token, "token_type": "bearer"})
+    set_auth_cookie(response, access_token)
+    return response

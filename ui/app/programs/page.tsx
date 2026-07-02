@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { safeExternalUrl } from "@/lib/url";
 import { Program, ProgramStatus, RequirementWithProgram, DeadlineWithProgram } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
@@ -118,9 +119,9 @@ function ProgramCard({ program, reqCount }: { program: Program; reqCount?: { don
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {program.app_fee != null && <span>${program.app_fee} fee</span>}
-          {program.url && (
+          {safeExternalUrl(program.url) && (
             <a
-              href={program.url}
+              href={safeExternalUrl(program.url)!}
               target="_blank"
               rel="noopener noreferrer"
               className="underline underline-offset-2 hover:text-foreground"

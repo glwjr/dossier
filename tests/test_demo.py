@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token
+from app.auth import AUTH_COOKIE, create_access_token
 from app.config import settings
 from app.demo import (
     clone_user_data,
@@ -280,7 +280,7 @@ def test_demo_endpoint_creates_isolated_account(raw_client, db_session, monkeypa
     token = response.json()["access_token"]
 
     # The minted token authenticates a brand-new demo user with cloned data.
-    me = raw_client.get("/me", headers={"Authorization": f"Bearer {token}"})
+    me = raw_client.get("/me", cookies={AUTH_COOKIE: token})
     assert me.status_code == 200
     body = me.json()
     assert body["email"].startswith("demo-")
@@ -297,11 +297,13 @@ def test_demo_endpoint_redirects_to_frontend(raw_client, db_session, monkeypatch
     monkeypatch.setattr(settings, "frontend_url", "http://localhost:3000")
 
     response = raw_client.post("/auth/demo", follow_redirects=False)
-    # 303 See Other so the browser issues a GET on the callback after our POST.
+    # 303 See Other so the browser issues a GET on the destination after our POST.
     assert response.status_code == 303
-    assert response.headers["location"].startswith(
-        "http://localhost:3000/auth/callback?token="
-    )
+    assert response.headers["location"] == "http://localhost:3000/"
+    # The demo JWT is set as an HttpOnly cookie, never exposed to JS.
+    set_cookie = response.headers["set-cookie"]
+    assert "dossier_token=" in set_cookie
+    assert "HttpOnly" in set_cookie
 
 
 def test_demo_endpoint_501_when_disabled(raw_client, monkeypatch):
@@ -318,12 +320,8 @@ def test_each_demo_login_is_a_separate_account(raw_client, db_session, monkeypat
     first = raw_client.post("/auth/demo").json()["access_token"]
     second = raw_client.post("/auth/demo").json()["access_token"]
 
-    email1 = raw_client.get("/me", headers={"Authorization": f"Bearer {first}"}).json()[
-        "email"
-    ]
-    email2 = raw_client.get(
-        "/me", headers={"Authorization": f"Bearer {second}"}
-    ).json()["email"]
+    email1 = raw_client.get("/me", cookies={AUTH_COOKIE: first}).json()["email"]
+    email2 = raw_client.get("/me", cookies={AUTH_COOKIE: second}).json()["email"]
     assert email1 != email2
 
 
@@ -357,7 +355,7 @@ def test_demo_user_cannot_delete_account(raw_client, db_session):
     demo = _demo_user(db_session, "del", hours_old=0)
     token = create_access_token({"sub": demo.email})
 
-    response = raw_client.delete("/me", headers={"Authorization": f"Bearer {token}"})
+    response = raw_client.delete("/me", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403
     assert db_session.scalar(select(User).where(User.id == demo.id)) is not None
 
@@ -366,9 +364,7 @@ def test_demo_user_cannot_create_calendar_token(raw_client, db_session):
     demo = _demo_user(db_session, "cal", hours_old=0)
     token = create_access_token({"sub": demo.email})
 
-    response = raw_client.post(
-        "/me/calendar-token", headers={"Authorization": f"Bearer {token}"}
-    )
+    response = raw_client.post("/me/calendar-token", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403
     db_session.refresh(demo)
     assert demo.calendar_token is None
@@ -378,7 +374,5 @@ def test_demo_user_cannot_revoke_calendar_token(raw_client, db_session):
     demo = _demo_user(db_session, "cal2", hours_old=0)
     token = create_access_token({"sub": demo.email})
 
-    response = raw_client.delete(
-        "/me/calendar-token", headers={"Authorization": f"Bearer {token}"}
-    )
+    response = raw_client.delete("/me/calendar-token", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403

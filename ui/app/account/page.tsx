@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { User } from "@/lib/types";
-import { clearToken, getToken, redirectToHome } from "@/lib/auth";
+import { logout, redirectToHome } from "@/lib/auth";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { formatDate } from "@/lib/display";
@@ -40,24 +40,20 @@ function AccountInner() {
 
   const deleteAccount = useMutation({
     mutationFn: () => api.delete("/me"),
-    onSuccess: () => {
-      clearToken();
-      redirectToHome();
-    },
+    // The API clears the auth cookie as part of deletion; just leave.
+    onSuccess: () => redirectToHome(),
     onError: onMutationError,
   });
 
   function handleSignOut() {
-    clearToken();
-    redirectToHome();
+    // logout() clears the HttpOnly cookie server-side, then redirects.
+    logout();
   }
 
   const signOutEverywhere = useMutation({
     mutationFn: () => api.post("/me/logout-all", {}),
-    onSuccess: () => {
-      clearToken();
-      redirectToHome();
-    },
+    // logout-all bumps token_version and clears this browser's cookie.
+    onSuccess: () => redirectToHome(),
     onError: onMutationError,
   });
 
@@ -73,10 +69,8 @@ function AccountInner() {
   }
 
   async function handleExport() {
-    const token = getToken();
-    if (!token) return;
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/export`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
     if (!res.ok) return;
     const blob = await res.blob();

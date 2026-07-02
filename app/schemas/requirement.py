@@ -3,22 +3,23 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from app.models.requirement import RequirementKind, RequirementStatus
+from app.schemas.validators import Notes, ShortStr
 
 
 class RequirementCreate(BaseModel):
-    label: str
+    label: ShortStr
     kind: RequirementKind
     status: RequirementStatus = RequirementStatus.todo
     due_date: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class RequirementUpdate(BaseModel):
-    label: str | None = None
+    label: ShortStr | None = None
     kind: RequirementKind | None = None
     status: RequirementStatus | None = None
     due_date: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramSummary(BaseModel):

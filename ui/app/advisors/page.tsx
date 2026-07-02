@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { safeExternalUrl } from "@/lib/url";
 import { AdvisorWithProgram } from "@/lib/types";
 import { ADVISOR_RESPONSE_LABEL, formatDate } from "@/lib/display";
 import { Input } from "@/components/ui/input";
@@ -163,9 +164,9 @@ function AdvisorsInner() {
               {c.email}
             </a>
           )}
-          {c.url && (
+          {safeExternalUrl(c.url) && (
             <a
-              href={c.url}
+              href={safeExternalUrl(c.url)!}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"

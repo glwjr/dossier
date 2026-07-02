@@ -3,22 +3,23 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from app.models.document import DocumentKind, DocumentStatus
+from app.schemas.validators import Notes, ShortStr, WebUrl
 
 
 class DocumentCreate(BaseModel):
     kind: DocumentKind
-    title: str
+    title: ShortStr
     status: DocumentStatus = DocumentStatus.draft
-    url: str | None = None
-    notes: str | None = None
+    url: WebUrl | None = None
+    notes: Notes | None = None
 
 
 class DocumentUpdate(BaseModel):
     kind: DocumentKind | None = None
-    title: str | None = None
+    title: ShortStr | None = None
     status: DocumentStatus | None = None
-    url: str | None = None
-    notes: str | None = None
+    url: WebUrl | None = None
+    notes: Notes | None = None
 
 
 class DocumentRead(BaseModel):

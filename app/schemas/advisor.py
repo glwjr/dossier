@@ -3,26 +3,27 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models.advisor import AdvisorResponse
+from app.schemas.validators import Notes, ShortStr, WebUrl
 
 
 class AdvisorCreate(BaseModel):
-    name: str
+    name: ShortStr
     email: EmailStr | None = None
-    url: str | None = None
-    research_area: str | None = None
+    url: WebUrl | None = None
+    research_area: ShortStr | None = None
     contacted_on: date | None = None
     response: AdvisorResponse = AdvisorResponse.none
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class AdvisorUpdate(BaseModel):
-    name: str | None = None
+    name: ShortStr | None = None
     email: EmailStr | None = None
-    url: str | None = None
-    research_area: str | None = None
+    url: WebUrl | None = None
+    research_area: ShortStr | None = None
     contacted_on: date | None = None
     response: AdvisorResponse | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramSummary(BaseModel):
