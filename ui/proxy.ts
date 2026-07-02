@@ -15,6 +15,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on all routes except auth callbacks, Next.js internals, and static files.
-  matcher: ["/((?!auth/|_next/static|_next/image|favicon.ico).*)"],
+  // Run on all routes except auth callbacks, the public share page, Next.js
+  // internals, and static files.
+  matcher: ["/((?!auth/|share/|_next/static|_next/image|favicon.ico).*)"],
 };

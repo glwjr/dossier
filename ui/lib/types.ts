@@ -236,7 +236,24 @@ export interface User {
   email: string;
   name: string;
   calendar_token: string | null;
+  share_token: string | null;
   is_demo: boolean;
   email_reminders: boolean;
   created_at: string;
+}
+
+export interface ShareProgram {
+  school: string;
+  department: string;
+  degree: string;
+  tier: string;
+  status: string;
+  location: string | null;
+  url: string | null;
+  decision_deadline: string | null;
+}
+
+export interface ShareView {
+  name: string;
+  programs: ShareProgram[];
 }

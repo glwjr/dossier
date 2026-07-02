@@ -18,6 +18,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 function AccountInner() {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["me"],
@@ -50,6 +51,20 @@ function AccountInner() {
     onError: onMutationError,
   });
 
+  const generateShare = useMutation({
+    mutationFn: () => api.post<User>("/me/share-token", {}),
+    onSuccess: (updated) => queryClient.setQueryData(["me"], updated),
+    onError: onMutationError,
+  });
+  const revokeShare = useMutation({
+    mutationFn: () => api.delete("/me/share-token"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Share link disabled");
+    },
+    onError: onMutationError,
+  });
+
   const deleteAccount = useMutation({
     mutationFn: () => api.delete("/me"),
     // The API clears the auth cookie as part of deletion; just leave.
@@ -74,10 +89,21 @@ function AccountInner() {
     : "";
   const webcalUrl = feedUrl.replace(/^https?:\/\//, "webcal://");
 
+  const shareUrl =
+    user?.share_token && typeof window !== "undefined"
+      ? `${window.location.origin}/share/${user.share_token}`
+      : "";
+
   function copyFeed() {
     navigator.clipboard.writeText(feedUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  function copyShare() {
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 1500);
   }
 
   async function handleExport() {
@@ -198,6 +224,57 @@ function AccountInner() {
               disabled={generateToken.isPending}
             >
               {generateToken.isPending ? "Generating…" : "Generate calendar link"}
+            </Button>
+          </div>
+        )}
+      </div>
+      )}
+      {!isDemo && (
+      <div className="space-y-2 border-t pt-6">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Share your list
+        </p>
+        {user.share_token ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Anyone with this link can view your programs and status
+              (read-only). Keep it private.
+            </p>
+            <div className="flex gap-2">
+              <Input readOnly value={shareUrl} className="text-xs" />
+              <Button variant="outline" onClick={copyShare}>
+                {copiedShare ? "Copied" : "Copy"}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => generateShare.mutate()}
+                disabled={generateShare.isPending}
+              >
+                Regenerate
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => revokeShare.mutate()}
+                disabled={revokeShare.isPending}
+              >
+                Disable
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Create a private read-only link to share your program slate with
+              an advisor or mentor.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => generateShare.mutate()}
+              disabled={generateShare.isPending}
+            >
+              {generateShare.isPending ? "Generating…" : "Create share link"}
             </Button>
           </div>
         )}

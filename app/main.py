@@ -19,6 +19,7 @@ from app.routers import (
     programs,
     recommenders,
     requirements,
+    share,
     tasks,
 )
 
@@ -34,6 +35,7 @@ _ROUTERS = (
     documents.router,
     dashboard.router,
     calendar.router,
+    share.router,
     tasks.router,
 )
 

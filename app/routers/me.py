@@ -95,6 +95,32 @@ def logout_all(
     clear_auth_cookie(response)
 
 
+@router.post("/me/share-token", response_model=UserRead)
+def rotate_share_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate (or rotate) the secret token for the public read-only share page."""
+    _reject_demo(current_user)
+    current_user.share_token = secrets.token_urlsafe(24)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.delete("/me/share-token", response_model=UserRead)
+def revoke_share_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke the share page; the old link stops working immediately."""
+    _reject_demo(current_user)
+    current_user.share_token = None
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @router.post("/me/calendar-token", response_model=UserRead)
 def rotate_calendar_token(
     current_user: User = Depends(get_current_user),
