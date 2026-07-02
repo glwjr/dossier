@@ -14,9 +14,6 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
       - name: Dump database
         env:
           # Render Dashboard → your Postgres → "External Database URL".
@@ -31,7 +28,11 @@ jobs:
           fi
           ts=$(date -u +%Y%m%dT%H%M%SZ)
           file="dossier-${ts}.sql.gz"
-          pg_dump --no-owner --no-privileges "$BACKUP_DATABASE_URL" | gzip > "$file"
+          # pg_dump must be >= the server's major version. Run it from a pinned
+          # Postgres image so it matches Render (bump the tag if Render upgrades).
+          docker run --rm postgres:18 \
+            pg_dump --no-owner --no-privileges "$BACKUP_DATABASE_URL" \
+            | gzip > "$file"
           # A valid dump always starts with the pg_dump header. Guard against an
           # empty/partial dump slipping through as a "successful" backup.
           if ! gzip -dc "$file" | grep -q "PostgreSQL database dump"; then
