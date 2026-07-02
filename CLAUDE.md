@@ -14,8 +14,11 @@ PhD application tracker. Architectural decisions below are settled — don't re-
 - SQLite in dev, **Postgres** in prod — selected via `DATABASE_URL` env var
 - **pytest** + FastAPI `TestClient`
 - **ruff** for lint + format
-- **Docker** + **GitHub Actions** CI
+- **Docker** + **GitHub Actions** CI (backend: ruff + pytest; frontend: eslint + tsc + vitest + build)
 - **Next.js 16** App Router, TanStack Query, shadcn/ui (Base UI variant)
+- **Vitest** + Testing Library for frontend unit tests (`ui/lib/*.test.ts`, `npm test`)
+- **Sentry** for error tracking (env-gated via `SENTRY_DSN`; no-op when unset)
+- **Dependabot** for weekly pip / npm / github-actions updates
 
 ---
 
@@ -25,7 +28,9 @@ Two separable concerns kept deliberately separate:
 
 1. **Authorization model** — `User` entity, `user_id` owner on every row, every query scoped to `current_user`, every endpoint gated by `Depends(get_current_user)`. Ownership of nested resources (requirements, deadlines, etc.) is verified through the parent program via the shared `get_program_or_404` helper in `app/ownership.py` — load `Program` scoped to `current_user.id` first; 404 if not theirs.
 
-2. **Authentication mechanism** — Google OAuth + JWT (signed/verified with **PyJWT**), entirely behind `get_current_user` in `app/auth.py`. Validates a Bearer JWT issued by `/auth/callback` after the OAuth code exchange. Replacing the auth mechanism in the future touches only that one function.
+2. **Authentication mechanism** — Google OAuth + JWT (signed/verified with **PyJWT**), entirely behind `get_current_user` in `app/auth.py`. Validates a Bearer JWT issued by `/auth/callback` after the OAuth code exchange (which requires a Google-**verified** email). Replacing the auth mechanism in the future touches only that one function.
+
+**Sessions / revocation**: JWTs are stateless (7-day lifetime). Each carries a `ver` claim = the user's `token_version`; `get_current_user` rejects a token whose `ver` doesn't match the current value (missing claim treated as 0). `POST /me/logout-all` bumps `token_version`, invalidating every outstanding token ("sign out everywhere"; UI button on the account page).
 
 **Admin**: a single `ADMIN_EMAIL` env var gates `GET /admin/stats` (`app/routers/admin.py`, `_require_admin` → 403 for everyone else). Leave it blank to disable admin access entirely.
 
@@ -54,7 +59,7 @@ There is a test proving one user cannot read or mutate another user's data.
 
 ## Data model
 
-**User** — `id, email (unique), name, calendar_token? (unique), is_demo, created_at`
+**User** — `id, email (unique), name, calendar_token? (unique), is_demo, token_version, created_at`
 
 **Program** — `id, user_id (FK), school, department, degree, url?, tier (reach|match|likely), status (researching|drafting|submitted|interview|accepted|waitlisted|rejected), location?, app_fee?, stipend?, required_letters?, decision_deadline?, notes?, created_at, updated_at`
 
@@ -146,7 +151,7 @@ pyproject.toml
 
 **Migrations + demo seed run in Render's `preDeployCommand`** (`alembic upgrade head && python seed.py --demo`), once per deploy — NOT in the Docker `CMD` (which only starts uvicorn). This avoids races if the web service ever scales past one instance. ⚠️ If you run the image anywhere other than Render, run that command yourself before serving.
 
-**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`, `ADMIN_EMAIL` (optional — enables `/admin/stats`). Demo login (all optional): `DEMO_TEMPLATE_EMAIL` (set to enable, e.g. `demo@dossiertool.com`; must match the seeded template email), `DEMO_TTL_HOURS` (default 168; must be ≥ the token lifetime or startup fails), `DEMO_MAX_USERS` (default 500), `DEMO_RATE_LIMIT_PER_MINUTE` (default 10, 0 disables).
+**Render env vars:** `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://api.dossiertool.com/auth/callback`, `FRONTEND_URL=https://my.dossiertool.com`, `ADMIN_EMAIL` (optional — enables `/admin/stats`). Demo login (all optional): `DEMO_TEMPLATE_EMAIL` (set to enable, e.g. `demo@dossiertool.com`; must match the seeded template email), `DEMO_TTL_HOURS` (default 168; must be ≥ the token lifetime or startup fails), `DEMO_MAX_USERS` (default 500), `DEMO_RATE_LIMIT_PER_MINUTE` (default 10, 0 disables). Error tracking (optional): `SENTRY_DSN` (blank disables), `SENTRY_TRACES_SAMPLE_RATE` (default 0).
 
 **Render plans:** web service on **Starter** (always on); Postgres on **Basic-256mb**. Setting `FRONTEND_URL` flips prod behavior: CORS drops `localhost:3000` and trusts only the deployed UI, startup refuses the dev `SECRET_KEY`, and the interactive docs (`/docs`, `/redoc`, `/openapi.json`) are disabled. `GET /` returns a minimal JSON status (no docs redirect). `healthCheckPath` is `/health`.
 
