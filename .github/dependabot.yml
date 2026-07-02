@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Backend Python deps (pyproject.toml / uv.lock)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      python-minor:
+        update-types: ["minor", "patch"]
+
+  # Frontend deps (ui/package.json)
+  - package-ecosystem: "npm"
+    directory: "/ui"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor:
+        update-types: ["minor", "patch"]
+
+  # GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
