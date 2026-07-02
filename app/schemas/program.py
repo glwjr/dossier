@@ -3,36 +3,37 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.program import ProgramStatus, Tier
+from app.schemas.validators import Notes, ShortStr, WebUrl
 
 
 class ProgramCreate(BaseModel):
-    school: str
-    department: str
-    degree: str
-    url: str | None = None
-    location: str | None = None
+    school: ShortStr
+    department: ShortStr
+    degree: ShortStr
+    url: WebUrl | None = None
+    location: ShortStr | None = None
     tier: Tier
     status: ProgramStatus = ProgramStatus.researching
     app_fee: int | None = Field(default=None, ge=0)
     stipend: int | None = Field(default=None, ge=0)
     required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramUpdate(BaseModel):
-    school: str | None = None
-    department: str | None = None
-    degree: str | None = None
-    url: str | None = None
-    location: str | None = None
+    school: ShortStr | None = None
+    department: ShortStr | None = None
+    degree: ShortStr | None = None
+    url: WebUrl | None = None
+    location: ShortStr | None = None
     tier: Tier | None = None
     status: ProgramStatus | None = None
     app_fee: int | None = Field(default=None, ge=0)
     stipend: int | None = Field(default=None, ge=0)
     required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramRead(BaseModel):

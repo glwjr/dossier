@@ -3,20 +3,21 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models.recommender import RecommenderStatus
+from app.schemas.validators import Notes, ShortStr
 
 
 class RecommenderCreate(BaseModel):
-    name: str
+    name: ShortStr
     email: EmailStr | None = None
-    institution: str | None = None
-    notes: str | None = None
+    institution: ShortStr | None = None
+    notes: Notes | None = None
 
 
 class RecommenderUpdate(BaseModel):
-    name: str | None = None
+    name: ShortStr | None = None
     email: EmailStr | None = None
-    institution: str | None = None
-    notes: str | None = None
+    institution: ShortStr | None = None
+    notes: Notes | None = None
 
 
 class ProgramSummary(BaseModel):
@@ -55,13 +56,13 @@ class ProgramRecommenderCreate(BaseModel):
     recommender_id: int
     status: RecommenderStatus = RecommenderStatus.to_ask
     due_date: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramRecommenderUpdate(BaseModel):
     status: RecommenderStatus | None = None
     due_date: date | None = None
-    notes: str | None = None
+    notes: Notes | None = None
 
 
 class ProgramRecommenderRead(BaseModel):
