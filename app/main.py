@@ -1,3 +1,4 @@
+import sentry_sdk
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -62,7 +63,26 @@ def root():
     return {"service": "dossier-api", "status": "ok"}
 
 
+def init_sentry() -> bool:
+    """Initialize Sentry error tracking if a DSN is configured.
+
+    Returns whether it was enabled; a no-op (returns False) without SENTRY_DSN,
+    so dev and tests never send events. PII (user emails) is not sent.
+    """
+    if not settings.sentry_dsn:
+        return False
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment="production" if settings.frontend_url else "development",
+        traces_sample_rate=settings.sentry_traces_sample_rate,
+        send_default_pii=False,
+    )
+    return True
+
+
 def create_app() -> FastAPI:
+    init_sentry()
+
     # Interactive docs are disabled in production (frontend_url set) so the
     # schema isn't exposed publicly; they stay on locally for development.
     docs_enabled = not settings.frontend_url

@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Per-IP cap on POST /auth/demo per minute (0 disables). Each request clones
     # ~150 rows, so this bounds the churn a single client can cause.
     demo_rate_limit_per_minute: int = 10
+    # Error tracking. Blank disables Sentry entirely (dev/test default).
+    sentry_dsn: str = ""
+    # Fraction of requests traced for performance (0 = errors only).
+    sentry_traces_sample_rate: float = 0.0
 
     @model_validator(mode="after")
     def _require_secret_key_in_prod(self) -> "Settings":
