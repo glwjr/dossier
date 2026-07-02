@@ -1,0 +1,28 @@
+name: Weekly Digest
+
+# Triggers the reminder-digest job on the API. The API does all the work and
+# sends the email; this workflow only pokes it with the shared secret, so no
+# user data ever touches GitHub. Opt-in: no-ops unless CRON_SECRET is set.
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # Mondays 13:00 UTC (~8–9am US Eastern)
+  workflow_dispatch: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly digest
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET not set — skipping."
+            exit 0
+          fi
+          # --fail makes an HTTP 4xx/5xx (e.g. bad secret) fail the job loudly.
+          curl --fail --show-error --silent -X POST \
+            -H "X-Cron-Key: $CRON_SECRET" \
+            https://api.dossiertool.com/tasks/weekly-digest
