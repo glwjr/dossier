@@ -37,6 +37,15 @@ secret.
 3. Trigger a run: **Actions → DB Backup → Run workflow** (or wait for the daily
    schedule). Download the artifact from the run to confirm it worked.
 
+### Troubleshooting
+
+The workflow **fails** (rather than uploading an empty file) if `pg_dump`
+can't connect or produces no output. If a run errors with "Dump is empty or
+invalid," check that `BACKUP_DATABASE_URL` is the **prod** database's External
+URL (not a different/empty instance) and includes SSL if Render requires it
+(e.g. append `?sslmode=require`). The `pg_dump` stderr in the run log shows the
+exact connection error.
+
 ### Security note
 
 The dump contains **all user data (PII)**. Keep the repo private, keep retention

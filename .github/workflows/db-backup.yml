@@ -22,14 +22,24 @@ jobs:
           # Render Dashboard → your Postgres → "External Database URL".
           BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: |
-          if [ -z "$BACKUP_DATABASE_URL" ]; then
+          # pipefail so a pg_dump failure fails the step instead of silently
+          # producing an empty gzip; -e/-u catch other errors.
+          set -euo pipefail
+          if [ -z "${BACKUP_DATABASE_URL:-}" ]; then
             echo "BACKUP_DATABASE_URL not set — skipping backup."
             exit 0
           fi
           ts=$(date -u +%Y%m%dT%H%M%SZ)
           file="dossier-${ts}.sql.gz"
           pg_dump --no-owner --no-privileges "$BACKUP_DATABASE_URL" | gzip > "$file"
-          echo "Wrote $file ($(du -h "$file" | cut -f1))"
+          # A valid dump always starts with the pg_dump header. Guard against an
+          # empty/partial dump slipping through as a "successful" backup.
+          if ! gzip -dc "$file" | grep -q "PostgreSQL database dump"; then
+            echo "::error::Dump is empty or invalid — refusing to upload."
+            exit 1
+          fi
+          bytes=$(gzip -dc "$file" | wc -c)
+          echo "Dump OK: $file (${bytes} uncompressed bytes)"
           echo "DUMP_FILE=$file" >> "$GITHUB_ENV"
 
       - name: Upload backup artifact
