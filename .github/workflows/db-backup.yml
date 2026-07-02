@@ -33,13 +33,17 @@ jobs:
           docker run --rm postgres:18 \
             pg_dump --no-owner --no-privileges "$BACKUP_DATABASE_URL" \
             | gzip > "$file"
-          # A valid dump always starts with the pg_dump header. Guard against an
-          # empty/partial dump slipping through as a "successful" backup.
-          if ! gzip -dc "$file" | grep -q "PostgreSQL database dump"; then
-            echo "::error::Dump is empty or invalid — refusing to upload."
+          # Validate against a decompressed copy using plain file reads — not
+          # early-exit pipes (grep -q / head), which send SIGPIPE back up the
+          # pipeline and make pipefail misreport a valid dump as a failure.
+          gzip -dc "$file" > dump.sql
+          bytes=$(wc -c < dump.sql)
+          if [ "$bytes" -lt 1000 ] || ! grep -q "PostgreSQL database dump" dump.sql; then
+            echo "::error::Dump looks empty or invalid (${bytes} bytes) — refusing to upload."
+            head -c 500 dump.sql || true
             exit 1
           fi
-          bytes=$(gzip -dc "$file" | wc -c)
+          rm -f dump.sql
           echo "Dump OK: $file (${bytes} uncompressed bytes)"
           echo "DUMP_FILE=$file" >> "$GITHUB_ENV"
 
