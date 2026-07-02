@@ -16,7 +16,7 @@ from app.models.program import Program
 from app.models.recommender import ProgramRecommender, Recommender
 from app.models.requirement import Requirement
 from app.models.user import User
-from app.schemas.user import UserRead
+from app.schemas.user import UserRead, UserUpdate
 
 router = APIRouter(tags=["me"])
 
@@ -32,6 +32,20 @@ def _reject_demo(current_user: User) -> None:
 
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=UserRead)
+def update_me(
+    payload: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update the current user's preferences (currently just email reminders)."""
+    if payload.email_reminders is not None:
+        current_user.email_reminders = payload.email_reminders
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 

@@ -8,6 +8,18 @@ def test_me_returns_current_user(client, dev_user):
     assert "created_at" in data
     # Regular users are flagged as non-demo so the UI can hide demo affordances.
     assert data["is_demo"] is False
+    # Reminder emails are on by default.
+    assert data["email_reminders"] is True
+
+
+def test_patch_me_toggles_email_reminders(client, dev_user):
+    off = client.patch("/me", json={"email_reminders": False})
+    assert off.status_code == 200
+    assert off.json()["email_reminders"] is False
+    assert client.get("/me").json()["email_reminders"] is False
+
+    on = client.patch("/me", json={"email_reminders": True})
+    assert on.json()["email_reminders"] is True
 
 
 def test_me_flags_demo_user(raw_client, db_session):

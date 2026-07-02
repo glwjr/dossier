@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, false, func
+from sqlalchemy import Boolean, DateTime, Integer, String, false, func, true
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -22,6 +22,10 @@ class User(Base):
     # everywhere"); the current value is embedded in each issued token.
     token_version: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0", default=0
+    )
+    # Opt-in (default) to the weekly reminder-digest email.
+    email_reminders: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=true(), default=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

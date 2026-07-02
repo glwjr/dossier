@@ -11,4 +11,9 @@ class UserRead(BaseModel):
     name: str
     calendar_token: str | None
     is_demo: bool
+    email_reminders: bool
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    email_reminders: bool | None = None
