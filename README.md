@@ -203,6 +203,13 @@ npm test          # Vitest unit tests
 npm run build
 ```
 
+Pre-commit hooks (ruff lint/format + basic hygiene) run on every commit once
+installed:
+
+```bash
+uv run pre-commit install
+```
+
 ### After pulling changes
 
 New migrations or dependencies may land on `main`. After `git pull`:
