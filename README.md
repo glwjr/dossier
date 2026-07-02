@@ -13,7 +13,7 @@ Full-stack PhD application tracker. Keep tabs on programs, requirements, deadlin
 ### Prerequisites
 
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- Node.js 18+
+- Node.js 20+
 
 ### Backend
 
@@ -192,3 +192,28 @@ uv run ruff format .
 uv run alembic revision --autogenerate -m "description"
 uv run alembic upgrade head
 ```
+
+Frontend checks (mirrors CI):
+
+```bash
+cd ui
+npm run lint
+npx tsc --noEmit
+npm test          # Vitest unit tests
+npm run build
+```
+
+### After pulling changes
+
+New migrations or dependencies may land on `main`. After `git pull`:
+
+```bash
+uv run alembic upgrade head      # apply any new DB migrations
+uv sync                          # sync backend dependencies
+cd ui && npm install             # sync frontend dependencies
+```
+
+A `sqlite3.OperationalError: no such column …` (or the Postgres equivalent)
+at runtime almost always means a migration hasn't been applied locally — run
+`uv run alembic upgrade head`. In production this runs automatically via
+Render's `preDeployCommand`.
