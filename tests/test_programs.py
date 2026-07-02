@@ -309,3 +309,25 @@ def test_import_programs_over_cap_rejected(client):
         json={"programs": [_imp(f"School {i}") for i in range(101)]},
     )
     assert resp.status_code == 422
+
+
+def test_program_interview_fields_roundtrip(client):
+    created = client.post(
+        "/programs",
+        json={
+            "school": "CMU",
+            "department": "LTI",
+            "degree": "PhD",
+            "tier": "reach",
+            "interview_date": "2026-02-14",
+            "interview_notes": "Zoom with Prof. Xu",
+        },
+    ).json()
+    assert created["interview_date"] == "2026-02-14"
+    assert created["interview_notes"] == "Zoom with Prof. Xu"
+
+    patched = client.patch(
+        f"/programs/{created['id']}", json={"interview_date": "2026-02-20"}
+    ).json()
+    assert patched["interview_date"] == "2026-02-20"
+    assert patched["interview_notes"] == "Zoom with Prof. Xu"

@@ -42,6 +42,8 @@ class Program(Base):
     stipend: Mapped[int | None] = mapped_column(Integer)
     required_letters: Mapped[int | None] = mapped_column(Integer)
     decision_deadline: Mapped[date | None] = mapped_column(Date)
+    interview_date: Mapped[date | None] = mapped_column(Date)
+    interview_notes: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

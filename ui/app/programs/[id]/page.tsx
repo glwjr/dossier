@@ -827,7 +827,7 @@ function ProgramDetail({ id }: { id: number }) {
             <p className="mt-0.5 text-sm text-muted-foreground">{program.location}</p>
           )}
           <div className="mt-2 text-sm text-muted-foreground">
-            {(program.app_fee != null || program.stipend != null || applicationDeadline || program.decision_deadline) && (
+            {(program.app_fee != null || program.stipend != null || applicationDeadline || program.decision_deadline || program.interview_date) && (
               <div className="flex flex-wrap gap-x-2 gap-y-0.5 [&>span~span]:before:mr-2 [&>span~span]:before:text-muted-foreground/50 [&>span~span]:before:content-['·']">
                 {program.app_fee != null && <span>${program.app_fee} fee</span>}
                 {program.stipend != null && <span>${program.stipend.toLocaleString()}/yr stipend</span>}
@@ -836,6 +836,9 @@ function ProgramDetail({ id }: { id: number }) {
                 )}
                 {program.decision_deadline && (
                   <span>Reply by {formatDate(program.decision_deadline)}</span>
+                )}
+                {program.interview_date && (
+                  <span>Interview {formatDate(program.interview_date)}</span>
                 )}
               </div>
             )}
@@ -851,6 +854,12 @@ function ProgramDetail({ id }: { id: number }) {
               </a>
             )}
           </div>
+          {program.interview_notes && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Interview:</span>{" "}
+              {program.interview_notes}
+            </p>
+          )}
           {program.notes && (
             <p className="mt-2 text-sm text-muted-foreground">{program.notes}</p>
           )}

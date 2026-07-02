@@ -18,6 +18,8 @@ class ProgramCreate(BaseModel):
     stipend: int | None = Field(default=None, ge=0)
     required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
+    interview_date: date | None = None
+    interview_notes: Notes | None = None
     notes: Notes | None = None
 
 
@@ -38,6 +40,8 @@ class ProgramUpdate(BaseModel):
     stipend: int | None = Field(default=None, ge=0)
     required_letters: int | None = Field(default=None, ge=0)
     decision_deadline: date | None = None
+    interview_date: date | None = None
+    interview_notes: Notes | None = None
     notes: Notes | None = None
 
 
@@ -57,6 +61,8 @@ class ProgramRead(BaseModel):
     stipend: int | None
     required_letters: int | None
     decision_deadline: date | None
+    interview_date: date | None
+    interview_notes: str | None
     notes: str | None
     created_at: datetime
     updated_at: datetime

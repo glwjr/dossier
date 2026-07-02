@@ -107,6 +107,8 @@ export interface ProgramCreate {
   stipend?: number | null;
   required_letters?: number | null;
   decision_deadline?: string | null;
+  interview_date?: string | null;
+  interview_notes?: string | null;
   notes?: string | null;
 }
 
@@ -126,6 +128,8 @@ export interface Program {
   stipend: number | null;
   required_letters: number | null;
   decision_deadline: string | null;
+  interview_date: string | null;
+  interview_notes: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;

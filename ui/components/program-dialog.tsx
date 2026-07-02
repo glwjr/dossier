@@ -49,6 +49,8 @@ const EMPTY: ProgramCreate = {
   stipend: undefined,
   required_letters: undefined,
   decision_deadline: "",
+  interview_date: "",
+  interview_notes: "",
   notes: "",
 };
 
@@ -64,6 +66,8 @@ function fromProgram(p: Program): ProgramCreate {
     stipend: p.stipend ?? undefined,
     required_letters: p.required_letters ?? undefined,
     decision_deadline: p.decision_deadline ?? "",
+    interview_date: p.interview_date ?? "",
+    interview_notes: p.interview_notes ?? "",
     location: p.location ?? "",
     notes: p.notes ?? "",
   };
@@ -122,6 +126,8 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
       stipend: form.stipend ?? null,
       required_letters: form.required_letters ?? null,
       decision_deadline: form.decision_deadline || null,
+      interview_date: form.interview_date || null,
+      interview_notes: form.interview_notes || null,
     });
   }
 
@@ -287,6 +293,28 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
                   placeholder="e.g. 3"
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="interview_date">Interview date</Label>
+              <Input
+                id="interview_date"
+                type="date"
+                value={form.interview_date ?? ""}
+                onChange={(e) => set("interview_date", e.target.value)}
+                className="w-full appearance-none sm:appearance-auto"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="interview_notes">Interview notes</Label>
+              <Textarea
+                id="interview_notes"
+                value={form.interview_notes ?? ""}
+                onChange={(e) => set("interview_notes", e.target.value)}
+                rows={2}
+                placeholder="Who you're meeting, prep, logistics…"
+              />
             </div>
 
             <div className="space-y-1.5">
