@@ -44,9 +44,16 @@ def list_advisors(
     program_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     get_program_or_404(program_id, current_user, db)
-    return db.scalars(select(Advisor).where(Advisor.program_id == program_id)).all()
+    return db.scalars(
+        select(Advisor)
+        .where(Advisor.program_id == program_id)
+        .order_by(Advisor.id)
+        .limit(page.limit)
+        .offset(page.offset)
+    ).all()
 
 
 @router.post(

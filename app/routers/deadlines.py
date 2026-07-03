@@ -41,12 +41,15 @@ def list_deadlines(
     program_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     get_program_or_404(program_id, current_user, db)
     return db.scalars(
         select(Deadline)
         .where(Deadline.program_id == program_id)
-        .order_by(Deadline.due_date)
+        .order_by(Deadline.due_date, Deadline.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 

@@ -41,10 +41,15 @@ def list_requirements(
     program_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     get_program_or_404(program_id, current_user, db)
     return db.scalars(
-        select(Requirement).where(Requirement.program_id == program_id)
+        select(Requirement)
+        .where(Requirement.program_id == program_id)
+        .order_by(Requirement.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 
