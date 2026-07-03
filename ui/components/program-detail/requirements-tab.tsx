@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { Requirement } from "@/lib/types";
 import { REQUIREMENT_STATUS_LABEL, formatDate } from "@/lib/display";
 import { RequirementDialog } from "@/components/requirement-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -58,8 +58,6 @@ export function RequirementsTab({ programId }: { programId: number }) {
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const sorted = [...data].sort((a, b) => {
     const diff = REQ_STATUS_SORT[a.status] - REQ_STATUS_SORT[b.status];
@@ -118,38 +116,7 @@ export function RequirementsTab({ programId }: { programId: number }) {
               </Button>
             }
           />
-          {confirmDelete === r.id ? (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => {
-                  deleteReq.mutate(r.id);
-                  setConfirmDelete(null);
-                }}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setConfirmDelete(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-muted-foreground"
-              onClick={() => setConfirmDelete(r.id)}
-            >
-              Delete
-            </Button>
-          )}
+          <ConfirmButton onConfirm={() => deleteReq.mutate(r.id)} />
           </div>
         </div>
       ))}

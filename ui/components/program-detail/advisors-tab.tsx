@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
@@ -8,6 +7,7 @@ import { safeExternalUrl } from "@/lib/url";
 import { Advisor } from "@/lib/types";
 import { ADVISOR_RESPONSE_LABEL, formatDate } from "@/lib/display";
 import { AdvisorDialog } from "@/components/advisor-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -36,8 +36,6 @@ export function AdvisorsTab({ programId }: { programId: number }) {
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
@@ -91,38 +89,7 @@ export function AdvisorsTab({ programId }: { programId: number }) {
                 </Button>
               }
             />
-            {confirmDelete === c.id ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    deleteContact.mutate(c.id);
-                    setConfirmDelete(null);
-                  }}
-                >
-                  Delete
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setConfirmDelete(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground"
-                onClick={() => setConfirmDelete(c.id)}
-              >
-                Delete
-              </Button>
-            )}
+            <ConfirmButton onConfirm={() => deleteContact.mutate(c.id)} />
           </div>
         </div>
       ))}

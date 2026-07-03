@@ -12,6 +12,7 @@ import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { RecommenderDialog } from "@/components/recommender-dialog";
 import { AssignToProgramDialog } from "@/components/assign-to-program-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,8 +62,6 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   if (isLoading)
     return (
@@ -169,38 +168,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
                     </Button>
                   }
                 />
-                {confirmDelete === r.id ? (
-                  <>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => {
-                        deleteRec.mutate(r.id);
-                        setConfirmDelete(null);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => setConfirmDelete(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-muted-foreground"
-                    onClick={() => setConfirmDelete(r.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
+                <ConfirmButton onConfirm={() => deleteRec.mutate(r.id)} />
               </div>
             </div>
           </CardHeader>

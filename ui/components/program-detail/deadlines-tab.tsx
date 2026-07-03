@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { Deadline } from "@/lib/types";
 import { DEADLINE_KIND_LABEL, formatDate } from "@/lib/display";
 import { DeadlineDialog } from "@/components/deadline-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -37,8 +37,6 @@ export function DeadlinesTab({ programId }: { programId: number }) {
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const sortedDeadlines = [...data].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -80,38 +78,7 @@ export function DeadlinesTab({ programId }: { programId: number }) {
                 </Button>
               }
             />
-            {confirmDelete === d.id ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    deleteDeadline.mutate(d.id);
-                    setConfirmDelete(null);
-                  }}
-                >
-                  Delete
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setConfirmDelete(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground"
-                onClick={() => setConfirmDelete(d.id)}
-              >
-                Delete
-              </Button>
-            )}
+            <ConfirmButton onConfirm={() => deleteDeadline.mutate(d.id)} />
           </div>
           {d.notes && (
             <p className="w-full text-xs text-muted-foreground">{d.notes}</p>

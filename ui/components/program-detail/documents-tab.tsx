@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
@@ -8,6 +7,7 @@ import { safeExternalUrl } from "@/lib/url";
 import { Document } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { DocumentDialog } from "@/components/document-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -51,8 +51,6 @@ export function DocumentsTab({ programId }: { programId: number }) {
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
@@ -102,38 +100,7 @@ export function DocumentsTab({ programId }: { programId: number }) {
                 </Button>
               }
             />
-            {confirmDelete === d.id ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    deleteDoc.mutate(d.id);
-                    setConfirmDelete(null);
-                  }}
-                >
-                  Delete
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setConfirmDelete(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground"
-                onClick={() => setConfirmDelete(d.id)}
-              >
-                Delete
-              </Button>
-            )}
+            <ConfirmButton onConfirm={() => deleteDoc.mutate(d.id)} />
           </div>
           <Select
             value={d.status}

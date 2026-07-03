@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { ProgramRecommender } from "@/lib/types";
 import { REC_STATUS_LABEL, formatDate } from "@/lib/display";
 import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
@@ -45,8 +45,6 @@ export function RecommendersTab({
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
@@ -101,38 +99,10 @@ export function RecommendersTab({
                 </Button>
               }
             />
-            {confirmDelete === pr.recommender_id ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    removeAssignment.mutate(pr.recommender_id);
-                    setConfirmDelete(null);
-                  }}
-                >
-                  Remove
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setConfirmDelete(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground"
-                onClick={() => setConfirmDelete(pr.recommender_id)}
-              >
-                Remove
-              </Button>
-            )}
+            <ConfirmButton
+              label="Remove"
+              onConfirm={() => removeAssignment.mutate(pr.recommender_id)}
+            />
           </div>
         </div>
       ))}
