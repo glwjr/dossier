@@ -197,7 +197,7 @@ function TimelineInner() {
         />
         <div className="flex gap-2">
         <Select value={programFilter} onValueChange={(v) => v && setProgramFilter(v)}>
-          <SelectTrigger className="h-9 flex-1 text-sm sm:w-44 sm:flex-none">
+          <SelectTrigger className="h-9 min-w-0 flex-1 text-sm sm:w-44 sm:flex-none">
             <SelectValue>
               {programFilter === "all"
                 ? "All programs"
@@ -215,7 +215,7 @@ function TimelineInner() {
         </Select>
 
         <Select value={kindFilter} onValueChange={(v) => v && setKindFilter(v)}>
-          <SelectTrigger className="h-9 flex-1 text-sm sm:w-36 sm:flex-none">
+          <SelectTrigger className="h-9 min-w-0 flex-1 text-sm sm:w-36 sm:flex-none">
             <SelectValue>
               {kindFilter === "all"
                 ? "All types"
