@@ -19,6 +19,12 @@ updates:
     groups:
       npm-minor:
         update-types: ["minor", "patch"]
+    ignore:
+      # eslint-config-next still bundles eslint-plugin-react ^7.37, whose
+      # react/display-name rule uses APIs removed in ESLint 10. Hold on the
+      # major until the Next.js lint stack supports ESLint 10.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions versions
   - package-ecosystem: "github-actions"
