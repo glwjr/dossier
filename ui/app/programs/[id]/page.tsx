@@ -173,9 +173,9 @@ function ProgramDetail({ id }: { id: number }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold">{program.school}</h1>
+            <h1 className="min-w-0 break-words text-2xl font-semibold">{program.school}</h1>
             <Badge variant={PROGRAM_TIER_VARIANT[program.tier]}>
               {PROGRAM_TIER_LABEL[program.tier]}
             </Badge>
