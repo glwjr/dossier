@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { safeExternalUrl } from "@/lib/url";
 import { DocumentWithProgram } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
@@ -33,7 +34,7 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
     expandAll,
   } = useCollapsedSections("dossier_collapsed_documents");
   const { data, isLoading, error } = useQuery<DocumentWithProgram[]>({
-    queryKey: ["documents-all"],
+    queryKey: queryKeys.documents.all,
     queryFn: () => api.get("/documents"),
   });
 
@@ -41,8 +42,8 @@ function DocumentsList({ statusFilter, kindFilter, search, sort }: { statusFilte
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/documents/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.root });
     },
     onError: onMutationError,
   });

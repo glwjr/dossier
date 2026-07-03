@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { use } from "react";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { safeExternalUrl } from "@/lib/url";
 import {
   Deadline,
@@ -82,7 +83,7 @@ const RESPONSE_BORDER: Record<string, string> = {
 function RequirementsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<Requirement[]>({
-    queryKey: ["requirements", programId],
+    queryKey: queryKeys.requirements.byProgram(programId),
     queryFn: () => api.get(`/programs/${programId}/requirements`),
   });
 
@@ -90,16 +91,16 @@ function RequirementsTab({ programId }: { programId: number }) {
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/requirements/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
     },
   });
 
   const deleteReq = useMutation({
     mutationFn: (id: number) => api.delete(`/requirements/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
       toast.success("Deleted");
     },
     onError: onMutationError,
@@ -207,7 +208,7 @@ function RequirementsTab({ programId }: { programId: number }) {
 function DeadlinesTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<Deadline[]>({
-    queryKey: ["deadlines", programId],
+    queryKey: queryKeys.deadlines.byProgram(programId),
     queryFn: () => api.get(`/programs/${programId}/deadlines`),
   });
 
@@ -215,16 +216,16 @@ function DeadlinesTab({ programId }: { programId: number }) {
     mutationFn: (d: Deadline) =>
       api.patch(`/deadlines/${d.id}`, { done: !d.done }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 
   const deleteDeadline = useMutation({
     mutationFn: (id: number) => api.delete(`/deadlines/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success("Deleted");
     },
     onError: onMutationError,
@@ -323,7 +324,7 @@ function RecommendersTab({
 }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<ProgramRecommender[]>({
-    queryKey: ["program-recommenders", programId],
+    queryKey: queryKeys.recommenders.byProgram(programId),
     queryFn: () => api.get(`/programs/${programId}/recommenders`),
   });
 
@@ -335,8 +336,8 @@ function RecommendersTab({
     mutationFn: (recommenderId: number) =>
       api.delete(`/programs/${programId}/recommenders/${recommenderId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["program-recommenders", programId] });
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Removed");
     },
     onError: onMutationError,
@@ -439,15 +440,15 @@ function RecommendersTab({
 function AdvisorsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<Advisor[]>({
-    queryKey: ["advisors", programId],
+    queryKey: queryKeys.advisors.byProgram(programId),
     queryFn: () => api.get(`/programs/${programId}/advisors`),
   });
 
   const deleteContact = useMutation({
     mutationFn: (id: number) => api.delete(`/advisors/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["advisors", programId] });
-      queryClient.invalidateQueries({ queryKey: ["advisors-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.advisors.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.advisors.all });
       toast.success("Deleted");
     },
     onError: onMutationError,
@@ -549,7 +550,7 @@ function AdvisorsTab({ programId }: { programId: number }) {
 function DocumentsTab({ programId }: { programId: number }) {
   const queryClient = useQueryClient();
   const { data = [] } = useQuery<Document[]>({
-    queryKey: ["documents", programId],
+    queryKey: queryKeys.documents.byProgram(programId),
     queryFn: () => api.get(`/programs/${programId}/documents`),
   });
 
@@ -557,16 +558,16 @@ function DocumentsTab({ programId }: { programId: number }) {
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/documents/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents", programId] });
-      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
     },
   });
 
   const deleteDoc = useMutation({
     mutationFn: (id: number) => api.delete(`/documents/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents", programId] });
-      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
       toast.success("Deleted");
     },
     onError: onMutationError,
@@ -710,32 +711,32 @@ function ProgramDetail({ id }: { id: number }) {
   }
 
   const { data: program, isLoading, error } = useQuery<Program>({
-    queryKey: ["program", id],
+    queryKey: queryKeys.programs.detail(id),
     queryFn: () => api.get(`/programs/${id}`),
   });
 
   const { data: requirements = [] } = useQuery<Requirement[]>({
-    queryKey: ["requirements", id],
+    queryKey: queryKeys.requirements.byProgram(id),
     queryFn: () => api.get(`/programs/${id}/requirements`),
     enabled: !!program,
   });
   const { data: deadlines = [] } = useQuery<Deadline[]>({
-    queryKey: ["deadlines", id],
+    queryKey: queryKeys.deadlines.byProgram(id),
     queryFn: () => api.get(`/programs/${id}/deadlines`),
     enabled: !!program,
   });
   const { data: programRecommenders = [] } = useQuery<ProgramRecommender[]>({
-    queryKey: ["program-recommenders", id],
+    queryKey: queryKeys.recommenders.byProgram(id),
     queryFn: () => api.get(`/programs/${id}/recommenders`),
     enabled: !!program,
   });
   const { data: advisors = [] } = useQuery<Advisor[]>({
-    queryKey: ["advisors", id],
+    queryKey: queryKeys.advisors.byProgram(id),
     queryFn: () => api.get(`/programs/${id}/advisors`),
     enabled: !!program,
   });
   const { data: documents = [] } = useQuery<Document[]>({
-    queryKey: ["documents", id],
+    queryKey: queryKeys.documents.byProgram(id),
     queryFn: () => api.get(`/programs/${id}/documents`),
     enabled: !!program,
   });
@@ -748,9 +749,9 @@ function ProgramDetail({ id }: { id: number }) {
   const updateStatus = useMutation({
     mutationFn: (status: string) => api.patch(`/programs/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["program", id] });
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
     onError: onMutationError,
   });
@@ -758,8 +759,8 @@ function ProgramDetail({ id }: { id: number }) {
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/programs/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success("Program deleted");
       router.push("/programs");
     },

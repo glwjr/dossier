@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Recommender } from "@/lib/types";
 import { REC_STATUS_LABEL, formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
@@ -30,7 +31,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 function RecommenderList({ statusFilter, search }: { statusFilter: string; search: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<Recommender[]>({
-    queryKey: ["recommenders"],
+    queryKey: queryKeys.recommenders.all,
     queryFn: () => api.get("/recommenders"),
   });
 
@@ -46,7 +47,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
     }) =>
       api.patch(`/programs/${programId}/recommenders/${recommenderId}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Status updated");
     },
     onError: onMutationError,
@@ -55,7 +56,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
   const deleteRec = useMutation({
     mutationFn: (id: number) => api.delete(`/recommenders/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Deleted");
     },
     onError: onMutationError,

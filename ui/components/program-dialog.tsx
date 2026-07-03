@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Program, ProgramCreate } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
@@ -93,11 +94,11 @@ export function ProgramDialog({ program, trigger, onSuccess, open: controlledOpe
             data
           ),
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["program", result.id] });
-      queryClient.invalidateQueries({ queryKey: ["requirements", result.id] });
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.detail(result.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.byProgram(result.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success(isEdit ? "Program updated" : "Program created");
       setOpen(false);
       onSuccess?.(result);

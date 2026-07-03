@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { safeExternalUrl } from "@/lib/url";
 import { AdvisorWithProgram } from "@/lib/types";
 import { ADVISOR_RESPONSE_LABEL, formatDate } from "@/lib/display";
@@ -59,7 +60,7 @@ function AdvisorsInner() {
   }
 
   const { data = [], isLoading, error } = useQuery<AdvisorWithProgram[]>({
-    queryKey: ["advisors-all"],
+    queryKey: queryKeys.advisors.all,
     queryFn: () => api.get("/advisors"),
   });
 

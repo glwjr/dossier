@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Deadline, DeadlineCreate } from "@/lib/types";
 import { DEADLINE_KIND_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
@@ -61,8 +62,8 @@ export function DeadlineDialog({ programId, deadline, trigger }: Props) {
         ? api.patch<Deadline>(`/deadlines/${deadline.id}`, data)
         : api.post<Deadline>(`/programs/${programId}/deadlines`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deadlines", programId] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success("Saved");
       setOpen(false);
     },

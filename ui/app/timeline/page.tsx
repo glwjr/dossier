@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { DeadlineWithProgram, RequirementWithProgram } from "@/lib/types";
 import {
   DEADLINE_KIND_LABEL,
@@ -54,12 +55,12 @@ function TimelineInner() {
   } = useCollapsedSections("dossier_collapsed_timeline");
 
   const { data: deadlines = [], isLoading: dlLoading, error: dlError } = useQuery<DeadlineWithProgram[]>({
-    queryKey: ["deadlines"],
+    queryKey: queryKeys.deadlines.all,
     queryFn: () => api.get("/deadlines"),
   });
 
   const { data: requirements = [], isLoading: reqLoading, error: reqError } = useQuery<RequirementWithProgram[]>({
-    queryKey: ["requirements-all"],
+    queryKey: queryKeys.requirements.all,
     queryFn: () => api.get("/requirements"),
   });
 
@@ -68,7 +69,7 @@ function TimelineInner() {
   const toggleDeadline = useMutation({
     mutationFn: (d: DeadlineWithProgram) =>
       api.patch(`/deadlines/${d.id}`, { done: !d.done }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["deadlines"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.root }),
   });
 
   const toggleRequirement = useMutation({
@@ -77,8 +78,8 @@ function TimelineInner() {
         status: r.status === "done" ? "todo" : "done",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.root });
     },
   });
 

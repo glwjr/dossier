@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Advisor, AdvisorCreate } from "@/lib/types";
 import { ADVISOR_RESPONSE_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
@@ -67,8 +68,8 @@ export function AdvisorDialog({ programId, contact, trigger }: Props) {
         ? api.patch<Advisor>(`/advisors/${contact.id}`, data)
         : api.post<Advisor>(`/programs/${programId}/advisors`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["advisors", programId] });
-      queryClient.invalidateQueries({ queryKey: ["advisors-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.advisors.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.advisors.all });
       toast.success("Saved");
       setOpen(false);
     },

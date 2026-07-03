@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { formatDate } from "@/lib/display";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -108,15 +109,15 @@ function Dashboard() {
   const [filter, setFilter] = useState<DashboardFilter>("all");
 
   const { data, isLoading, error } = useQuery<DashboardEntry[]>({
-    queryKey: ["dashboard"],
+    queryKey: queryKeys.dashboard,
     queryFn: () => api.get("/dashboard"),
   });
   const { data: allDeadlines = [] } = useQuery<DeadlineWithProgram[]>({
-    queryKey: ["deadlines-all"],
+    queryKey: queryKeys.deadlines.all,
     queryFn: () => api.get("/deadlines"),
   });
   const { data: allRequirements = [] } = useQuery<RequirementWithProgram[]>({
-    queryKey: ["requirements-all"],
+    queryKey: queryKeys.requirements.all,
     queryFn: () => api.get("/requirements"),
   });
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { safeExternalUrl } from "@/lib/url";
 import { Program, ProgramStatus, RequirementWithProgram, DeadlineWithProgram } from "@/lib/types";
 import {
@@ -84,15 +85,15 @@ function ProgramCard({ program, reqCount }: { program: Program; reqCount?: { don
     mutationFn: (status: ProgramStatus) =>
       api.patch<Program>(`/programs/${program.id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 
   const updateNotes = useMutation({
     mutationFn: (notes: string) =>
       api.patch(`/programs/${program.id}`, { notes: notes || null }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["programs"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.programs.all }),
     onError: onMutationError,
   });
 
@@ -197,17 +198,17 @@ function ProgramList({
   search: string;
 }) {
   const { data, isLoading, error } = useQuery<Program[]>({
-    queryKey: ["programs"],
+    queryKey: queryKeys.programs.all,
     queryFn: () => api.get("/programs"),
   });
 
   const { data: requirements = [] } = useQuery<RequirementWithProgram[]>({
-    queryKey: ["requirements-all"],
+    queryKey: queryKeys.requirements.all,
     queryFn: () => api.get("/requirements"),
   });
 
   const { data: allDeadlines = [] } = useQuery<DeadlineWithProgram[]>({
-    queryKey: ["deadlines"],
+    queryKey: queryKeys.deadlines.all,
     queryFn: () => api.get("/deadlines"),
     enabled: sort === "deadline",
   });
@@ -301,7 +302,7 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
   const [dragOverStatus, setDragOverStatus] = useState<ProgramStatus | null>(null);
 
   const { data, isLoading, error } = useQuery<Program[]>({
-    queryKey: ["programs"],
+    queryKey: queryKeys.programs.all,
     queryFn: () => api.get("/programs"),
   });
 
@@ -309,8 +310,8 @@ function BoardView({ tierFilter, search }: { tierFilter: string; search: string 
     mutationFn: ({ id, status }: { id: number; status: ProgramStatus }) =>
       api.patch<Program>(`/programs/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
     onError: onMutationError,
   });
@@ -475,7 +476,7 @@ function ProgramsInner() {
   }
 
   function handleExport() {
-    const programs = queryClient.getQueryData<Program[]>(["programs"]);
+    const programs = queryClient.getQueryData<Program[]>(queryKeys.programs.all);
     if (!programs?.length) return;
 
     const allColumns: { key: string; label: string; value: (p: Program) => string | number }[] = [

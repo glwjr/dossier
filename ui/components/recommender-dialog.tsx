@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Recommender, RecommenderCreate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -52,7 +53,7 @@ export function RecommenderDialog({ recommender, trigger }: Props) {
         ? api.patch<Recommender>(`/recommenders/${recommender.id}`, data)
         : api.post<Recommender>("/recommenders", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Saved");
       setOpen(false);
     },

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Program } from "@/lib/types";
 import {
   PROGRAM_STATUS_LABEL,
@@ -39,7 +40,7 @@ function CompareInner() {
   const searchParams = useSearchParams();
 
   const { data: programs = [], isLoading, isError } = useQuery<Program[]>({
-    queryKey: ["programs"],
+    queryKey: queryKeys.programs.all,
     queryFn: () => api.get("/programs"),
   });
 

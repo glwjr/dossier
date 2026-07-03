@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { User } from "@/lib/types";
 import { logout, redirectToHome } from "@/lib/auth";
 import { RequireAuth } from "@/components/require-auth";
@@ -21,19 +22,19 @@ function AccountInner() {
   const [copiedShare, setCopiedShare] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { data: user, isLoading, error } = useQuery<User>({
-    queryKey: ["me"],
+    queryKey: queryKeys.me,
     queryFn: () => api.get("/me"),
   });
 
   const generateToken = useMutation({
     mutationFn: () => api.post<User>("/me/calendar-token", {}),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.me }),
     onError: onMutationError,
   });
   const revokeToken = useMutation({
     mutationFn: () => api.delete("/me/calendar-token"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
       toast.success("Calendar link disabled");
     },
     onError: onMutationError,
@@ -43,7 +44,7 @@ function AccountInner() {
     mutationFn: (enabled: boolean) =>
       api.patch<User>("/me", { email_reminders: enabled }),
     onSuccess: (updated) => {
-      queryClient.setQueryData(["me"], updated);
+      queryClient.setQueryData(queryKeys.me, updated);
       toast.success(
         updated.email_reminders ? "Reminders on" : "Reminders off"
       );
@@ -53,13 +54,13 @@ function AccountInner() {
 
   const generateShare = useMutation({
     mutationFn: () => api.post<User>("/me/share-token", {}),
-    onSuccess: (updated) => queryClient.setQueryData(["me"], updated),
+    onSuccess: (updated) => queryClient.setQueryData(queryKeys.me, updated),
     onError: onMutationError,
   });
   const revokeShare = useMutation({
     mutationFn: () => api.delete("/me/share-token"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
       toast.success("Share link disabled");
     },
     onError: onMutationError,
