@@ -4,6 +4,7 @@ Actions) rather than a signed-in user. Protected by a shared CRON_SECRET.
 
 import hmac
 
+import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,12 +37,20 @@ def weekly_digest(db: Session = Depends(get_db)):
     ).all()
 
     sent = 0
+    failed = 0
     for user in users:
         digest = build_digest(db, user)
         if digest is None:
             continue
         subject, html = digest
-        if send_email(user.email, subject, html):
-            sent += 1
+        try:
+            if send_email(user.email, subject, html):
+                sent += 1
+        except Exception as exc:
+            # One bad recipient (bounce, provider 5xx) must not abort the rest
+            # of the run — record it and keep going. capture_exception is a
+            # no-op when Sentry isn't configured.
+            failed += 1
+            sentry_sdk.capture_exception(exc)
 
-    return {"considered": len(users), "sent": sent}
+    return {"considered": len(users), "sent": sent, "failed": failed}
