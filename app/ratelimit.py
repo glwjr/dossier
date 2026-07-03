@@ -22,12 +22,13 @@ class FixedWindowRateLimiter:
 
     @staticmethod
     def _client_ip(request: Request) -> str:
-        # Leftmost X-Forwarded-For hop (Render sets this). Spoofable, but the
-        # failure mode is a bypass (a fake IP gets its own bucket), never a
-        # global lockout — which taking a trusted-proxy value could cause.
+        # Rightmost X-Forwarded-For hop: appended by our own proxy (Render),
+        # so it's the one entry the client cannot choose. Anything left of it
+        # is client-supplied — keying on that would let a caller mint a fresh
+        # bucket per request and bypass the limit entirely.
         forwarded = request.headers.get("x-forwarded-for")
         if forwarded:
-            return forwarded.split(",")[0].strip()
+            return forwarded.rsplit(",", 1)[-1].strip()
         return request.client.host if request.client else "unknown"
 
     def reset(self) -> None:
