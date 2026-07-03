@@ -73,6 +73,31 @@ def test_login_returns_501_without_credentials(raw_client, monkeypatch):
     assert response.status_code == 501
 
 
+def test_login_rate_limited(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "auth_rate_limit_per_minute", 3)
+    for _ in range(3):
+        r = raw_client.get("/auth/login", follow_redirects=False)
+        assert r.status_code in (302, 307)
+    blocked = raw_client.get("/auth/login", follow_redirects=False)
+    assert blocked.status_code == 429
+    assert "retry-after" in {k.lower() for k in blocked.headers}
+
+
+def test_callback_rate_limited(raw_client, monkeypatch):
+    # Each callback hit triggers outbound calls to Google, so it must be
+    # throttled even when the request would fail validation.
+    monkeypatch.setattr(settings, "auth_rate_limit_per_minute", 1)
+    first = raw_client.get(
+        "/auth/callback?code=x&state=y", cookies={"oauth_state": "z"}
+    )
+    assert first.status_code == 400  # bad state, but it consumed the budget
+    blocked = raw_client.get(
+        "/auth/callback?code=x&state=y", cookies={"oauth_state": "z"}
+    )
+    assert blocked.status_code == 429
+
+
 # --- /auth/callback ---
 
 

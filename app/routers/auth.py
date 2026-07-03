@@ -17,7 +17,7 @@ from app.demo import (
     purge_surplus_demo_users,
 )
 from app.models.user import User
-from app.ratelimit import rate_limit_demo
+from app.ratelimit import rate_limit_auth, rate_limit_demo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -42,7 +42,7 @@ def _clear_state_cookie(response: Response) -> None:
     )
 
 
-@router.get("/login")
+@router.get("/login", dependencies=[Depends(rate_limit_auth)])
 def login() -> RedirectResponse:
     """Redirect the browser to Google's OAuth consent screen."""
     if not settings.google_client_id:
@@ -72,7 +72,7 @@ def login() -> RedirectResponse:
     return redirect
 
 
-@router.get("/callback")
+@router.get("/callback", dependencies=[Depends(rate_limit_auth)])
 def callback(
     request: Request,
     code: str | None = None,

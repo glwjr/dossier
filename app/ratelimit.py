@@ -63,11 +63,17 @@ class FixedWindowRateLimiter:
 
 demo_limiter = FixedWindowRateLimiter(window_seconds=60)
 import_limiter = FixedWindowRateLimiter(window_seconds=60)
+auth_limiter = FixedWindowRateLimiter(window_seconds=60)
 
 
 def rate_limit_demo(request: Request) -> None:
     """Route dependency: throttle POST /auth/demo per client IP."""
     demo_limiter.check(request, limit=settings.demo_rate_limit_per_minute)
+
+
+def rate_limit_auth(request: Request) -> None:
+    """Route dependency: throttle the OAuth endpoints per client IP."""
+    auth_limiter.check(request, limit=settings.auth_rate_limit_per_minute)
 
 
 def rate_limit_import(request: Request) -> None:
