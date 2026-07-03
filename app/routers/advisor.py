@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.advisor import Advisor
 from app.models.program import Program
@@ -83,8 +84,7 @@ def update_advisor(
     db: Session = Depends(get_db),
 ):
     advisor = get_owned_child_or_404(Advisor, advisor_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(advisor, key, value)
+    apply_update(advisor, body)
     db.commit()
     db.refresh(advisor)
     return advisor

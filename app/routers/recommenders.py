@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.program import Program
 from app.models.recommender import ProgramRecommender, Recommender
@@ -114,8 +115,7 @@ def update_recommender(
     db: Session = Depends(get_db),
 ):
     rec = _get_recommender_or_404(rec_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(rec, key, value)
+    apply_update(rec, body)
     db.commit()
     db.refresh(rec)
     return rec
@@ -204,8 +204,7 @@ def update_program_recommender(
     db: Session = Depends(get_db),
 ):
     pr = _get_pr_or_404(program_id, recommender_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(pr, key, value)
+    apply_update(pr, body)
     db.commit()
     db.refresh(pr)
     return pr

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.deadline import Deadline
 from app.models.program import Program
@@ -80,8 +81,7 @@ def update_deadline(
     db: Session = Depends(get_db),
 ):
     deadline = get_owned_child_or_404(Deadline, deadline_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(deadline, key, value)
+    apply_update(deadline, body)
     db.commit()
     db.refresh(deadline)
     return deadline

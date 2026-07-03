@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.program import Program
 from app.models.requirement import Requirement
@@ -80,8 +81,7 @@ def update_requirement(
     db: Session = Depends(get_db),
 ):
     req = get_owned_child_or_404(Requirement, req_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(req, key, value)
+    apply_update(req, body)
     db.commit()
     db.refresh(req)
     return req
