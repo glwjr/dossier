@@ -1,11 +1,21 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 import httpx
+import jwt as pyjwt
 
-from app.auth import AUTH_COOKIE, create_access_token
+from app.auth import AUTH_COOKIE, JWT_AUDIENCE, JWT_ISSUER, create_access_token
 from app.config import settings
 from app.models.user import User
+
+
+def _handcrafted_token(**claims) -> str:
+    """Sign a token directly (bypassing create_access_token) to simulate
+    legacy or foreign tokens."""
+    now = datetime.now(timezone.utc)
+    payload = {"iat": now, "exp": now + timedelta(minutes=5), **claims}
+    return pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 
 def _get_with_cookie(client, path, token):
@@ -274,12 +284,46 @@ def test_valid_jwt_authenticates_user(raw_client, db_session):
 
 
 def test_access_token_carries_issued_at(raw_client):
-    import jwt
-
     token = create_access_token({"sub": "iat-user@example.com"})
-    claims = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    claims = pyjwt.decode(
+        token, settings.secret_key, algorithms=["HS256"], audience=JWT_AUDIENCE
+    )
     assert "iat" in claims
     assert "exp" in claims
+
+
+def test_access_token_carries_issuer_and_audience(raw_client):
+    token = create_access_token({"sub": "aud-user@example.com"})
+    claims = pyjwt.decode(
+        token, settings.secret_key, algorithms=["HS256"], audience=JWT_AUDIENCE
+    )
+    assert claims["iss"] == JWT_ISSUER
+    assert claims["aud"] == JWT_AUDIENCE
+
+
+def test_jwt_without_iss_aud_still_authenticates(raw_client, db_session):
+    # Tokens minted before iss/aud existed must keep working until expiry.
+    user = User(email="legacy@example.com", name="Legacy")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email)
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 200
+
+
+def test_jwt_with_wrong_audience_rejected(raw_client, db_session):
+    user = User(email="wrongaud@example.com", name="Wrong Aud")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email, aud="some-other-service")
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 401
+
+
+def test_jwt_with_wrong_issuer_rejected(raw_client, db_session):
+    user = User(email="wrongiss@example.com", name="Wrong Iss")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email, iss="someone-else")
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 401
 
 
 def test_invalid_jwt_returns_401(raw_client):
