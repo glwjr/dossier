@@ -72,7 +72,7 @@ def _build_template(db: Session) -> User:
     db.add(
         Advisor(
             program_id=prog.id,
-            name="Prof. Barzilay",
+            name="Prof. Mercer",
             response=AdvisorResponse.positive,
         )
     )
@@ -128,7 +128,7 @@ def test_clone_copies_full_graph(db_session):
     )
     assert (
         db_session.scalar(select(Advisor).where(Advisor.program_id == pc.id)).name
-        == "Prof. Barzilay"
+        == "Prof. Mercer"
     )
     assert (
         db_session.scalar(select(Document).where(Document.program_id == pc.id)).title
