@@ -118,6 +118,15 @@ def test_callback_creates_user_and_returns_jwt(raw_client, db_session, monkeypat
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
+    # Sessions track the account (id), not the address — an email change or
+    # delete-and-re-signup must not revive old tokens.
+    claims = pyjwt.decode(
+        data["access_token"],
+        settings.secret_key,
+        algorithms=["HS256"],
+        audience=JWT_AUDIENCE,
+    )
+    assert claims["sub"].isdigit()
 
 
 def test_callback_redirects_to_frontend_when_configured(
@@ -277,10 +286,23 @@ def test_valid_jwt_authenticates_user(raw_client, db_session):
     db_session.add(user)
     db_session.flush()
 
-    token = create_access_token({"sub": "jwt-user@example.com"})
+    token = create_access_token({"sub": str(user.id)})
     response = _get_with_cookie(raw_client, "/me", token)
     assert response.status_code == 200
     assert response.json()["email"] == "jwt-user@example.com"
+
+
+def test_legacy_email_subject_still_authenticates(raw_client, db_session):
+    # Tokens minted before the id-based subject identified users by email;
+    # they must keep working until they expire (7-day lifetime).
+    user = User(email="email-sub@example.com", name="Email Sub")
+    db_session.add(user)
+    db_session.flush()
+
+    token = create_access_token({"sub": user.email})
+    response = _get_with_cookie(raw_client, "/me", token)
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
 
 
 def test_access_token_carries_issued_at(raw_client):
@@ -337,9 +359,11 @@ def test_missing_auth_cookie_returns_401(raw_client):
 
 
 def test_jwt_for_nonexistent_user_returns_401(raw_client):
-    token = create_access_token({"sub": "ghost@example.com"})
-    response = _get_with_cookie(raw_client, "/me", token)
-    assert response.status_code == 401
+    # Both subject forms: an id that doesn't exist and a legacy email that
+    # doesn't exist.
+    for sub in ("999999", "ghost@example.com"):
+        token = create_access_token({"sub": sub})
+        assert _get_with_cookie(raw_client, "/me", token).status_code == 401
 
 
 def test_jwt_without_ver_claim_treated_as_zero(raw_client, db_session):
@@ -348,7 +372,7 @@ def test_jwt_without_ver_claim_treated_as_zero(raw_client, db_session):
     user = User(email="nover@example.com", name="No Ver")
     db_session.add(user)
     db_session.flush()
-    token = create_access_token({"sub": user.email})
+    token = create_access_token({"sub": str(user.id)})
     response = _get_with_cookie(raw_client, "/me", token)
     assert response.status_code == 200
 
@@ -357,7 +381,7 @@ def test_jwt_rejected_after_token_version_bump(raw_client, db_session):
     user = User(email="ver-user@example.com", name="Ver User")
     db_session.add(user)
     db_session.flush()
-    token = create_access_token({"sub": user.email, "ver": user.token_version})
+    token = create_access_token({"sub": str(user.id), "ver": user.token_version})
 
     assert _get_with_cookie(raw_client, "/me", token).status_code == 200
 

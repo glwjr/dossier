@@ -154,7 +154,7 @@ def callback(
         user.name = name
         db.commit()
 
-    response = _issue_token(email, user.token_version)
+    response = _issue_token(user)
     # The state served its purpose — expire it so it can't be replayed.
     _clear_state_cookie(response)
     return response
@@ -235,9 +235,7 @@ def demo_login(db: Session = Depends(get_db)):
     db.commit()
 
     # 303: this is a POST, so the browser must GET the destination, not re-POST.
-    return _issue_token(
-        email, demo_user.token_version, redirect_status=status.HTTP_303_SEE_OTHER
-    )
+    return _issue_token(demo_user, redirect_status=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -251,13 +249,12 @@ def logout(response: Response):
 
 
 def _issue_token(
-    email: str,
-    token_version: int,
+    user: User,
     redirect_status: int = status.HTTP_307_TEMPORARY_REDIRECT,
 ):
     """Set the JWT as an HttpOnly cookie, then redirect to the app (or return
     JSON when no frontend is configured, e.g. local API-only use and tests)."""
-    access_token = create_access_token({"sub": email, "ver": token_version})
+    access_token = create_access_token({"sub": str(user.id), "ver": user.token_version})
     if settings.frontend_url:
         response: Response = RedirectResponse(
             f"{settings.frontend_url}/", status_code=redirect_status
