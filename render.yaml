@@ -26,6 +26,18 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+      # Optional feature enablers (blank disables each feature); values live
+      # in the dashboard. Declared here so the blueprint matches reality.
+      - key: DEMO_TEMPLATE_EMAIL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: REMINDER_FROM_EMAIL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
 
 databases:
   - name: dossier-db
