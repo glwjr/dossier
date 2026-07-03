@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
@@ -7,7 +7,7 @@ from app.db import get_db
 from app.models.document import Document
 from app.models.program import Program
 from app.models.user import User
-from app.ownership import get_program_or_404
+from app.ownership import get_owned_child_or_404, get_program_or_404
 from app.pagination import Pagination, pagination
 from app.schemas.document import (
     DocumentCreate,
@@ -34,19 +34,6 @@ def list_all_documents(
         .limit(page.limit)
         .offset(page.offset)
     ).all()
-
-
-def _get_document_or_404(doc_id: int, current_user: User, db: Session) -> Document:
-    doc = db.scalar(
-        select(Document)
-        .join(Program, Document.program_id == Program.id)
-        .where(Document.id == doc_id, Program.user_id == current_user.id)
-    )
-    if doc is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-        )
-    return doc
 
 
 @router.get("/programs/{program_id}/documents", response_model=list[DocumentRead])
@@ -85,7 +72,7 @@ def update_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    doc = _get_document_or_404(doc_id, current_user, db)
+    doc = get_owned_child_or_404(Document, doc_id, current_user, db)
     for key, value in body.model_dump(exclude_unset=True).items():
         setattr(doc, key, value)
     db.commit()
@@ -99,6 +86,6 @@ def delete_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    doc = _get_document_or_404(doc_id, current_user, db)
+    doc = get_owned_child_or_404(Document, doc_id, current_user, db)
     db.delete(doc)
     db.commit()

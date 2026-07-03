@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
@@ -7,7 +7,7 @@ from app.db import get_db
 from app.models.deadline import Deadline
 from app.models.program import Program
 from app.models.user import User
-from app.ownership import get_program_or_404
+from app.ownership import get_owned_child_or_404, get_program_or_404
 from app.pagination import Pagination, pagination
 from app.schemas.deadline import (
     DeadlineCreate,
@@ -17,20 +17,6 @@ from app.schemas.deadline import (
 )
 
 router = APIRouter(tags=["deadlines"])
-
-
-def _get_deadline_or_404(deadline_id: int, current_user: User, db: Session) -> Deadline:
-    """Load a deadline; verify ownership via a join through the parent program."""
-    deadline = db.scalar(
-        select(Deadline)
-        .join(Program, Deadline.program_id == Program.id)
-        .where(Deadline.id == deadline_id, Program.user_id == current_user.id)
-    )
-    if deadline is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Deadline not found"
-        )
-    return deadline
 
 
 @router.get("/deadlines", response_model=list[DeadlineWithProgramRead])
@@ -90,7 +76,7 @@ def update_deadline(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    deadline = _get_deadline_or_404(deadline_id, current_user, db)
+    deadline = get_owned_child_or_404(Deadline, deadline_id, current_user, db)
     for key, value in body.model_dump(exclude_unset=True).items():
         setattr(deadline, key, value)
     db.commit()
@@ -104,6 +90,6 @@ def delete_deadline(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    deadline = _get_deadline_or_404(deadline_id, current_user, db)
+    deadline = get_owned_child_or_404(Deadline, deadline_id, current_user, db)
     db.delete(deadline)
     db.commit()

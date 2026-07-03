@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
@@ -7,7 +7,7 @@ from app.db import get_db
 from app.models.advisor import Advisor
 from app.models.program import Program
 from app.models.user import User
-from app.ownership import get_program_or_404
+from app.ownership import get_owned_child_or_404, get_program_or_404
 from app.pagination import Pagination, pagination
 from app.schemas.advisor import (
     AdvisorCreate,
@@ -34,22 +34,6 @@ def list_all_advisors(
         .limit(page.limit)
         .offset(page.offset)
     ).all()
-
-
-def _get_advisor_or_404(advisor_id: int, current_user: User, db: Session) -> Advisor:
-    advisor = db.scalar(
-        select(Advisor)
-        .join(Program, Advisor.program_id == Program.id)
-        .where(
-            Advisor.id == advisor_id,
-            Program.user_id == current_user.id,
-        )
-    )
-    if advisor is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Advisor not found"
-        )
-    return advisor
 
 
 @router.get(
@@ -91,7 +75,7 @@ def update_advisor(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    advisor = _get_advisor_or_404(advisor_id, current_user, db)
+    advisor = get_owned_child_or_404(Advisor, advisor_id, current_user, db)
     for key, value in body.model_dump(exclude_unset=True).items():
         setattr(advisor, key, value)
     db.commit()
@@ -105,6 +89,6 @@ def delete_advisor(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    advisor = _get_advisor_or_404(advisor_id, current_user, db)
+    advisor = get_owned_child_or_404(Advisor, advisor_id, current_user, db)
     db.delete(advisor)
     db.commit()
