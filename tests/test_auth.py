@@ -47,6 +47,16 @@ def test_login_state_cookie_not_secure_in_dev(raw_client, monkeypatch):
     assert "Secure" not in set_cookie
 
 
+def test_login_state_cookie_scoped_to_auth_path(raw_client, monkeypatch):
+    # The state cookie is only needed by /auth/callback — don't send it on
+    # every API request.
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "path=/auth" in set_cookie.lower()
+
+
 def test_login_returns_501_without_credentials(raw_client, monkeypatch):
     monkeypatch.setattr(settings, "google_client_id", "")
     response = raw_client.get("/auth/login")
@@ -126,6 +136,59 @@ def test_callback_redirects_to_frontend_when_configured(
     assert f"{AUTH_COOKIE}=" in set_cookie
     assert "HttpOnly" in set_cookie
     assert "samesite=lax" in set_cookie.lower()
+
+
+def test_callback_clears_state_cookie_after_success(
+    raw_client, db_session, monkeypatch
+):
+    """The OAuth state is single-use: a successful callback must expire it."""
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "google_client_secret", "test-secret")
+    monkeypatch.setattr(settings, "frontend_url", "")
+
+    login_resp = raw_client.get("/auth/login", follow_redirects=False)
+    state_cookie = login_resp.cookies.get("oauth_state")
+    state = parse_qs(urlparse(login_resp.headers["location"]).query)["state"][0]
+
+    with patch("app.routers.auth.httpx.Client", return_value=_mock_google()):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+        )
+
+    assert response.status_code == 200
+    state_headers = [
+        h
+        for h in response.headers.get_list("set-cookie")
+        if h.startswith("oauth_state=")
+    ]
+    assert len(state_headers) == 1
+    deletion = state_headers[0].lower()
+    assert "expires=" in deletion or "max-age=0" in deletion
+
+
+def test_callback_redirects_home_when_user_denies_consent(raw_client, monkeypatch):
+    """Cancelling on Google's consent screen must not dead-end in a 422."""
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get(
+        "/auth/callback?error=access_denied&state=any", follow_redirects=False
+    )
+    assert response.status_code in (302, 307)
+    assert response.headers["location"] == "https://my.example.com/"
+    # No session is minted on a denial.
+    assert AUTH_COOKIE not in response.headers.get("set-cookie", "")
+
+
+def test_callback_denial_returns_400_without_frontend(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "frontend_url", "")
+    response = raw_client.get("/auth/callback?error=access_denied&state=any")
+    assert response.status_code == 400
+
+
+def test_callback_missing_code_is_handled(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get("/auth/callback", follow_redirects=False)
+    assert response.status_code in (302, 307)
 
 
 def test_callback_rejects_invalid_state(raw_client):

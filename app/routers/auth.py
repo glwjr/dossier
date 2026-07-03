@@ -25,6 +25,22 @@ _GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 _GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 _GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
+# CSRF-protection state for the OAuth round-trip. Scoped to /auth so it isn't
+# sent on every API request, and expired after one use in the callback.
+_STATE_COOKIE = "oauth_state"
+_STATE_COOKIE_PATH = "/auth"
+
+
+def _clear_state_cookie(response: Response) -> None:
+    # Attributes must match the set_cookie call in login() to delete.
+    response.delete_cookie(
+        _STATE_COOKIE,
+        path=_STATE_COOKIE_PATH,
+        httponly=True,
+        secure=bool(settings.frontend_url),
+        samesite="lax",
+    )
+
 
 @router.get("/login")
 def login() -> RedirectResponse:
@@ -44,27 +60,41 @@ def login() -> RedirectResponse:
     }
     redirect = RedirectResponse(f"{_GOOGLE_AUTH_URL}?{urlencode(params)}")
     redirect.set_cookie(
-        "oauth_state",
+        _STATE_COOKIE,
         state,
         httponly=True,
         samesite="lax",
         # Secure in deployed environments (HTTPS); relaxed for local http dev.
         secure=bool(settings.frontend_url),
         max_age=600,
+        path=_STATE_COOKIE_PATH,
     )
     return redirect
 
 
 @router.get("/callback")
 def callback(
-    code: str,
-    state: str,
     request: Request,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
     db: Session = Depends(get_db),
 ):
     """Handle Google's redirect: exchange the code for a Dossier JWT."""
-    stored_state = request.cookies.get("oauth_state")
-    if not stored_state or not hmac.compare_digest(state, stored_state):
+    if error or not code:
+        # The user cancelled on Google's consent screen (or Google reported
+        # an error) — no session to mint. Send them back to the app; the
+        # frontend middleware bounces unauthenticated visitors to the
+        # marketing/login site.
+        if settings.frontend_url:
+            return RedirectResponse(f"{settings.frontend_url}/")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google sign-in was cancelled",
+        )
+
+    stored_state = request.cookies.get(_STATE_COOKIE)
+    if not state or not stored_state or not hmac.compare_digest(state, stored_state):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OAuth state — possible CSRF",
@@ -124,7 +154,10 @@ def callback(
         user.name = name
         db.commit()
 
-    return _issue_token(email, user.token_version)
+    response = _issue_token(email, user.token_version)
+    # The state served its purpose — expire it so it can't be replayed.
+    _clear_state_cookie(response)
+    return response
 
 
 def _require_same_site_origin(request: Request) -> None:
