@@ -82,8 +82,8 @@ def get_current_user(
             # expire (same grandfathering as the "ver" claim).
             options={"verify_aud": False},
         )
-        email: str | None = payload.get("sub")
-        if email is None:
+        sub = payload.get("sub")
+        if not isinstance(sub, str) or not sub:
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
@@ -92,7 +92,14 @@ def get_current_user(
     if payload.get("iss", JWT_ISSUER) != JWT_ISSUER:
         raise credentials_exception
 
-    user = db.scalar(select(User).where(User.email == email))
+    if sub.isdigit():
+        # Canonical subject: the user id. Sessions track the account, so an
+        # email change or a delete-and-re-signup never revives old tokens.
+        user = db.get(User, int(sub))
+    else:
+        # Legacy subject (pre-id tokens): the email. Grandfathered until those
+        # tokens expire — safe to remove one token lifetime after deploying.
+        user = db.scalar(select(User).where(User.email == sub))
     if user is None:
         raise credentials_exception
     # Reject tokens minted before the user's last "sign out everywhere".

@@ -1,10 +1,32 @@
 from app.models.app_meta import AppMeta
 from seed import (
+    _ADVISORS,
+    _RECOMMENDERS,
     DEMO_TEMPLATE_VERSION,
     _get_meta,
     _needs_reseed,
     _set_meta,
 )
+
+# --- sample people are fictional ---
+
+
+def test_seed_people_have_fictional_contact_info():
+    """Advisors and recommenders in the seed are invented people; their emails
+    and homepages must use reserved example domains so the public repo and the
+    demo never attribute fabricated correspondence to anyone real."""
+    people = [a for advisors in _ADVISORS.values() for a in advisors]
+    people += _RECOMMENDERS
+    assert people
+    for person in people:
+        email = person.get("email")
+        if email:
+            domain = email.rsplit("@", 1)[1]
+            assert domain.endswith(("example.edu", "example.com")), email
+        url = person.get("url")
+        if url:
+            assert "example.edu" in url, url
+
 
 # --- app_meta helpers ---
 

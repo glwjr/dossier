@@ -72,7 +72,7 @@ def _build_template(db: Session) -> User:
     db.add(
         Advisor(
             program_id=prog.id,
-            name="Prof. Barzilay",
+            name="Prof. Mercer",
             response=AdvisorResponse.positive,
         )
     )
@@ -128,7 +128,7 @@ def test_clone_copies_full_graph(db_session):
     )
     assert (
         db_session.scalar(select(Advisor).where(Advisor.program_id == pc.id)).name
-        == "Prof. Barzilay"
+        == "Prof. Mercer"
     )
     assert (
         db_session.scalar(select(Document).where(Document.program_id == pc.id)).title
@@ -428,7 +428,7 @@ def test_demo_allows_any_origin_when_unconfigured(raw_client, db_session, monkey
 
 def test_demo_user_cannot_delete_account(raw_client, db_session):
     demo = _demo_user(db_session, "del", hours_old=0)
-    token = create_access_token({"sub": demo.email})
+    token = create_access_token({"sub": str(demo.id)})
 
     response = raw_client.delete("/me", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403
@@ -437,7 +437,7 @@ def test_demo_user_cannot_delete_account(raw_client, db_session):
 
 def test_demo_user_cannot_create_calendar_token(raw_client, db_session):
     demo = _demo_user(db_session, "cal", hours_old=0)
-    token = create_access_token({"sub": demo.email})
+    token = create_access_token({"sub": str(demo.id)})
 
     response = raw_client.post("/me/calendar-token", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403
@@ -447,7 +447,7 @@ def test_demo_user_cannot_create_calendar_token(raw_client, db_session):
 
 def test_demo_user_cannot_revoke_calendar_token(raw_client, db_session):
     demo = _demo_user(db_session, "cal2", hours_old=0)
-    token = create_access_token({"sub": demo.email})
+    token = create_access_token({"sub": str(demo.id)})
 
     response = raw_client.delete("/me/calendar-token", cookies={AUTH_COOKIE: token})
     assert response.status_code == 403

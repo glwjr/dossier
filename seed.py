@@ -66,7 +66,7 @@ _PROGRAMS = [
         "app_fee": 75,
         "notes": (
             "Interview scheduled for Feb 14. Flew out for visit day."
-            " Very strong fit with Prof. Xu's group."
+            " Very strong fit with Prof. Raghunathan's group."
         ),
     },
     {
@@ -169,28 +169,32 @@ _PROGRAMS = [
 # Recommenders
 # ---------------------------------------------------------------------------
 
+# All people in the seed are FICTIONAL (schools/programs are real, the humans
+# are not). Contact info stays on reserved example domains — enforced by
+# tests/test_seed.py — so the public repo and demo never attribute invented
+# correspondence to anyone real.
 _RECOMMENDERS = [
     {
-        "name": "Prof. Margaret Chen",
+        "name": "Prof. Beatriz Sandoval",
         "institution": "UC San Diego",
-        "email": "m.chen@ucsd.edu",
+        "email": "b.sandoval@example.edu",
         "notes": (
             "Primary advisor. Specializes in computational syntax."
             " Know her well — three years in her lab."
         ),
     },
     {
-        "name": "Prof. David Osei",
+        "name": "Prof. Henrik Waldner",
         "institution": "Stanford University",
-        "email": "osei@cs.stanford.edu",
+        "email": "h.waldner@example.edu",
         "notes": (
             "Collaborator on the summer NLP internship project. Strong letter expected."
         ),
     },
     {
-        "name": "Dr. Sarah Novak",
+        "name": "Dr. Amara Diallo",
         "institution": "Google DeepMind",
-        "email": "snovak@deepmind.com",
+        "email": "a.diallo@example.com",
         "notes": (
             "Industry mentor from 2024 internship. Reached out Dec 1 — she agreed."
         ),
@@ -599,13 +603,14 @@ _DEADLINES: dict[int, list[dict]] = {
 # Advisors
 # ---------------------------------------------------------------------------
 
+# Fictional faculty — see the note above _RECOMMENDERS.
 _ADVISORS: dict[int, list[dict]] = {
     0: [  # MIT
         {
-            "name": "Prof. Regina Barzilay",
+            "name": "Prof. Rosalind Mercer",
             "research_area": "Clinical NLP & ML for medicine",
-            "email": "regina@csail.mit.edu",
-            "url": "https://people.csail.mit.edu/regina/",
+            "email": "r.mercer@example.edu",
+            "url": "https://example.edu/~rmercer/",
             "contacted_on": date(2025, 10, 3),
             "response": AdvisorResponse.positive,
             "notes": (
@@ -614,10 +619,10 @@ _ADVISORS: dict[int, list[dict]] = {
             ),
         },
         {
-            "name": "Prof. Yoon Kim",
+            "name": "Prof. Theo Lindqvist",
             "research_area": "Deep learning & structured prediction for NLP",
-            "email": "yoonkim@mit.edu",
-            "url": "https://people.csail.mit.edu/yoonkim/",
+            "email": "t.lindqvist@example.edu",
+            "url": "https://example.edu/~tlindqvist/",
             "contacted_on": date(2025, 10, 10),
             "response": AdvisorResponse.none,
             "notes": "No response after two weeks.",
@@ -625,10 +630,10 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     1: [  # Stanford
         {
-            "name": "Prof. Christopher Manning",
+            "name": "Prof. Miriam Kessler",
             "research_area": "Foundations of NLP & deep learning",
-            "email": "manning@cs.stanford.edu",
-            "url": "https://nlp.stanford.edu/~manning/",
+            "email": "m.kessler@example.edu",
+            "url": "https://example.edu/~mkessler/",
             "contacted_on": date(2025, 10, 5),
             "response": AdvisorResponse.positive,
             "notes": (
@@ -637,9 +642,9 @@ _ADVISORS: dict[int, list[dict]] = {
             ),
         },
         {
-            "name": "Prof. Dan Jurafsky",
+            "name": "Prof. Alejandro Reyes",
             "research_area": "Computational linguistics & NLP for social science",
-            "email": "jurafsky@stanford.edu",
+            "email": "a.reyes@example.edu",
             "contacted_on": date(2025, 10, 12),
             "response": AdvisorResponse.none,
             "notes": "Auto-reply directing to application portal.",
@@ -647,10 +652,10 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     2: [  # CMU
         {
-            "name": "Prof. Graham Neubig",
+            "name": "Prof. Priya Raghunathan",
             "research_area": "Multilingual NLP & machine translation",
-            "email": "gneubig@cs.cmu.edu",
-            "url": "http://www.phontron.com/",
+            "email": "p.raghunathan@example.edu",
+            "url": "https://example.edu/~praghunathan/",
             "contacted_on": date(2025, 10, 8),
             "response": AdvisorResponse.meeting_scheduled,
             "notes": (
@@ -659,9 +664,9 @@ _ADVISORS: dict[int, list[dict]] = {
             ),
         },
         {
-            "name": "Prof. Yulia Tsvetkov",
+            "name": "Prof. Anna Kovalenko",
             "research_area": "Multilingual & socially-aware NLP",
-            "email": "ytsvetko@cs.cmu.edu",
+            "email": "a.kovalenko@example.edu",
             "contacted_on": date(2025, 10, 20),
             "response": AdvisorResponse.positive,
             "notes": (
@@ -672,10 +677,10 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     3: [  # Berkeley
         {
-            "name": "Prof. David Bamman",
+            "name": "Prof. Julian Ashworth",
             "research_area": "NLP for the humanities & cultural analytics",
-            "email": "dbamman@berkeley.edu",
-            "url": "http://people.ischool.berkeley.edu/~dbamman/",
+            "email": "j.ashworth@example.edu",
+            "url": "https://example.edu/~jashworth/",
             "contacted_on": date(2025, 10, 15),
             "response": AdvisorResponse.positive,
             "notes": (
@@ -686,21 +691,21 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     4: [  # UW
         {
-            "name": "Prof. Noah Smith",
+            "name": "Prof. Naomi Feldstein",
             "research_area": "NLP with structured & low-resource models",
-            "email": "nasmith@cs.washington.edu",
-            "url": "https://nasmith.github.io/",
+            "email": "n.feldstein@example.edu",
+            "url": "https://example.edu/~nfeldstein/",
             "contacted_on": date(2025, 10, 7),
             "response": AdvisorResponse.positive,
             "notes": (
                 "Responded quickly. Interested in my work on low-resource parsing."
-                " Suggested connecting with his postdoc."
+                " Suggested connecting with her postdoc."
             ),
         },
         {
-            "name": "Prof. Luke Zettlemoyer",
+            "name": "Prof. Marcus Oyelaran",
             "research_area": "Semantic parsing & large language models",
-            "email": "lsz@cs.washington.edu",
+            "email": "m.oyelaran@example.edu",
             "contacted_on": date(2025, 10, 20),
             "response": AdvisorResponse.none,
             "notes": "No response.",
@@ -708,10 +713,10 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     5: [  # JHU
         {
-            "name": "Prof. Benjamin Van Durme",
+            "name": "Prof. Sofia Brandt",
             "research_area": "Semantics & information extraction",
-            "email": "vandurme@cs.jhu.edu",
-            "url": "https://www.cs.jhu.edu/~vandurme/",
+            "email": "s.brandt@example.edu",
+            "url": "https://example.edu/~sbrandt/",
             "contacted_on": date(2025, 10, 18),
             "response": AdvisorResponse.positive,
             "notes": "Enthusiastic reply. CLSP community seems very collaborative.",
@@ -719,9 +724,9 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     8: [  # Ohio State
         {
-            "name": "Prof. Micha Elsner",
+            "name": "Prof. Emeka Nwosu",
             "research_area": "Computational morphology & psycholinguistics",
-            "email": "elsner@ling.osu.edu",
+            "email": "e.nwosu@example.edu",
             "contacted_on": date(2025, 11, 1),
             "response": AdvisorResponse.positive,
             "notes": "Brief but encouraging reply.",
@@ -729,10 +734,10 @@ _ADVISORS: dict[int, list[dict]] = {
     ],
     9: [  # Georgetown
         {
-            "name": "Prof. Nathan Schneider",
+            "name": "Prof. Lena Vartanian",
             "research_area": "Computational semantics & Universal Dependencies",
-            "email": "nathan.schneider@georgetown.edu",
-            "url": "https://people.cs.georgetown.edu/nschneid/",
+            "email": "l.vartanian@example.edu",
+            "url": "https://example.edu/~lvartanian/",
             "contacted_on": date(2026, 3, 15),
             "response": AdvisorResponse.meeting_scheduled,
             "notes": (
@@ -936,7 +941,7 @@ def seed(email: str | None = None, name: str = "Dev User") -> None:
 
 
 # Bump when the sample content below changes so deploys rebuild the template.
-DEMO_TEMPLATE_VERSION = 1
+DEMO_TEMPLATE_VERSION = 2
 _DEMO_VERSION_KEY = "demo_template_version"
 
 

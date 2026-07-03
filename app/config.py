@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     # Per-IP cap on POST /programs/import per minute (0 disables). Bulk create is
     # authenticated, so this just bounds accidental or scripted floods.
     import_rate_limit_per_minute: int = 30
+    # Per-IP cap on the OAuth endpoints (/auth/login + /auth/callback share one
+    # bucket) per minute (0 disables). Each callback triggers outbound calls to
+    # Google, so this bounds the upstream traffic a hostile client can cause.
+    # A sign-in costs 2 hits, so the default allows ~10 sign-ins/min per IP.
+    auth_rate_limit_per_minute: int = 20
     # Error tracking. Blank disables Sentry entirely (dev/test default).
     sentry_dsn: str = ""
     # Fraction of requests traced for performance (0 = errors only).
