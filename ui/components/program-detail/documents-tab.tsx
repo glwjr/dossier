@@ -8,6 +8,7 @@ import { Document } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { DocumentDialog } from "@/components/document-dialog";
 import { ConfirmButton } from "@/components/confirm-button";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -61,10 +62,10 @@ export function DocumentsTab({ programId }: { programId: number }) {
         />
       </div>
       {data.length === 0 && (
-        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No documents yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Link your SOPs, CVs, and writing samples to this program.</p>
-        </div>
+        <EmptyState
+          title="No documents yet"
+          message="Link your SOPs, CVs, and writing samples to this program."
+        />
       )}
       {data.map((d) => (
         <div

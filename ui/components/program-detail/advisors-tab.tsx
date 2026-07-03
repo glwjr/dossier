@@ -8,6 +8,7 @@ import { Advisor } from "@/lib/types";
 import { ADVISOR_RESPONSE_LABEL, formatDate } from "@/lib/display";
 import { AdvisorDialog } from "@/components/advisor-dialog";
 import { ConfirmButton } from "@/components/confirm-button";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -46,10 +47,10 @@ export function AdvisorsTab({ programId }: { programId: number }) {
         />
       </div>
       {data.length === 0 && (
-        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No advisors yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Track potential faculty advisors, their research, and any outreach.</p>
-        </div>
+        <EmptyState
+          title="No advisors yet"
+          message="Track potential faculty advisors, their research, and any outreach."
+        />
       )}
       {data.map((c) => (
         <div

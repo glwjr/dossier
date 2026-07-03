@@ -7,6 +7,7 @@ import { Deadline } from "@/lib/types";
 import { DEADLINE_KIND_LABEL, formatDate } from "@/lib/display";
 import { DeadlineDialog } from "@/components/deadline-dialog";
 import { ConfirmButton } from "@/components/confirm-button";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -52,10 +53,10 @@ export function DeadlinesTab({ programId }: { programId: number }) {
         />
       </div>
       {sortedDeadlines.length === 0 && (
-        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No deadlines yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Track application, fellowship, and fee waiver deadlines.</p>
-        </div>
+        <EmptyState
+          title="No deadlines yet"
+          message="Track application, fellowship, and fee waiver deadlines."
+        />
       )}
       {sortedDeadlines.map((d) => (
         <div

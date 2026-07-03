@@ -7,6 +7,7 @@ import { ProgramRecommender } from "@/lib/types";
 import { REC_STATUS_LABEL, formatDate } from "@/lib/display";
 import { AssignRecommenderDialog } from "@/components/assign-recommender-dialog";
 import { ConfirmButton } from "@/components/confirm-button";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { onMutationError } from "@/lib/mutation-error";
@@ -68,10 +69,10 @@ export function RecommendersTab({
         />
       </div>
       {data.length === 0 && (
-        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No recommenders assigned</p>
-          <p className="mt-1 text-sm text-muted-foreground">Assign letter writers and track their status for this program.</p>
-        </div>
+        <EmptyState
+          title="No recommenders assigned"
+          message="Assign letter writers and track their status for this program."
+        />
       )}
       {data.map((pr) => (
         <div

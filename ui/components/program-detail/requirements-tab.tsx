@@ -7,6 +7,7 @@ import { Requirement } from "@/lib/types";
 import { REQUIREMENT_STATUS_LABEL, formatDate } from "@/lib/display";
 import { RequirementDialog } from "@/components/requirement-dialog";
 import { ConfirmButton } from "@/components/confirm-button";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -77,10 +78,10 @@ export function RequirementsTab({ programId }: { programId: number }) {
         />
       </div>
       {sorted.length === 0 && (
-        <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-          <p className="text-sm font-medium">No requirements yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Add the documents, tests, and other items this program requires.</p>
-        </div>
+        <EmptyState
+          title="No requirements yet"
+          message="Add the documents, tests, and other items this program requires."
+        />
       )}
       {sorted.map((r) => (
         <div
