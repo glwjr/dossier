@@ -23,8 +23,20 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   if (res.status === 204) return undefined as T;
-  if (!res.ok) throw new Error(`API error ${res.status}`);
+  if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
+}
+
+async function errorMessage(res: Response): Promise<string> {
+  // Prefer the API's human-readable detail (e.g. rate-limit guidance);
+  // validation errors put a list there, so only accept a string.
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string") return body.detail;
+  } catch {
+    // Non-JSON body (proxy error page, empty) — fall through.
+  }
+  return `API error ${res.status}`;
 }
 
 export const api = {
