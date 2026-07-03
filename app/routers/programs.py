@@ -9,6 +9,7 @@ from app.models.requirement import Requirement, RequirementKind
 from app.models.user import User
 from app.ownership import get_program_or_404
 from app.pagination import Pagination, pagination
+from app.ratelimit import rate_limit_import
 from app.schemas.program import (
     ProgramCreate,
     ProgramImport,
@@ -62,7 +63,10 @@ def create_program(
 
 
 @router.post(
-    "/import", response_model=list[ProgramRead], status_code=status.HTTP_201_CREATED
+    "/import",
+    response_model=list[ProgramRead],
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_import)],
 )
 def import_programs(
     body: ProgramImport,

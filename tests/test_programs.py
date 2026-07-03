@@ -311,6 +311,18 @@ def test_import_programs_over_cap_rejected(client):
     assert resp.status_code == 422
 
 
+def test_import_programs_rate_limited(client, dev_user, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "import_rate_limit_per_minute", 2)
+
+    for _ in range(2):
+        assert client.post("/programs/import", json={"programs": []}).status_code == 201
+    blocked = client.post("/programs/import", json={"programs": []})
+    assert blocked.status_code == 429
+    assert "retry-after" in {k.lower() for k in blocked.headers}
+
+
 def test_program_interview_fields_roundtrip(client):
     created = client.post(
         "/programs",

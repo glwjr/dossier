@@ -2,7 +2,7 @@ import enum
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, ForeignKey, Text
+from sqlalchemy import Boolean, Date, ForeignKey, Index, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,9 +22,16 @@ class DeadlineKind(str, enum.Enum):
 class Deadline(Base):
     __tablename__ = "deadlines"
 
+    # Composite index (program_id, due_date) serves the dashboard's per-program
+    # next-deadline aggregate and the per-program list ordered by due_date; the
+    # leading program_id column also covers plain program_id lookups.
+    __table_args__ = (
+        Index("ix_deadlines_program_id_due_date", "program_id", "due_date"),
+    )
+
     id: Mapped[int] = mapped_column(primary_key=True)
     program_id: Mapped[int] = mapped_column(
-        ForeignKey("programs.id", ondelete="CASCADE"), index=True
+        ForeignKey("programs.id", ondelete="CASCADE")
     )
     kind: Mapped[DeadlineKind] = mapped_column(SAEnum(DeadlineKind))
     due_date: Mapped[date] = mapped_column(Date)

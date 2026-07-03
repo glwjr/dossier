@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Per-IP cap on POST /auth/demo per minute (0 disables). Each request clones
     # ~150 rows, so this bounds the churn a single client can cause.
     demo_rate_limit_per_minute: int = 10
+    # Per-IP cap on POST /programs/import per minute (0 disables). Bulk create is
+    # authenticated, so this just bounds accidental or scripted floods.
+    import_rate_limit_per_minute: int = 30
     # Error tracking. Blank disables Sentry entirely (dev/test default).
     sentry_dsn: str = ""
     # Fraction of requests traced for performance (0 = errors only).
