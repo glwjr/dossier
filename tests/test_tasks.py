@@ -52,6 +52,22 @@ def test_weekly_digest_disabled_when_secret_blank(raw_client, monkeypatch):
     assert r.status_code == 403
 
 
+def test_weekly_digest_skips_demo_template_account(raw_client, db_session, monkeypatch):
+    """The demo template is a regular (non-demo) user with reminders on by
+    default; it must never be emailed."""
+    monkeypatch.setattr(settings, "cron_secret", SECRET)
+    template = _user_with_due_deadline(db_session, "demo-template@example.com")
+    monkeypatch.setattr(settings, "demo_template_email", template.email)
+    _user_with_due_deadline(db_session, "real@example.com")
+
+    with patch("app.routers.tasks.send_email", return_value=True) as send:
+        r = raw_client.post("/tasks/weekly-digest", headers={"X-Cron-Key": SECRET})
+
+    assert r.status_code == 200
+    recipients = [call.args[0] for call in send.call_args_list]
+    assert recipients == ["real@example.com"]
+
+
 def test_weekly_digest_survives_per_user_send_failure(
     raw_client, db_session, monkeypatch
 ):

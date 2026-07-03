@@ -29,12 +29,15 @@ def _require_cron(x_cron_key: str = Header(default="", alias="X-Cron-Key")) -> N
 @router.post("/weekly-digest", dependencies=[Depends(_require_cron)])
 def weekly_digest(db: Session = Depends(get_db)):
     """Email each opted-in, non-demo user a digest of what's due soon."""
-    users = db.scalars(
-        select(User).where(
-            User.email_reminders.is_(True),
-            User.is_demo.is_(False),
-        )
-    ).all()
+    stmt = select(User).where(
+        User.email_reminders.is_(True),
+        User.is_demo.is_(False),
+    )
+    # The demo template is a regular (non-demo) user seeded with sample
+    # deadlines; its address may not even exist, so never email it.
+    if settings.demo_template_email:
+        stmt = stmt.where(User.email != settings.demo_template_email)
+    users = db.scalars(stmt).all()
 
     sent = 0
     failed = 0
