@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { RequirementWithProgram } from "@/lib/types";
 import {
   REQUIREMENT_STATUS_LABEL,
@@ -57,7 +58,7 @@ function RequirementsList({
   } = useCollapsedSections("dossier_collapsed_requirements");
 
   const { data, isLoading, error } = useQuery<RequirementWithProgram[]>({
-    queryKey: ["requirements-all"],
+    queryKey: queryKeys.requirements.all,
     queryFn: () => api.get("/requirements"),
   });
 
@@ -65,8 +66,8 @@ function RequirementsList({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       api.patch(`/requirements/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.root });
       toast.success("Status updated");
     },
     onError: onMutationError,
@@ -76,8 +77,8 @@ function RequirementsList({
     mutationFn: ({ id, notes }: { id: number; notes: string }) =>
       api.patch(`/requirements/${id}`, { notes: notes || null }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.root });
     },
     onError: onMutationError,
   });
@@ -87,8 +88,8 @@ function RequirementsList({
       await Promise.all(ids.map((id) => api.patch(`/requirements/${id}`, { status })));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["requirements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.root });
       setSelectedIds(new Set());
       toast.success("Updated");
     },

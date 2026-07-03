@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
@@ -29,7 +30,7 @@ interface AdminStats {
 
 function AdminInner() {
   const { data, isLoading, error } = useQuery<AdminStats>({
-    queryKey: ["admin-stats"],
+    queryKey: queryKeys.adminStats,
     queryFn: () => api.get("/admin/stats"),
     retry: false,
   });

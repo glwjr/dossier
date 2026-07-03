@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Recommender } from "@/lib/types";
 import { REC_STATUS_LABEL, formatDate } from "@/lib/display";
 import { RequireAuth } from "@/components/require-auth";
 import { ErrorState } from "@/components/error-state";
 import { RecommenderDialog } from "@/components/recommender-dialog";
 import { AssignToProgramDialog } from "@/components/assign-to-program-dialog";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +32,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 function RecommenderList({ statusFilter, search }: { statusFilter: string; search: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<Recommender[]>({
-    queryKey: ["recommenders"],
+    queryKey: queryKeys.recommenders.all,
     queryFn: () => api.get("/recommenders"),
   });
 
@@ -46,7 +48,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
     }) =>
       api.patch(`/programs/${programId}/recommenders/${recommenderId}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Status updated");
     },
     onError: onMutationError,
@@ -55,13 +57,11 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
   const deleteRec = useMutation({
     mutationFn: (id: number) => api.delete(`/recommenders/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Deleted");
     },
     onError: onMutationError,
   });
-
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   if (isLoading)
     return (
@@ -168,38 +168,7 @@ function RecommenderList({ statusFilter, search }: { statusFilter: string; searc
                     </Button>
                   }
                 />
-                {confirmDelete === r.id ? (
-                  <>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => {
-                        deleteRec.mutate(r.id);
-                        setConfirmDelete(null);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => setConfirmDelete(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-muted-foreground"
-                    onClick={() => setConfirmDelete(r.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
+                <ConfirmButton onConfirm={() => deleteRec.mutate(r.id)} />
               </div>
             </div>
           </CardHeader>

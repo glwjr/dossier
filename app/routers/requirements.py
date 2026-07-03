@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, contains_eager
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.program import Program
 from app.models.requirement import Requirement
 from app.models.user import User
-from app.ownership import get_program_or_404
+from app.ownership import get_owned_child_or_404, get_program_or_404
 from app.pagination import Pagination, pagination
 from app.schemas.requirement import (
     RequirementCreate,
@@ -36,31 +37,20 @@ def list_all_requirements(
     ).all()
 
 
-def _get_requirement_or_404(
-    req_id: int, current_user: User, db: Session
-) -> Requirement:
-    """Load a requirement; verify ownership via a join through the parent program."""
-    req = db.scalar(
-        select(Requirement)
-        .join(Program, Requirement.program_id == Program.id)
-        .where(Requirement.id == req_id, Program.user_id == current_user.id)
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Requirement not found"
-        )
-    return req
-
-
 @router.get("/programs/{program_id}/requirements", response_model=list[RequirementRead])
 def list_requirements(
     program_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    page: Pagination = Depends(pagination),
 ):
     get_program_or_404(program_id, current_user, db)
     return db.scalars(
-        select(Requirement).where(Requirement.program_id == program_id)
+        select(Requirement)
+        .where(Requirement.program_id == program_id)
+        .order_by(Requirement.id)
+        .limit(page.limit)
+        .offset(page.offset)
     ).all()
 
 
@@ -90,9 +80,8 @@ def update_requirement(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    req = _get_requirement_or_404(req_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(req, key, value)
+    req = get_owned_child_or_404(Requirement, req_id, current_user, db)
+    apply_update(req, body)
     db.commit()
     db.refresh(req)
     return req
@@ -104,6 +93,6 @@ def delete_requirement(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    req = _get_requirement_or_404(req_id, current_user, db)
+    req = get_owned_child_or_404(Requirement, req_id, current_user, db)
     db.delete(req)
     db.commit()

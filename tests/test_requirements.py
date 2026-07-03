@@ -61,6 +61,31 @@ def test_list_requirements(client, program, req):
     assert items[0]["id"] == req["id"]
 
 
+def test_list_requirements_pagination(client, program):
+    # Create a handful, then page through with limit/offset.
+    for i in range(5):
+        r = client.post(
+            f"/programs/{program['id']}/requirements",
+            json={**REQ_PAYLOAD, "label": f"Req {i}"},
+        )
+        assert r.status_code == 201
+
+    first = client.get(
+        f"/programs/{program['id']}/requirements", params={"limit": 2, "offset": 0}
+    )
+    assert first.status_code == 200
+    page1 = first.json()
+    assert len(page1) == 2
+
+    second = client.get(
+        f"/programs/{program['id']}/requirements", params={"limit": 2, "offset": 2}
+    )
+    page2 = second.json()
+    assert len(page2) == 2
+    # Deterministic ordering: no overlap between consecutive pages.
+    assert {r["id"] for r in page1}.isdisjoint({r["id"] for r in page2})
+
+
 def test_update_requirement(client, req):
     response = client.patch(
         f"/requirements/{req['id']}",

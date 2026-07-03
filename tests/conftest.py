@@ -38,12 +38,13 @@ def _create_schema():
 
 
 @pytest.fixture(autouse=True)
-def _reset_demo_rate_limiter():
-    # The demo limiter is process-global; clear it so counts don't bleed across
-    # tests that hit POST /auth/demo.
-    from app.ratelimit import demo_limiter
+def _reset_rate_limiters():
+    # The limiters are process-global; clear them so counts don't bleed across
+    # tests that hit POST /auth/demo or POST /programs/import.
+    from app.ratelimit import demo_limiter, import_limiter
 
     demo_limiter.reset()
+    import_limiter.reset()
     yield
 
 

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Document, DocumentCreate } from "@/lib/types";
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
@@ -63,8 +64,8 @@ export function DocumentDialog({ programId, document, trigger }: Props) {
         ? api.patch<Document>(`/documents/${document.id}`, data)
         : api.post<Document>(`/programs/${programId}/documents`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents", programId] });
-      queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
       toast.success("Saved");
       setOpen(false);
     },

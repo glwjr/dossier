@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Requirement, RequirementCreate } from "@/lib/types";
 import { REQUIREMENT_KIND_LABEL, REQUIREMENT_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
@@ -63,8 +64,8 @@ export function RequirementDialog({ programId, requirement, trigger }: Props) {
         ? api.patch<Requirement>(`/requirements/${requirement.id}`, data)
         : api.post<Requirement>(`/programs/${programId}/requirements`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["requirements", programId] });
-      queryClient.invalidateQueries({ queryKey: ["requirements-all"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.byProgram(programId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requirements.all });
       toast.success("Saved");
       setOpen(false);
     },

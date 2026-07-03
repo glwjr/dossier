@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
 
+# Cancel superseded runs: a new push to the same ref (or PR) stops the
+# in-flight run instead of stacking redundant ones.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import {
   ProgramRecommender,
   ProgramRecommenderCreate,
@@ -59,7 +60,7 @@ export function AssignRecommenderDialog({
   const queryClient = useQueryClient();
 
   const { data: recommenders = [] } = useQuery<Recommender[]>({
-    queryKey: ["recommenders"],
+    queryKey: queryKeys.recommenders.all,
     queryFn: () => api.get("/recommenders"),
     enabled: open,
   });
@@ -80,7 +81,7 @@ export function AssignRecommenderDialog({
             data
           ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["program-recommenders", programId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.byProgram(programId) });
       toast.success("Saved");
       setOpen(false);
     },

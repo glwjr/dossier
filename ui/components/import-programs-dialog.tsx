@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Program } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,8 +61,8 @@ export function ImportProgramsDialog({ trigger }: Props) {
   const importMutation = useMutation({
     mutationFn: () => api.post<Program[]>("/programs/import", { programs }),
     onSuccess: (created) => {
-      queryClient.invalidateQueries({ queryKey: ["programs"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.programs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success(`Imported ${created.length} program(s)`);
       setText("");
       setOpen(false);

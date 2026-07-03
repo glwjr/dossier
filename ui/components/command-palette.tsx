@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Program, RequirementWithProgram, Recommender, AdvisorWithProgram, DocumentWithProgram } from "@/lib/types";
 import { PROGRAM_STATUS_LABEL } from "@/lib/display";
 import {
@@ -70,31 +71,31 @@ export function CommandPalette() {
   const router = useRouter();
 
   const { data: programs = [] } = useQuery<Program[]>({
-    queryKey: ["programs"],
+    queryKey: queryKeys.programs.all,
     queryFn: () => api.get("/programs"),
     enabled: open,
   });
 
   const { data: requirements = [] } = useQuery<RequirementWithProgram[]>({
-    queryKey: ["requirements-all"],
+    queryKey: queryKeys.requirements.all,
     queryFn: () => api.get("/requirements"),
     enabled: open,
   });
 
   const { data: recommenders = [] } = useQuery<Recommender[]>({
-    queryKey: ["recommenders"],
+    queryKey: queryKeys.recommenders.all,
     queryFn: () => api.get("/recommenders"),
     enabled: open,
   });
 
   const { data: advisors = [] } = useQuery<AdvisorWithProgram[]>({
-    queryKey: ["advisors-all"],
+    queryKey: queryKeys.advisors.all,
     queryFn: () => api.get("/advisors"),
     enabled: open,
   });
 
   const { data: documents = [] } = useQuery<DocumentWithProgram[]>({
-    queryKey: ["documents-all"],
+    queryKey: queryKeys.documents.all,
     queryFn: () => api.get("/documents"),
     enabled: open,
   });

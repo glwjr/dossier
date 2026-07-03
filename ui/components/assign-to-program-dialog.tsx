@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { Program, ProgramRecommender, ProgramAssignmentSummary } from "@/lib/types";
 import { REC_STATUS_LABEL } from "@/lib/display";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export function AssignToProgramDialog({
   const queryClient = useQueryClient();
 
   const { data: programs = [] } = useQuery<Program[]>({
-    queryKey: ["programs"],
+    queryKey: queryKeys.programs.all,
     queryFn: () => api.get("/programs"),
     enabled: open,
   });
@@ -61,7 +62,7 @@ export function AssignToProgramDialog({
         notes: notes || null,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommenders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recommenders.root });
       toast.success("Assigned");
       setOpen(false);
     },

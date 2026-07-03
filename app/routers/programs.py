@@ -3,12 +3,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.crud import apply_update
 from app.db import get_db
 from app.models.program import Program
 from app.models.requirement import Requirement, RequirementKind
 from app.models.user import User
 from app.ownership import get_program_or_404
 from app.pagination import Pagination, pagination
+from app.ratelimit import rate_limit_import
 from app.schemas.program import (
     ProgramCreate,
     ProgramImport,
@@ -62,7 +64,10 @@ def create_program(
 
 
 @router.post(
-    "/import", response_model=list[ProgramRead], status_code=status.HTTP_201_CREATED
+    "/import",
+    response_model=list[ProgramRead],
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_import)],
 )
 def import_programs(
     body: ProgramImport,
@@ -97,8 +102,7 @@ def update_program(
     db: Session = Depends(get_db),
 ):
     program = get_program_or_404(program_id, current_user, db)
-    for key, value in body.model_dump(exclude_unset=True).items():
-        setattr(program, key, value)
+    apply_update(program, body)
     db.commit()
     db.refresh(program)
     return program
