@@ -1,0 +1,26 @@
+# Secrets must never enter the build context — a local .env would otherwise
+# be baked into an image layer by `COPY . .`.
+.env
+.env.*
+!.env.example
+
+# Not needed at runtime (predeploy.sh needs app/, alembic/, alembic.ini,
+# seed.py; uvicorn needs app/).
+.git
+.github
+.venv
+ui
+web
+tests
+docs
+
+# Local artifacts and caches
+*.db
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+node_modules
+.pre-commit-config.yaml
+Dockerfile
+.dockerignore
