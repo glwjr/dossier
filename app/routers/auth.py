@@ -1,6 +1,6 @@
 import hmac
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -127,7 +127,47 @@ def callback(
     return _issue_token(email, user.token_version)
 
 
-@router.post("/demo", dependencies=[Depends(rate_limit_demo)])
+def _require_same_site_origin(request: Request) -> None:
+    """Reject browser POSTs from third-party pages (login CSRF).
+
+    A cross-site page can auto-submit a top-level form to /auth/demo; the
+    Set-Cookie on the response would silently replace a signed-in user's
+    session with a throwaway demo account (SameSite=Lax doesn't stop the
+    response from setting cookies). Browsers always send Origin on
+    cross-site POSTs, so requests without one (curl, tests, calendar-style
+    non-browser clients) are safe to allow.
+
+    Trusted origins: the deployed frontend, plus any host under the shared
+    parent domain (COOKIE_DOMAIN — where the marketing site's demo form
+    lives). When neither is configured (local dev) there is nothing to
+    check against.
+    """
+    origin = request.headers.get("origin")
+    if not origin:
+        return
+    frontend_host = (
+        urlparse(settings.frontend_url).netloc if settings.frontend_url else ""
+    )
+    parent = settings.cookie_domain.lstrip(".") if settings.cookie_domain else ""
+    if not frontend_host and not parent:
+        return
+
+    parsed = urlparse(origin)
+    if frontend_host and parsed.netloc == frontend_host:
+        return
+    hostname = parsed.hostname or ""
+    if parent and (hostname == parent or hostname.endswith("." + parent)):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Cross-site demo login is not allowed",
+    )
+
+
+@router.post(
+    "/demo",
+    dependencies=[Depends(_require_same_site_origin), Depends(rate_limit_demo)],
+)
 def demo_login(db: Session = Depends(get_db)):
     """Log into a throwaway account seeded with a copy of the demo template data.
 
