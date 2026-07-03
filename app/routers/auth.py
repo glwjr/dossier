@@ -1,6 +1,6 @@
 import hmac
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -25,6 +25,22 @@ _GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 _GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 _GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
+# CSRF-protection state for the OAuth round-trip. Scoped to /auth so it isn't
+# sent on every API request, and expired after one use in the callback.
+_STATE_COOKIE = "oauth_state"
+_STATE_COOKIE_PATH = "/auth"
+
+
+def _clear_state_cookie(response: Response) -> None:
+    # Attributes must match the set_cookie call in login() to delete.
+    response.delete_cookie(
+        _STATE_COOKIE,
+        path=_STATE_COOKIE_PATH,
+        httponly=True,
+        secure=bool(settings.frontend_url),
+        samesite="lax",
+    )
+
 
 @router.get("/login")
 def login() -> RedirectResponse:
@@ -44,27 +60,41 @@ def login() -> RedirectResponse:
     }
     redirect = RedirectResponse(f"{_GOOGLE_AUTH_URL}?{urlencode(params)}")
     redirect.set_cookie(
-        "oauth_state",
+        _STATE_COOKIE,
         state,
         httponly=True,
         samesite="lax",
         # Secure in deployed environments (HTTPS); relaxed for local http dev.
         secure=bool(settings.frontend_url),
         max_age=600,
+        path=_STATE_COOKIE_PATH,
     )
     return redirect
 
 
 @router.get("/callback")
 def callback(
-    code: str,
-    state: str,
     request: Request,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
     db: Session = Depends(get_db),
 ):
     """Handle Google's redirect: exchange the code for a Dossier JWT."""
-    stored_state = request.cookies.get("oauth_state")
-    if not stored_state or not hmac.compare_digest(state, stored_state):
+    if error or not code:
+        # The user cancelled on Google's consent screen (or Google reported
+        # an error) — no session to mint. Send them back to the app; the
+        # frontend middleware bounces unauthenticated visitors to the
+        # marketing/login site.
+        if settings.frontend_url:
+            return RedirectResponse(f"{settings.frontend_url}/")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google sign-in was cancelled",
+        )
+
+    stored_state = request.cookies.get(_STATE_COOKIE)
+    if not state or not stored_state or not hmac.compare_digest(state, stored_state):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OAuth state — possible CSRF",
@@ -124,10 +154,53 @@ def callback(
         user.name = name
         db.commit()
 
-    return _issue_token(email, user.token_version)
+    response = _issue_token(email, user.token_version)
+    # The state served its purpose — expire it so it can't be replayed.
+    _clear_state_cookie(response)
+    return response
 
 
-@router.post("/demo", dependencies=[Depends(rate_limit_demo)])
+def _require_same_site_origin(request: Request) -> None:
+    """Reject browser POSTs from third-party pages (login CSRF).
+
+    A cross-site page can auto-submit a top-level form to /auth/demo; the
+    Set-Cookie on the response would silently replace a signed-in user's
+    session with a throwaway demo account (SameSite=Lax doesn't stop the
+    response from setting cookies). Browsers always send Origin on
+    cross-site POSTs, so requests without one (curl, tests, calendar-style
+    non-browser clients) are safe to allow.
+
+    Trusted origins: the deployed frontend, plus any host under the shared
+    parent domain (COOKIE_DOMAIN — where the marketing site's demo form
+    lives). When neither is configured (local dev) there is nothing to
+    check against.
+    """
+    origin = request.headers.get("origin")
+    if not origin:
+        return
+    frontend_host = (
+        urlparse(settings.frontend_url).netloc if settings.frontend_url else ""
+    )
+    parent = settings.cookie_domain.lstrip(".") if settings.cookie_domain else ""
+    if not frontend_host and not parent:
+        return
+
+    parsed = urlparse(origin)
+    if frontend_host and parsed.netloc == frontend_host:
+        return
+    hostname = parsed.hostname or ""
+    if parent and (hostname == parent or hostname.endswith("." + parent)):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Cross-site demo login is not allowed",
+    )
+
+
+@router.post(
+    "/demo",
+    dependencies=[Depends(_require_same_site_origin), Depends(rate_limit_demo)],
+)
 def demo_login(db: Session = Depends(get_db)):
     """Log into a throwaway account seeded with a copy of the demo template data.
 

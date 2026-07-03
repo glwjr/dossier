@@ -1,11 +1,21 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 import httpx
+import jwt as pyjwt
 
-from app.auth import AUTH_COOKIE, create_access_token
+from app.auth import AUTH_COOKIE, JWT_AUDIENCE, JWT_ISSUER, create_access_token
 from app.config import settings
 from app.models.user import User
+
+
+def _handcrafted_token(**claims) -> str:
+    """Sign a token directly (bypassing create_access_token) to simulate
+    legacy or foreign tokens."""
+    now = datetime.now(timezone.utc)
+    payload = {"iat": now, "exp": now + timedelta(minutes=5), **claims}
+    return pyjwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 
 def _get_with_cookie(client, path, token):
@@ -45,6 +55,16 @@ def test_login_state_cookie_not_secure_in_dev(raw_client, monkeypatch):
     set_cookie = response.headers["set-cookie"]
     assert "oauth_state=" in set_cookie
     assert "Secure" not in set_cookie
+
+
+def test_login_state_cookie_scoped_to_auth_path(raw_client, monkeypatch):
+    # The state cookie is only needed by /auth/callback — don't send it on
+    # every API request.
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    response = raw_client.get("/auth/login", follow_redirects=False)
+    set_cookie = response.headers["set-cookie"]
+    assert "oauth_state=" in set_cookie
+    assert "path=/auth" in set_cookie.lower()
 
 
 def test_login_returns_501_without_credentials(raw_client, monkeypatch):
@@ -126,6 +146,59 @@ def test_callback_redirects_to_frontend_when_configured(
     assert f"{AUTH_COOKIE}=" in set_cookie
     assert "HttpOnly" in set_cookie
     assert "samesite=lax" in set_cookie.lower()
+
+
+def test_callback_clears_state_cookie_after_success(
+    raw_client, db_session, monkeypatch
+):
+    """The OAuth state is single-use: a successful callback must expire it."""
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "google_client_secret", "test-secret")
+    monkeypatch.setattr(settings, "frontend_url", "")
+
+    login_resp = raw_client.get("/auth/login", follow_redirects=False)
+    state_cookie = login_resp.cookies.get("oauth_state")
+    state = parse_qs(urlparse(login_resp.headers["location"]).query)["state"][0]
+
+    with patch("app.routers.auth.httpx.Client", return_value=_mock_google()):
+        response = raw_client.get(
+            f"/auth/callback?code=test_code&state={state}",
+            cookies={"oauth_state": state_cookie},
+        )
+
+    assert response.status_code == 200
+    state_headers = [
+        h
+        for h in response.headers.get_list("set-cookie")
+        if h.startswith("oauth_state=")
+    ]
+    assert len(state_headers) == 1
+    deletion = state_headers[0].lower()
+    assert "expires=" in deletion or "max-age=0" in deletion
+
+
+def test_callback_redirects_home_when_user_denies_consent(raw_client, monkeypatch):
+    """Cancelling on Google's consent screen must not dead-end in a 422."""
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get(
+        "/auth/callback?error=access_denied&state=any", follow_redirects=False
+    )
+    assert response.status_code in (302, 307)
+    assert response.headers["location"] == "https://my.example.com/"
+    # No session is minted on a denial.
+    assert AUTH_COOKIE not in response.headers.get("set-cookie", "")
+
+
+def test_callback_denial_returns_400_without_frontend(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "frontend_url", "")
+    response = raw_client.get("/auth/callback?error=access_denied&state=any")
+    assert response.status_code == 400
+
+
+def test_callback_missing_code_is_handled(raw_client, monkeypatch):
+    monkeypatch.setattr(settings, "frontend_url", "https://my.example.com")
+    response = raw_client.get("/auth/callback", follow_redirects=False)
+    assert response.status_code in (302, 307)
 
 
 def test_callback_rejects_invalid_state(raw_client):
@@ -211,12 +284,46 @@ def test_valid_jwt_authenticates_user(raw_client, db_session):
 
 
 def test_access_token_carries_issued_at(raw_client):
-    import jwt
-
     token = create_access_token({"sub": "iat-user@example.com"})
-    claims = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    claims = pyjwt.decode(
+        token, settings.secret_key, algorithms=["HS256"], audience=JWT_AUDIENCE
+    )
     assert "iat" in claims
     assert "exp" in claims
+
+
+def test_access_token_carries_issuer_and_audience(raw_client):
+    token = create_access_token({"sub": "aud-user@example.com"})
+    claims = pyjwt.decode(
+        token, settings.secret_key, algorithms=["HS256"], audience=JWT_AUDIENCE
+    )
+    assert claims["iss"] == JWT_ISSUER
+    assert claims["aud"] == JWT_AUDIENCE
+
+
+def test_jwt_without_iss_aud_still_authenticates(raw_client, db_session):
+    # Tokens minted before iss/aud existed must keep working until expiry.
+    user = User(email="legacy@example.com", name="Legacy")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email)
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 200
+
+
+def test_jwt_with_wrong_audience_rejected(raw_client, db_session):
+    user = User(email="wrongaud@example.com", name="Wrong Aud")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email, aud="some-other-service")
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 401
+
+
+def test_jwt_with_wrong_issuer_rejected(raw_client, db_session):
+    user = User(email="wrongiss@example.com", name="Wrong Iss")
+    db_session.add(user)
+    db_session.flush()
+    token = _handcrafted_token(sub=user.email, iss="someone-else")
+    assert _get_with_cookie(raw_client, "/me", token).status_code == 401
 
 
 def test_invalid_jwt_returns_401(raw_client):

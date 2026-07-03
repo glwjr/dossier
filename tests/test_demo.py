@@ -351,6 +351,81 @@ def test_demo_endpoint_rate_limited(raw_client, db_session, monkeypatch):
     assert "retry-after" in {k.lower() for k in blocked.headers}
 
 
+def _demo_origin_env(db_session, monkeypatch):
+    template = _build_template(db_session)
+    monkeypatch.setattr(settings, "demo_template_email", template.email)
+    monkeypatch.setattr(settings, "frontend_url", "https://my.dossiertool.com")
+    monkeypatch.setattr(settings, "cookie_domain", ".dossiertool.com")
+
+
+def test_demo_rejects_cross_site_origin(raw_client, db_session, monkeypatch):
+    """A third-party page auto-submitting a form must not mint a session
+    (login CSRF: it would silently replace a signed-in user's cookie)."""
+    _demo_origin_env(db_session, monkeypatch)
+
+    r = raw_client.post(
+        "/auth/demo",
+        headers={"Origin": "https://evil.example"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 403
+    demo_count = db_session.scalar(
+        select(func.count()).select_from(User).where(User.is_demo)
+    )
+    assert demo_count == 0
+
+
+def test_demo_rejects_null_origin(raw_client, db_session, monkeypatch):
+    # Sandboxed iframes submit with "Origin: null" — treat as cross-site.
+    _demo_origin_env(db_session, monkeypatch)
+    r = raw_client.post(
+        "/auth/demo", headers={"Origin": "null"}, follow_redirects=False
+    )
+    assert r.status_code == 403
+
+
+def test_demo_allows_marketing_site_origin(raw_client, db_session, monkeypatch):
+    # The marketing site (parent of COOKIE_DOMAIN) hosts the demo form.
+    _demo_origin_env(db_session, monkeypatch)
+    r = raw_client.post(
+        "/auth/demo",
+        headers={"Origin": "https://dossiertool.com"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+
+
+def test_demo_allows_frontend_origin(raw_client, db_session, monkeypatch):
+    _demo_origin_env(db_session, monkeypatch)
+    r = raw_client.post(
+        "/auth/demo",
+        headers={"Origin": "https://my.dossiertool.com"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+
+
+def test_demo_rejects_suffix_lookalike_origin(raw_client, db_session, monkeypatch):
+    # evildossiertool.com must not pass the parent-domain suffix check.
+    _demo_origin_env(db_session, monkeypatch)
+    r = raw_client.post(
+        "/auth/demo",
+        headers={"Origin": "https://evildossiertool.com"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 403
+
+
+def test_demo_allows_any_origin_when_unconfigured(raw_client, db_session, monkeypatch):
+    # Local dev: no frontend/cookie-domain configured — nothing to check against.
+    template = _build_template(db_session)
+    monkeypatch.setattr(settings, "demo_template_email", template.email)
+    monkeypatch.setattr(settings, "frontend_url", "")
+    monkeypatch.setattr(settings, "cookie_domain", "")
+    r = raw_client.post("/auth/demo", headers={"Origin": "http://localhost:5500"})
+    assert r.status_code == 200
+
+
 def test_demo_user_cannot_delete_account(raw_client, db_session):
     demo = _demo_user(db_session, "del", hours_old=0)
     token = create_access_token({"sub": demo.email})

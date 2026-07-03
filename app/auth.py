@@ -13,12 +13,19 @@ from app.models.user import User
 # middleware (ui/proxy.ts), which reads it server-side to gate routes.
 AUTH_COOKIE = "dossier_token"
 
+# iss/aud pin tokens to this service, so a token signed by anything else that
+# ever shares the key can't authenticate here.
+JWT_ISSUER = "dossier-api"
+JWT_AUDIENCE = "dossier"
+
 
 def create_access_token(data: dict) -> str:
     payload = data.copy()
     now = datetime.now(timezone.utc)
     payload["iat"] = now
     payload["exp"] = now + timedelta(minutes=settings.access_token_expire_minutes)
+    payload["iss"] = JWT_ISSUER
+    payload["aud"] = JWT_AUDIENCE
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 
@@ -66,11 +73,23 @@ def get_current_user(
     if not token:
         raise credentials_exception
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=["HS256"],
+            # iss/aud are checked manually below: tokens minted before these
+            # claims existed carry neither and must keep working until they
+            # expire (same grandfathering as the "ver" claim).
+            options={"verify_aud": False},
+        )
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
     except jwt.PyJWTError:
+        raise credentials_exception
+    if payload.get("aud", JWT_AUDIENCE) != JWT_AUDIENCE:
+        raise credentials_exception
+    if payload.get("iss", JWT_ISSUER) != JWT_ISSUER:
         raise credentials_exception
 
     user = db.scalar(select(User).where(User.email == email))

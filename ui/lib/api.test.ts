@@ -56,6 +56,32 @@ describe("api request", () => {
     await expect(api.get("/me")).rejects.toThrow("API error 500");
   });
 
+  it("surfaces the API's detail message on error responses", async () => {
+    mockFetch.mockResolvedValue(
+      response({ detail: "Too many requests — please try again shortly." }, 429),
+    );
+    await expect(api.get("/me")).rejects.toThrow(
+      "Too many requests — please try again shortly.",
+    );
+  });
+
+  it("falls back to the generic message when detail is not a string", async () => {
+    // FastAPI 422 validation errors put a list in detail.
+    mockFetch.mockResolvedValue(response({ detail: [{ msg: "bad" }] }, 422));
+    await expect(api.get("/me")).rejects.toThrow("API error 422");
+  });
+
+  it("falls back to the generic message when the body is not JSON", async () => {
+    mockFetch.mockResolvedValue({
+      status: 502,
+      ok: false,
+      json: async () => {
+        throw new Error("not json");
+      },
+    } as unknown as Response);
+    await expect(api.get("/me")).rejects.toThrow("API error 502");
+  });
+
   it("posts a JSON body with the POST method", async () => {
     mockFetch.mockResolvedValue(response({ ok: true }));
     await api.post("/programs", { school: "MIT" });

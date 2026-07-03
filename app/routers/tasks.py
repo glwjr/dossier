@@ -4,6 +4,7 @@ Actions) rather than a signed-in user. Protected by a shared CRON_SECRET.
 
 import hmac
 
+import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -28,20 +29,31 @@ def _require_cron(x_cron_key: str = Header(default="", alias="X-Cron-Key")) -> N
 @router.post("/weekly-digest", dependencies=[Depends(_require_cron)])
 def weekly_digest(db: Session = Depends(get_db)):
     """Email each opted-in, non-demo user a digest of what's due soon."""
-    users = db.scalars(
-        select(User).where(
-            User.email_reminders.is_(True),
-            User.is_demo.is_(False),
-        )
-    ).all()
+    stmt = select(User).where(
+        User.email_reminders.is_(True),
+        User.is_demo.is_(False),
+    )
+    # The demo template is a regular (non-demo) user seeded with sample
+    # deadlines; its address may not even exist, so never email it.
+    if settings.demo_template_email:
+        stmt = stmt.where(User.email != settings.demo_template_email)
+    users = db.scalars(stmt).all()
 
     sent = 0
+    failed = 0
     for user in users:
         digest = build_digest(db, user)
         if digest is None:
             continue
         subject, html = digest
-        if send_email(user.email, subject, html):
-            sent += 1
+        try:
+            if send_email(user.email, subject, html):
+                sent += 1
+        except Exception as exc:
+            # One bad recipient (bounce, provider 5xx) must not abort the rest
+            # of the run — record it and keep going. capture_exception is a
+            # no-op when Sentry isn't configured.
+            failed += 1
+            sentry_sdk.capture_exception(exc)
 
-    return {"considered": len(users), "sent": sent}
+    return {"considered": len(users), "sent": sent, "failed": failed}

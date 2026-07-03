@@ -15,6 +15,12 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 RUN uv sync --frozen --no-dev
 
+# Drop root: the app only needs to read /app and talk to the network.
+# (render.yaml's preDeployCommand also runs as this user; it only writes to
+# the database.)
+RUN useradd --create-home --uid 1000 appuser
+USER appuser
+
 EXPOSE 8000
 # Migrations + demo seed run once per deploy via render.yaml preDeployCommand,
 # not here, so scaling to multiple instances can't race them.

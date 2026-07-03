@@ -79,10 +79,14 @@ def import_programs(
         Program(**p.model_dump(), user_id=current_user.id) for p in body.programs
     ]
     db.add_all(created)
+    db.flush()
+    ids = [c.id for c in created]
     db.commit()
-    for c in created:
-        db.refresh(c)
-    return created
+    # One re-select (instead of a refresh query per row) to load DB-generated
+    # defaults; preserve the input order in the response.
+    rows = db.scalars(select(Program).where(Program.id.in_(ids)))
+    by_id = {row.id: row for row in rows}
+    return [by_id[i] for i in ids]
 
 
 @router.get("/{program_id}", response_model=ProgramRead)
